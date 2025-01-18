@@ -1,4 +1,4 @@
-# Automata Diagrams
+# Automata Diags
 
 A computational tool  for working with and visualizing various types of automata, including:
 - Deterministic Finite Automata (DFA)
