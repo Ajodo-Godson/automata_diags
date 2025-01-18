@@ -18,7 +18,7 @@ class DFA(Automaton[State]):
         self._sink_state = sink_state
 
     def accepts(self, word: Word) -> bool:
-        # implement the DFA acceptance logic
+
         current = self._start_state
         for symbol in word:
             if symbol not in self._alphabet:
