@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "automata_diags"
+version = "0.1.0"
+authors = [
+  { name="Godson Ajodo" },
+]
+description = "A package for working with and visualizing automata"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "pytest>=7.0.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/Ajodo-Godson/automata_diags"
+"Bug Tracker" = "https://github.com/Ajodo-Godson/automata_diags/issues" 
