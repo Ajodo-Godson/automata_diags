@@ -51,7 +51,7 @@ def test_dfa_three_consecutive_zeros():
     assert dfa.is_accept("1000") == True
     assert dfa.is_accept("0100") == False
     assert dfa.is_accept("0010") == False
-    assert dfa.is_accept("11000") == False
+    assert dfa.is_accept("11000") == True
 
 
 if __name__ == "__main__":
