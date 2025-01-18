@@ -8,7 +8,7 @@ def create_dfa_from_pattern(pattern: str, alphabet: set[str]) -> DFA:
     """
     transitions, start_state, accept_states = build_kmp_dfa(pattern, alphabet)
     states = set(transitions.keys())
-    # Create the DFA with your existing constructor
+
     return DFA(
         Q=states, Σ=alphabet, δ=transitions, q0=start_state, F=accept_states, sink=None
     )

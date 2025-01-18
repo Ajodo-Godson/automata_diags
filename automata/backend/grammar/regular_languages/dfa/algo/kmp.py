@@ -1,3 +1,5 @@
+from typing import Dict, Set, List, Tuple
+
 """
 Implements the Knuth-Morris-Pratt (KMP) pattern-matching algorithm in two ways:
 
@@ -8,10 +10,7 @@ Implements the Knuth-Morris-Pratt (KMP) pattern-matching algorithm in two ways:
 2. kmp_search(pattern, text):
    - Returns a list of all 0-based start indices where 'pattern' is found in 'text'.
 
-Author: Your Name
 """
-
-from typing import Dict, Set, List, Tuple
 
 
 def build_prefix_function(pattern: str) -> List[int]:

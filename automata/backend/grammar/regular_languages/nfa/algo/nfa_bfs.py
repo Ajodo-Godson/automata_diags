@@ -1,8 +1,5 @@
-# backend/grammar/regular_languages/nfa/algo/nfa_bfs.py
 from collections import deque
 from typing import Dict, Set, Optional
-
-# We'll assume states and symbols are strings; adapt if you have specific classes
 
 
 def epsilon_closure(

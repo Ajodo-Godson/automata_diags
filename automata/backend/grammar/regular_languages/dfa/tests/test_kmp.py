@@ -10,5 +10,3 @@ def test_kmp_dfa():
     assert dfa.is_accept("ababc") is True
     # Check partial
     assert dfa.is_accept("abab") is False
-    # or test bigger string if you treat the entire string must match
-    # If you want substring search, you might do a streaming approach
