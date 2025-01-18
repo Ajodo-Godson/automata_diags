@@ -10,7 +10,12 @@ def create_dfa_from_pattern(pattern: str, alphabet: set[str]) -> DFA:
     states = set(transitions.keys())
 
     return DFA(
-        Q=states, Σ=alphabet, δ=transitions, q0=start_state, F=accept_states, sink=None
+        states=states,
+        alphabet=alphabet,
+        transitions=transitions,
+        start_state=start_state,
+        accept_states=accept_states,
+        sink_state=None,
     )
 
 

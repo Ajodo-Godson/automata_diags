@@ -1,43 +1,26 @@
+from typing import TypeVar, Generic
 from abc import ABC, abstractmethod
-from typing import Set, Generic, TypeVar, Union
-from .core import State, Symbol, Word, Alphabet, StateSet
+from .dist import State, Symbol, Word, Alphabet, StateSet
 
-TState = TypeVar("TState", bound=State)
+T = TypeVar("T")
 
 
-class Automaton(ABC, Generic[TState]):
-    """
-    Abstract base for any automaton.
-    """
-
+class Automaton(Generic[T], ABC):
     def __init__(
-        self, states: StateSet, alphabet: Alphabet, start: State, accepts: StateSet
+        self,
+        states: StateSet,
+        alphabet: Alphabet,
+        start_state: State,
+        accept_states: StateSet,
     ):
         self._states = states
         self._alphabet = alphabet
-        self._start_state = start
-        self._accept_states = accepts
-
-    @property
-    def states(self) -> StateSet:
-        return self._states
-
-    @property
-    def alphabet(self) -> Alphabet:
-        return self._alphabet
-
-    @property
-    def start_state(self) -> State:
-        return self._start_state
-
-    @property
-    def accept_states(self) -> StateSet:
-        return self._accept_states
+        self._start_state = start_state
+        self._accept_states = accept_states
 
     @abstractmethod
     def accepts(self, word: Word) -> bool:
         """
-        Consumes 'word' and returns True if the automaton accepts, False if not.
-        Must be implemented by subclasses (e.g. DFA, NFA).
+        Returns True if the automaton accepts the given word, False otherwise.
         """
         pass

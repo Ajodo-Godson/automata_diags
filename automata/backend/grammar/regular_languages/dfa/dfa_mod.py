@@ -1,6 +1,6 @@
 from typing import Dict, Optional
-from backend.grammar.dist import Alphabet, StateSet, State, Symbol, Word
-from backend.grammar.automaton_base import Automaton
+from automata.backend.grammar.dist import Alphabet, StateSet, State, Symbol, Word
+from automata.backend.grammar.automaton_base import Automaton
 
 
 class DFA(Automaton[State]):

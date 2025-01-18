@@ -17,4 +17,12 @@ dependencies = [
 
 [project.urls]
 "Homepage" = "https://github.com/Ajodo-Godson/automata_diags"
-"Bug Tracker" = "https://github.com/Ajodo-Godson/automata_diags/issues" 
+"Bug Tracker" = "https://github.com/Ajodo-Godson/automata_diags/issues"
+
+[tool.pytest]
+pythonpath = [
+    "."
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["automata"] 
