@@ -39,7 +39,7 @@ def test_dfa_three_consecutive_zeros():
             1: {"0": 2, "1": 1},
             2: {"0": 3, "1": 1},
             3: {"0": 4, "1": 1},
-            4: {"0": 4, "1": 4},
+            4: {"0": 4, "1": 1},
         },
         start_state=1,
         accept_states={4},
