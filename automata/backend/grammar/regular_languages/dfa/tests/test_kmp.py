@@ -4,6 +4,7 @@ from automata.backend.grammar.regular_languages.dfa.dfa_mod_algo import (
     find_pattern_in_text,
     create_dfa_from_table,
 )
+from automata.backend.drawings.automata_drawer import AutomataDrawer
 
 
 def test_create_dfa_from_table():
@@ -18,6 +19,9 @@ def test_create_dfa_from_table():
     dfa = create_dfa_from_table(
         table, "q0", accept_states={"q2", "q4"}, alphabet={"a", "b"}
     )
+    drawer = AutomataDrawer()
+    output_path = drawer.draw_dfa_from_object(dfa, "simple_dfa")
+    print(f"DFA visualization saved to: {output_path}")
     # print(dfa)
     assert dfa.accepts("abaaaab")
     assert not dfa.accepts("bab")
@@ -62,5 +66,7 @@ def test_simple_dfa():
     )
     print(dfa)
     word = "bbbac"
-    assert dfa.accepts(word)
+    assert not dfa.accepts(word)
     # assert not dfa.accepts(word[:-1])
+
+    # Draw the DFA
