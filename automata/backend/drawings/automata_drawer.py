@@ -112,21 +112,29 @@ class AutomataDrawer:
         # Set default edge attributes
         dot.attr("edge", fontsize="12", arrowsize="0.7", fontname="helvetica")
 
+        # Convert all states to strings for visualization
+        str_transitions = {
+            str(state): {sym: str(target) for sym, target in trans.items()}
+            for state, trans in transitions.items()
+        }
+        str_start_state = str(start_state)
+        str_accept_states = {str(state) for state in accept_states}
+
         # Add all states
-        all_states = set(transitions.keys())
+        all_states = set(str_transitions.keys())
         for state in all_states:
             # Double circle for accept states, single circle for others
-            if state in accept_states:
+            if state in str_accept_states:
                 dot.node(state, state, shape="doublecircle")
             else:
                 dot.node(state, state, shape="circle")
 
         # Add start state arrow with a special style
         dot.node("", "", shape="none")
-        dot.edge("", start_state, arrowsize="1.0", penwidth="1.5")
+        dot.edge("", str_start_state, arrowsize="1.0", penwidth="1.5")
 
         # Combine transitions with same source and target states
-        combined_transitions = self.multi_alphabets_transition(transitions)
+        combined_transitions = self.multi_alphabets_transition(str_transitions)
 
         # Add transitions with combined labels
         for from_state, trans in combined_transitions.items():

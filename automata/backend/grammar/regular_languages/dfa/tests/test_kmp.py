@@ -40,6 +40,19 @@ def test_dfa_exact_match():
     assert not dfa.accepts("xxxababc")
 
 
+def test_dfa_pattern():
+    pattern = "ababc"
+    alphabet = {"a", "b", "c"}
+    dfa = create_dfa_from_pattern(pattern, alphabet)
+    print(dfa)
+    drawer = AutomataDrawer()
+    output_path = drawer.draw_dfa_from_object(dfa, "simple_dfa_pattern")
+    print(f"DFA visualization saved to: {output_path}")
+    assert dfa.accepts("ababc")
+    assert not dfa.accepts("ab")
+    assert not dfa.accepts("xxxababc")
+
+
 def test_kmp_search():
     pattern = "ababc"
     text = "zzzababcxxxababc"
