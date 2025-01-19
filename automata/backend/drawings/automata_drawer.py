@@ -27,6 +27,13 @@ class AutomataDrawer:
                 "  - Windows: Download from https://graphviz.org/download/"
             )
 
+    def multi_alphabets_transition():
+        """
+        This handles cases when there are multiple alphabets from one states to another same direction.
+        Instead of drawing multiple edges, we draw a single edge with multiple labels.
+        """
+        pass
+
     def draw_dfa(
         self,
         transitions: Dict[str, Dict[str, str]],
