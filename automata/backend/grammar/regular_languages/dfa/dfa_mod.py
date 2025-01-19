@@ -35,3 +35,6 @@ class DFA(Automaton[State]):
     ) -> None:
         """Utility method to add a single transition to the DFA."""
         self._transitions[from_state][symbol] = to_state
+
+    def __str__(self):
+        return f"DFA(states={self._states}, alphabet={self._alphabet}, transitions={self._transitions}, start_state={self._start_state}, accept_states={self._accept_states}, sink_state={self._sink_state})"
