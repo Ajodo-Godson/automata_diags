@@ -69,6 +69,4 @@ def test_simple_dfa():
     print(dfa)
     word = "bbbac"
     assert dfa.accepts(word)
-    # assert not dfa.accepts(word[:-1])
-
-    # Draw the DFA
+    assert not dfa.accepts(word[:-1])
