@@ -50,12 +50,11 @@ def test_kmp_search():
 
 def test_simple_dfa():
     alphabet = {"a", "b", "c"}
-    # states = {"s1", "s2", "s3"}
     initial_state = "s1"
     accepting_states = {"s3"}
     transition_function = {
         "s1": {"b": "s1", "a": "s2"},
-        "s2": {"a": "s3", "b": "s1"},
+        "s2": {"a": "s3", "b": "s1", "c": "s3"},
         "s3": {"c": "s3"},
     }
     dfa = create_dfa_from_table(
@@ -64,9 +63,12 @@ def test_simple_dfa():
         alphabet=alphabet,
         start_state=initial_state,
     )
+    drawer = AutomataDrawer()
+    output_path = drawer.draw_dfa_from_object(dfa, "simple_dfa_2")
+    print(f"DFA visualization saved to: {output_path}")
     print(dfa)
     word = "bbbac"
-    assert not dfa.accepts(word)
+    assert dfa.accepts(word)
     # assert not dfa.accepts(word[:-1])
 
     # Draw the DFA

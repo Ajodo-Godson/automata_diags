@@ -27,12 +27,38 @@ class AutomataDrawer:
                 "  - Windows: Download from https://graphviz.org/download/"
             )
 
-    def multi_alphabets_transition():
+    def multi_alphabets_transition(
+        self, transitions: Dict[str, Dict[str, str]]
+    ) -> Dict[str, Dict[str, str]]:
         """
         This handles cases when there are multiple alphabets from one states to another same direction.
         Instead of drawing multiple edges, we draw a single edge with multiple labels.
+
+        Args:
+            transitions: The transition function of the DFA
+
+        Returns:
+            A modified transition function with combined labels for transitions to the same state
         """
-        pass
+        combined_transitions = {}
+
+        # For each source state
+        for from_state, trans in transitions.items():
+            combined_transitions[from_state] = {}
+            target_states = {}
+
+            # Group transitions by target state
+            for symbol, to_state in trans.items():
+                if to_state not in target_states:
+                    target_states[to_state] = []
+                target_states[to_state].append(symbol)
+
+            # Combine symbols going to the same target state
+            for to_state, symbols in target_states.items():
+                label = ",".join(sorted(symbols))
+                combined_transitions[from_state][label] = to_state
+
+        return combined_transitions
 
     def draw_dfa(
         self,
@@ -70,6 +96,22 @@ class AutomataDrawer:
         dot = graphviz.Digraph(comment="DFA Visualization")
         dot.attr(rankdir="LR")  # Left to right layout
 
+        # Set graph attributes for better visualization
+        dot.attr("graph", rankdir="LR", pad="0.5", nodesep="0.5", ranksep="0.5")
+
+        # Set default node attributes
+        dot.attr(
+            "node",
+            shape="circle",
+            height="0.5",
+            width="0.5",
+            fontsize="12",
+            margin="0.05",
+        )
+
+        # Set default edge attributes
+        dot.attr("edge", fontsize="12", arrowsize="0.7", fontname="helvetica")
+
         # Add all states
         all_states = set(transitions.keys())
         for state in all_states:
@@ -79,14 +121,35 @@ class AutomataDrawer:
             else:
                 dot.node(state, state, shape="circle")
 
-        # Add start state arrow
+        # Add start state arrow with a special style
         dot.node("", "", shape="none")
-        dot.edge("", start_state)
+        dot.edge("", start_state, arrowsize="1.0", penwidth="1.5")
 
-        # Add transitions
-        for from_state, trans in transitions.items():
-            for symbol, to_state in trans.items():
-                dot.edge(from_state, to_state, label=symbol)
+        # Combine transitions with same source and target states
+        combined_transitions = self.multi_alphabets_transition(transitions)
+
+        # Add transitions with combined labels
+        for from_state, trans in combined_transitions.items():
+            for symbols, to_state in trans.items():
+                # Self-loops need special handling
+                if from_state == to_state:
+                    dot.edge(
+                        from_state,
+                        to_state,
+                        label=symbols,
+                        dir="both",
+                        arrowsize="0.7",
+                        penwidth="0.8",
+                        constraint="false",
+                    )
+                else:
+                    dot.edge(
+                        from_state,
+                        to_state,
+                        label=symbols,
+                        arrowsize="0.7",
+                        penwidth="0.8",
+                    )
 
         try:
             # Save the graph
