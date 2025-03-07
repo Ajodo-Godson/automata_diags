@@ -1,4 +1,4 @@
-# Automata Diags
+<!-- # Automata Diags
 
 A computational tool for working with and visualizing various types of automata, including:
 - Deterministic Finite Automata (DFA)
@@ -69,4 +69,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. -->
+
+## To be worked upon
