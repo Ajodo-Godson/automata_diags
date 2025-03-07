@@ -6,11 +6,19 @@ build-backend = "hatchling.build"
 name = "automata_diags"
 version = "0.1.0"
 authors = [
-  { name="Godson Ajodo" },
+  { name="Godson Ajodo", email="godson@uni.minerva.edu" },
 ]
 description = "A package for working with and visualizing automata"
 readme = "README.md"
 requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Education",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
 dependencies = [
     "pytest>=7.0.0",
     "graphviz>=0.20.0",
@@ -19,11 +27,18 @@ dependencies = [
 [project.urls]
 "Homepage" = "https://github.com/Ajodo-Godson/automata_diags"
 "Bug Tracker" = "https://github.com/Ajodo-Godson/automata_diags/issues"
+"Documentation" = "https://github.com/Ajodo-Godson/automata_diags/docs"
 
 [tool.pytest]
-pythonpath = [
-    "."
-]
+pythonpath = ["."]
 
 [tool.hatch.build.targets.wheel]
-packages = ["automata"] 
+packages = ["automata"]
+only-include = ["automata"]
+exclude = [
+    "automata/frontend",
+    "automata/**/tests",
+    "**/__pycache__",
+    "**/.pytest_cache",
+    "**/node_modules",
+] 
