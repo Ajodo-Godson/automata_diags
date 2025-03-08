@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "automata_diags"
-version = "0.1.0"
+version = "0.1.2"
 authors = [
   { name="Godson Ajodo", email="godson@uni.minerva.edu" },
 ]
@@ -20,8 +20,24 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Visualization",
 ]
 dependencies = [
-    "pytest>=7.0.0",
     "graphviz>=0.20.0",
+    "pytest>=7.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "build>=1.2.0",
+    "twine>=6.1.0",
+    "pytest-cov>=4.1.0",
+    "black>=24.1.0",
+    "flake8>=7.0.0",
+    "mypy>=1.8.0",
+    "types-graphviz>=0.20.1",
+]
+docs = [
+    "sphinx>=7.2.0",
+    "sphinx-rtd-theme>=2.0.0",
+    "myst-parser>=2.0.0",
 ]
 
 [project.urls]

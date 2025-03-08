@@ -1,1 +1,23 @@
-pytest>=7.0.0 
+# Core dependencies
+graphviz>=0.20.0
+pytest>=7.0.0
+
+# Development dependencies
+build>=1.2.0
+twine>=6.1.0
+pytest-cov>=4.1.0
+black>=24.1.0
+flake8>=7.0.0
+mypy>=1.8.0
+
+# Type checking
+types-graphviz>=0.20.1
+
+# Documentation
+sphinx>=7.2.0
+sphinx-rtd-theme>=2.0.0
+myst-parser>=2.0.0
+
+# Optional: for development and testing
+tox>=4.12.0
+pre-commit>=3.6.0 

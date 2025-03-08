@@ -45,7 +45,10 @@ class DFA(Automaton[State]):
 
     def __str__(self):
         return (
-            f"DFA(states={self._states}, alphabet={self._alphabet}, "
-            f"transitions={self._transitions}, start_state={self._start_state}, "
-            f"accept_states={self._accept_states}, sink_state={self._sink_state})"
+            f"DFA(states={self._states}, "
+            f"alphabet={self._alphabet}, "
+            f"transitions={self._transitions}, "
+            f"start_state={self._start_state}, "
+            f"accept_states={self._accept_states}, "
+            f"sink_state={self._sink_state})"
         )

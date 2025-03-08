@@ -30,15 +30,15 @@ class AutomataDrawer:
     def multi_alphabets_transition(
         self, transitions: Dict[str, Dict[str, str]]
     ) -> Dict[str, Dict[str, str]]:
-        """
-        This handles cases when there are multiple alphabets from one states to another same direction.
-        Instead of drawing multiple edges, we draw a single edge with multiple labels.
+        """Handle multiple alphabets between states.
+
+        Instead of drawing multiple edges, draw a single edge with multiple labels.
 
         Args:
             transitions: The transition function of the DFA
 
         Returns:
-            A modified transition function with combined labels for transitions to the same state
+            Modified transition function with combined labels
         """
         combined_transitions = {}
 
