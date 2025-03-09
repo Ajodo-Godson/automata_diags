@@ -71,4 +71,11 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.  -->
 
-## To Be worked on
+## 
+To run test 
+```bash
+pytest
+```
+```bash
+pytest automata/backend/grammar/regular_languages/dfa/tests/test_dfa.py
+```
