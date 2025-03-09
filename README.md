@@ -71,11 +71,22 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.  -->
 
-## 
-To run test 
-```bash
-pytest
+## To run test 
 ```
-```bash
-pytest automata/backend/grammar/regular_languages/dfa/tests/test_dfa.py
+git clone https://github.com/Ajodo-Godson/automata_diags
+cd automata_diags
 ```
+
+```bash
+pytest automata/backend/grammar/regular_languages/dfa/tests/test_kmp.py
+```
+
+# To test the current package version
+```bash 
+pip install -i https://test.pypi.org/simple/ automata-diags==0.1.2
+```
+
+Follow the instructions here: 
+https://test.pypi.org/project/automata-diags/0.1.2/#description 
+
+
