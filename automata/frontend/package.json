@@ -2,6 +2,7 @@
   "name": "automata_diags",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://Ajodo-Godson.github.io/automata_diags",
   "dependencies": {
     "cra-template": "1.2.0",
     "react": "^19.0.0",
