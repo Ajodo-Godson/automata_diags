@@ -1,4 +1,4 @@
-import { DFAExample } from './types';
+// import { DFAExample } from './types';
 
 export const DFA_EXAMPLES = {
     "ends_with_ab": {
@@ -30,12 +30,7 @@ export const DFA_EXAMPLES = {
     // Easy to add more examples
 };
 
-// Hook for loading examples (can be modified to fetch from API)
+// Hook for loading examples
 export const useExamples = () => {
-    // This could be modified to fetch from an API
-    return {
-        examples: DFA_EXAMPLES,
-        loading: false,
-        error: null
-    };
+    return { examples: DFA_EXAMPLES };
 }; 

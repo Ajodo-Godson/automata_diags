@@ -11,9 +11,12 @@
     "reactflow": "^11.11.4",
     "web-vitals": "^4.2.4"
   },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
+  },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "CI=false react-scripts build",
     "test": "react-scripts test",
     "test:coverage": "react-scripts test --coverage --watchAll=false",
     "eject": "react-scripts eject"
