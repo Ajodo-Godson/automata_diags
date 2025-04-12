@@ -1,0 +1,137 @@
+import React, { useCallback } from 'react';
+import ReactFlow, {
+    Background,
+    Controls,
+    Handle,
+    Position,
+    MarkerType,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+import './DFAGraph.css';
+
+const StateNode = ({ data, isConnectable }) => {
+    const isAcceptState = data.isAcceptState;
+    const isStartState = data.isStartState;
+    const isCurrentState = data.isCurrentState;
+
+    return (
+        <div
+            className={`state-node ${isAcceptState ? 'accept-state' : ''} 
+                       ${isStartState ? 'start-state' : ''} 
+                       ${isCurrentState ? 'current-state' : ''}`}
+        >
+            <Handle type="target" position={Position.Left} isConnectable={isConnectable} />
+            <div className="state-label">{data.label}</div>
+            {isAcceptState && <div className="accept-circle" />}
+            <Handle type="source" position={Position.Right} isConnectable={isConnectable} />
+        </div>
+    );
+};
+
+const nodeTypes = {
+    state: StateNode,
+};
+
+const DFAGraph = ({ states, transitions, startState, acceptStates, currentState, isPlaying }) => {
+    const getLayoutedElements = useCallback(() => {
+        // Calculate radius and center
+        const radius = Math.min(150, 600 / states.length);
+        const centerX = 300;
+        const centerY = 200;
+
+        // Create nodes in a circular layout
+        const nodes = states.map((state, index) => {
+            const angle = (index / states.length) * 2 * Math.PI;
+            const isCurrentNode = state === currentState;
+
+            return {
+                id: state,
+                type: 'state',
+                position: {
+                    x: centerX + radius * Math.cos(angle),
+                    y: centerY + radius * Math.sin(angle)
+                },
+                data: {
+                    label: state,
+                    isAcceptState: acceptStates.has(state),
+                    isStartState: state === startState,
+                    isCurrentState: isCurrentNode,
+                },
+                className: `${isCurrentNode && isPlaying ? 'active-node' : ''} 
+                           ${isCurrentNode ? 'highlight-node' : ''}`,
+            };
+        });
+
+        // Create edges with better styling
+        const edges = [];
+        Object.entries(transitions).forEach(([fromState, trans]) => {
+            Object.entries(trans).forEach(([symbol, toState]) => {
+                const existingEdge = edges.find(
+                    (e) => e.source === fromState && e.target === toState
+                );
+
+                if (existingEdge) {
+                    existingEdge.label = `${existingEdge.label}, ${symbol}`;
+                } else {
+                    const isSelfLoop = fromState === toState;
+                    const isActive = currentState === fromState;
+                    const isTransition = isPlaying && isActive;
+
+                    edges.push({
+                        id: `${fromState}-${symbol}-${toState}`,
+                        source: fromState,
+                        target: toState,
+                        label: symbol,
+                        type: isSelfLoop ? 'default' : 'smoothstep',
+                        animated: isTransition,
+                        style: {
+                            stroke: isActive ? '#2196F3' : '#555',
+                            strokeWidth: isActive ? 3 : 1,
+                            opacity: isActive ? 1 : 0.75,
+                        },
+                        labelStyle: {
+                            fill: isActive ? '#2196F3' : '#555',
+                            fontSize: '14px',
+                            fontWeight: isActive ? 'bold' : 'normal',
+                            background: isActive ? '#e3f2fd' : 'transparent',
+                            padding: isActive ? '2px 4px' : '0',
+                            borderRadius: '4px',
+                        },
+                        markerEnd: {
+                            type: MarkerType.ArrowClosed,
+                            width: 20,
+                            height: 20,
+                            color: isActive ? '#2196F3' : '#555',
+                        },
+                    });
+                }
+            });
+        });
+
+        return {
+            nodes,
+            edges
+        };
+    }, [states, transitions, startState, acceptStates, currentState, isPlaying]);
+
+    const { nodes, edges } = getLayoutedElements();
+
+    return (
+        <div style={{ height: '400px' }} className="dfa-graph-container">
+            <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                nodeTypes={nodeTypes}
+                fitView
+                minZoom={0.1}
+                maxZoom={1.5}
+                defaultZoom={0.8}
+            >
+                <Background color="#aaa" gap={16} />
+                <Controls />
+            </ReactFlow>
+        </div>
+    );
+};
+
+export default DFAGraph; 
