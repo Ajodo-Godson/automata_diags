@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 import Layout from './components/Layout';
-import DFASimulator from './components/DFASimulator';
+import DFASimulator from './components/DFA_components/DFASimulator';
 
 function App() {
   return (
