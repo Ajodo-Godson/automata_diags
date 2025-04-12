@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import './DFASimulator.css';
 import DFAGraph from './DFAGraph';
+import { useExamples } from './examples';
+import { useDFA } from './useDFA';
+import { useSimulation } from './useSimulation'; // We can create this later
 
 const DFASimulator = () => {
-    const [states, setStates] = useState(['q0']);
-    const [alphabet, setAlphabet] = useState(['a', 'b']);
-    const [transitions, setTransitions] = useState({
-        q0: { a: 'q0', b: 'q0' }
+    const { examples } = useExamples();
+    const dfa = useDFA({
+        states: ['q0'],
+        alphabet: ['a', 'b'],
+        transitions: { q0: { a: 'q0', b: 'q0' } },
+        startState: 'q0',
+        acceptStates: new Set(),
     });
-    const [startState, setStartState] = useState('q0');
-    const [acceptStates, setAcceptStates] = useState(new Set());
+
     const [inputString, setInputString] = useState('');
     const [result, setResult] = useState(null);
     const [simulationSteps, setSimulationSteps] = useState([]);
@@ -17,95 +22,18 @@ const DFASimulator = () => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [playbackSpeed, setPlaybackSpeed] = useState(1000); // milliseconds per step
 
-    // Predefined examples
-    const examples = {
-        "Ends with 'ab'": {
-            states: ['q0', 'q1', 'q2'],
-            alphabet: ['a', 'b'],
-            transitions: {
-                'q0': { a: 'q1', b: 'q0' },
-                'q1': { a: 'q1', b: 'q2' },
-                'q2': { a: 'q1', b: 'q0' }
-            },
-            startState: 'q0',
-            acceptStates: new Set(['q2']),
-            description: "Accepts strings that end with 'ab'"
-        },
-        "Contains 'aa'": {
-            states: ['q0', 'q1', 'q2'],
-            alphabet: ['a', 'b'],
-            transitions: {
-                'q0': { a: 'q1', b: 'q0' },
-                'q1': { a: 'q2', b: 'q0' },
-                'q2': { a: 'q2', b: 'q2' }
-            },
-            startState: 'q0',
-            acceptStates: new Set(['q2']),
-            description: "Accepts strings containing 'aa'"
-        }
-    };
-
     const loadExample = (exampleName) => {
         const example = examples[exampleName];
-        setStates(example.states);
-        setAlphabet(example.alphabet);
-        setTransitions(example.transitions);
-        setStartState(example.startState);
-        setAcceptStates(example.acceptStates);
+        dfa.loadDFA(example);
         setInputString('');
         setResult(null);
         setSimulationSteps([]);
         setCurrentStep(-1);
     };
 
-    const addState = () => {
-        const newState = `q${states.length}`;
-        setStates([...states, newState]);
-        setTransitions({
-            ...transitions,
-            [newState]: Object.fromEntries(alphabet.map(symbol => [symbol, newState]))
-        });
-    };
-
-    const addSymbol = () => {
-        const symbol = prompt('Enter new symbol:');
-        if (symbol && !alphabet.includes(symbol)) {
-            setAlphabet([...alphabet, symbol]);
-            // Update transitions for all states with new symbol
-            const newTransitions = { ...transitions };
-            states.forEach(state => {
-                newTransitions[state] = {
-                    ...newTransitions[state],
-                    [symbol]: states[0]
-                };
-            });
-            setTransitions(newTransitions);
-        }
-    };
-
-    const updateTransition = (fromState, symbol, toState) => {
-        setTransitions({
-            ...transitions,
-            [fromState]: {
-                ...transitions[fromState],
-                [symbol]: toState
-            }
-        });
-    };
-
-    const toggleAcceptState = (state) => {
-        const newAcceptStates = new Set(acceptStates);
-        if (newAcceptStates.has(state)) {
-            newAcceptStates.delete(state);
-        } else {
-            newAcceptStates.add(state);
-        }
-        setAcceptStates(newAcceptStates);
-    };
-
     const simulateString = () => {
         let steps = [];
-        let currentState = startState;
+        let currentState = dfa.startState;
         steps.push({
             state: currentState,
             remainingInput: inputString,
@@ -114,7 +42,7 @@ const DFASimulator = () => {
 
         for (let i = 0; i < inputString.length; i++) {
             const symbol = inputString[i];
-            if (!alphabet.includes(symbol)) {
+            if (!dfa.alphabet.includes(symbol)) {
                 setResult({
                     accepted: false,
                     message: `Invalid symbol: ${symbol}`
@@ -122,7 +50,7 @@ const DFASimulator = () => {
                 return;
             }
 
-            const nextState = transitions[currentState][symbol];
+            const nextState = dfa.transitions[currentState][symbol];
             steps.push({
                 state: nextState,
                 remainingInput: inputString.slice(i + 1),
@@ -131,7 +59,7 @@ const DFASimulator = () => {
             currentState = nextState;
         }
 
-        const accepted = acceptStates.has(currentState);
+        const accepted = dfa.acceptStates.has(currentState);
         steps.push({
             state: currentState,
             remainingInput: '',
@@ -193,18 +121,18 @@ const DFASimulator = () => {
                     <div className="dfa-graph">
                         <h3>DFA Visualization</h3>
                         <DFAGraph
-                            states={states}
-                            transitions={transitions}
-                            startState={startState}
-                            acceptStates={acceptStates}
+                            states={dfa.states}
+                            transitions={dfa.transitions}
+                            startState={dfa.startState}
+                            acceptStates={dfa.acceptStates}
                             currentState={currentStep >= 0 ? simulationSteps[currentStep].state : null}
                             isPlaying={isPlaying}
                         />
                     </div>
 
                     <div className="control-panel">
-                        <button onClick={addState}>Add State</button>
-                        <button onClick={addSymbol}>Add Symbol</button>
+                        <button onClick={() => dfa.addState()}>Add State</button>
+                        <button onClick={() => dfa.addSymbol()}>Add Symbol</button>
                     </div>
 
                     <div className="string-tester">
@@ -242,27 +170,27 @@ const DFASimulator = () => {
                             <thead>
                                 <tr>
                                     <th>State</th>
-                                    {alphabet.map(symbol => (
+                                    {dfa.alphabet.map(symbol => (
                                         <th key={symbol}>{symbol}</th>
                                     ))}
                                     <th>Accept?</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {states.map(state => (
+                                {dfa.states.map(state => (
                                     <tr key={state} className={
                                         currentStep >= 0 && simulationSteps[currentStep].state === state
                                             ? 'current-state'
                                             : ''
                                     }>
                                         <td>{state}</td>
-                                        {alphabet.map(symbol => (
+                                        {dfa.alphabet.map(symbol => (
                                             <td key={`${state}-${symbol}`}>
                                                 <select
-                                                    value={transitions[state][symbol]}
-                                                    onChange={(e) => updateTransition(state, symbol, e.target.value)}
+                                                    value={dfa.transitions[state][symbol]}
+                                                    onChange={(e) => dfa.updateTransition(state, symbol, e.target.value)}
                                                 >
-                                                    {states.map(s => (
+                                                    {dfa.states.map(s => (
                                                         <option key={s} value={s}>{s}</option>
                                                     ))}
                                                 </select>
@@ -271,8 +199,8 @@ const DFASimulator = () => {
                                         <td>
                                             <input
                                                 type="checkbox"
-                                                checked={acceptStates.has(state)}
-                                                onChange={() => toggleAcceptState(state)}
+                                                checked={dfa.acceptStates.has(state)}
+                                                onChange={() => dfa.toggleAcceptState(state)}
                                             />
                                         </td>
                                     </tr>
