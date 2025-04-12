@@ -30,6 +30,12 @@ const Layout = ({ children }) => {
                             <button onClick={() => window.dispatchEvent(new CustomEvent('addState'))}>
                                 Add State
                             </button>
+                            <button onClick={() => window.dispatchEvent(new CustomEvent('addSymbol'))}>
+                                Add Symbol
+                            </button>
+                            <button onClick={() => window.dispatchEvent(new CustomEvent('addCustomState'))}>
+                                Custom State
+                            </button>
                             <button onClick={() => window.dispatchEvent(new CustomEvent('addTransition'))}>
                                 Add Transition
                             </button>
@@ -42,10 +48,16 @@ const Layout = ({ children }) => {
                     <div className="history">
                         <h3>History</h3>
                         <div className="history-buttons">
-                            <button onClick={() => window.dispatchEvent(new CustomEvent('undo'))}>
+                            <button
+                                onClick={() => window.dispatchEvent(new CustomEvent('undo'))}
+                                className="history-button"
+                            >
                                 Undo
                             </button>
-                            <button onClick={() => window.dispatchEvent(new CustomEvent('redo'))}>
+                            <button
+                                onClick={() => window.dispatchEvent(new CustomEvent('redo'))}
+                                className="history-button"
+                            >
                                 Redo
                             </button>
                         </div>

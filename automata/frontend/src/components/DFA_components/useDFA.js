@@ -65,38 +65,29 @@ export const useDFA = (initialDFA) => {
     }, [saveToHistory]);
 
     const addTransition = useCallback(() => {
-        // Show a modal or prompt for transition details
-        const fromState = prompt('Enter source state:');
-        const symbol = prompt('Enter symbol:');
-        const toState = prompt('Enter target state:');
+        // Instead of prompting, we'll just highlight the transition table
+        // and let users know they can modify transitions there
+        alert('Use the transition table on the right to modify transitions.\nSelect states from the dropdown menus to define transitions.');
+    }, []);
 
-        if (fromState && symbol && toState) {
-            if (!states.includes(fromState) || !states.includes(toState)) {
-                alert('Invalid states!');
-                return;
+    const updateTransition = useCallback((fromState, symbol, toState) => {
+        const newTransitions = {
+            ...transitions,
+            [fromState]: {
+                ...transitions[fromState],
+                [symbol]: toState
             }
-            if (!alphabet.includes(symbol)) {
-                alert('Invalid symbol!');
-                return;
-            }
+        };
+        setTransitions(newTransitions);
 
-            const newTransitions = {
-                ...transitions,
-                [fromState]: {
-                    ...transitions[fromState],
-                    [symbol]: toState
-                }
-            };
-            setTransitions(newTransitions);
-
-            saveToHistory({
-                states,
-                alphabet,
-                transitions: newTransitions,
-                startState,
-                acceptStates
-            });
-        }
+        // Add to history when transition is updated
+        saveToHistory({
+            states,
+            alphabet,
+            transitions: newTransitions,
+            startState,
+            acceptStates
+        });
     }, [states, alphabet, transitions, startState, acceptStates, saveToHistory]);
 
     // Update existing functions to use history
@@ -150,16 +141,6 @@ export const useDFA = (initialDFA) => {
             acceptStates
         });
     }, [states, alphabet, transitions, startState, acceptStates, saveToHistory]);
-
-    const updateTransition = (fromState, symbol, toState) => {
-        setTransitions({
-            ...transitions,
-            [fromState]: {
-                ...transitions[fromState],
-                [symbol]: toState
-            }
-        });
-    };
 
     const toggleAcceptState = (state) => {
         const newAcceptStates = new Set(acceptStates);

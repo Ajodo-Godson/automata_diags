@@ -21,6 +21,7 @@ const DFASimulator = () => {
     const [currentStep, setCurrentStep] = useState(-1);
     const [isPlaying, setIsPlaying] = useState(false);
     const [playbackSpeed, setPlaybackSpeed] = useState(1000); // milliseconds per step
+    const [isEditingTransitions, setIsEditingTransitions] = useState(false);
 
     const loadExample = (exampleName) => {
         const example = examples[exampleName];
@@ -113,12 +114,33 @@ const DFASimulator = () => {
 
     useEffect(() => {
         const handleAddState = () => dfa.addState();
-        const handleAddTransition = () => dfa.addTransition();
+        const handleAddSymbol = () => {
+            const symbol = prompt('Enter new symbol:');
+            if (symbol && symbol.trim()) {
+                dfa.addSymbol(symbol.trim());
+            }
+        };
+        const handleAddCustomState = () => {
+            const newState = prompt('Enter state name (e.g., q0, q1):');
+            if (newState && newState.trim()) {
+                dfa.addState(newState.trim());
+            }
+        };
+        const handleAddTransition = () => {
+            setIsEditingTransitions(true);
+            // Scroll to transition table
+            document.querySelector('.transition-table').scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        };
         const handleClearAll = () => dfa.clearAll();
         const handleUndo = () => dfa.undo();
         const handleRedo = () => dfa.redo();
 
         window.addEventListener('addState', handleAddState);
+        window.addEventListener('addSymbol', handleAddSymbol);
+        window.addEventListener('addCustomState', handleAddCustomState);
         window.addEventListener('addTransition', handleAddTransition);
         window.addEventListener('clearAll', handleClearAll);
         window.addEventListener('undo', handleUndo);
@@ -126,6 +148,8 @@ const DFASimulator = () => {
 
         return () => {
             window.removeEventListener('addState', handleAddState);
+            window.removeEventListener('addSymbol', handleAddSymbol);
+            window.removeEventListener('addCustomState', handleAddCustomState);
             window.removeEventListener('addTransition', handleAddTransition);
             window.removeEventListener('clearAll', handleClearAll);
             window.removeEventListener('undo', handleUndo);
@@ -149,72 +173,6 @@ const DFASimulator = () => {
                             currentState={currentStep >= 0 ? simulationSteps[currentStep].state : null}
                             isPlaying={isPlaying}
                         />
-                    </div>
-
-                    <div className="toolbox">
-                        <h3>Toolbox</h3>
-                        <div className="tool-buttons">
-                            <button
-                                onClick={() => dfa.addState()}
-                                className="tool-button"
-                            >
-                                Add State
-                            </button>
-                            <button
-                                onClick={() => {
-                                    const symbol = prompt('Enter new symbol:');
-                                    if (symbol && symbol.trim()) {
-                                        dfa.addSymbol(symbol.trim());
-                                    }
-                                }}
-                                className="tool-button"
-                            >
-                                Add Symbol
-                            </button>
-                            <button
-                                onClick={() => {
-                                    const newState = prompt('Enter state name (e.g., q0, q1):');
-                                    if (newState && newState.trim()) {
-                                        dfa.addState(newState.trim());
-                                    }
-                                }}
-                                className="tool-button"
-                            >
-                                Custom State
-                            </button>
-                            <button
-                                onClick={dfa.addTransition}
-                                className="tool-button"
-                            >
-                                Add Transition
-                            </button>
-                            <button
-                                onClick={dfa.clearAll}
-                                className="tool-button"
-                            >
-                                Clear All
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="history">
-                        <h3>History</h3>
-                        <div className="history-buttons">
-                            <button
-                                onClick={dfa.undo}
-                                disabled={!dfa.canUndo}
-                                className="history-button"
-                            >
-                                Undo
-                            </button>
-                            <button
-                                onClick={dfa.redo}
-                                disabled={!dfa.canRedo}
-                                className="history-button"
-                            >
-                                Redo
-                            </button>
-                        </div>
                     </div>
 
                     <div className="string-tester">
@@ -245,7 +203,7 @@ const DFASimulator = () => {
                         ))}
                     </div>
 
-                    <div className="transition-table">
+                    <div className={`transition-table ${isEditingTransitions ? 'editing' : ''}`}>
                         <h3>Transition Table</h3>
                         <table>
                             <thead>
