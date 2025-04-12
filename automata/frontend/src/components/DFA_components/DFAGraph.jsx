@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import ReactFlow, {
     Background,
     Controls,
@@ -115,6 +115,10 @@ const DFAGraph = ({ states, transitions, startState, acceptStates, currentState,
     }, [states, transitions, startState, acceptStates, currentState, isPlaying]);
 
     const { nodes, edges } = getLayoutedElements();
+
+    useEffect(() => {
+        console.log('DFAGraph current state:', currentState);
+    }, [currentState]);
 
     return (
         <div style={{ height: '400px' }} className="dfa-graph-container">

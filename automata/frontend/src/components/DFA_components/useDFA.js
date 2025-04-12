@@ -74,13 +74,12 @@ export const useDFA = (initialDFA) => {
         const newTransitions = {
             ...transitions,
             [fromState]: {
-                ...transitions[fromState],
+                ...transitions[fromState] || {},
                 [symbol]: toState
             }
         };
         setTransitions(newTransitions);
 
-        // Add to history when transition is updated
         saveToHistory({
             states,
             alphabet,
@@ -100,7 +99,7 @@ export const useDFA = (initialDFA) => {
         const newStates = [...states, newState];
         const newTransitions = {
             ...transitions,
-            [newState]: Object.fromEntries(alphabet.map(symbol => [symbol, newState]))
+            [newState]: {} // Empty transitions object for new state
         };
 
         setStates(newStates);
@@ -122,21 +121,13 @@ export const useDFA = (initialDFA) => {
             return;
         }
         const newAlphabet = [...alphabet, symbol];
-        const newTransitions = { ...transitions };
-        states.forEach(state => {
-            newTransitions[state] = {
-                ...newTransitions[state],
-                [symbol]: states[0]
-            };
-        });
 
         setAlphabet(newAlphabet);
-        setTransitions(newTransitions);
 
         saveToHistory({
             states,
             alphabet: newAlphabet,
-            transitions: newTransitions,
+            transitions,
             startState,
             acceptStates
         });
@@ -160,6 +151,34 @@ export const useDFA = (initialDFA) => {
         setAcceptStates(dfa.acceptStates);
     };
 
+    // Add function to check if a transition exists
+    const hasTransition = useCallback((fromState, symbol) => {
+        return transitions[fromState] && transitions[fromState][symbol] !== undefined;
+    }, [transitions]);
+
+    // Add function to remove a transition
+    const removeTransition = useCallback((fromState, symbol) => {
+        if (!transitions[fromState] || !transitions[fromState][symbol]) return;
+
+        const newStateTransitions = { ...transitions[fromState] };
+        delete newStateTransitions[symbol];
+
+        const newTransitions = {
+            ...transitions,
+            [fromState]: newStateTransitions
+        };
+
+        setTransitions(newTransitions);
+
+        saveToHistory({
+            states,
+            alphabet,
+            transitions: newTransitions,
+            startState,
+            acceptStates
+        });
+    }, [states, alphabet, transitions, startState, acceptStates, saveToHistory]);
+
     return {
         states,
         alphabet,
@@ -177,6 +196,8 @@ export const useDFA = (initialDFA) => {
         clearAll,
         addTransition,
         canUndo: currentHistoryIndex > 0,
-        canRedo: currentHistoryIndex < history.length - 1
+        canRedo: currentHistoryIndex < history.length - 1,
+        hasTransition,
+        removeTransition
     };
 }; 

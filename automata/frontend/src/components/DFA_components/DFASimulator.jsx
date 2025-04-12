@@ -33,14 +33,14 @@ const DFASimulator = () => {
     };
 
     const simulateString = () => {
+        // Reset simulation state first
+        setSimulationSteps([]);
+        setCurrentStep(-1);
+
         let steps = [];
         let currentState = dfa.startState;
-        steps.push({
-            state: currentState,
-            remainingInput: inputString,
-            description: 'Starting at initial state'
-        });
 
+        // Process each symbol
         for (let i = 0; i < inputString.length; i++) {
             const symbol = inputString[i];
             if (!dfa.alphabet.includes(symbol)) {
@@ -51,16 +51,36 @@ const DFASimulator = () => {
                 return;
             }
 
+            if (!dfa.hasTransition(currentState, symbol)) {
+                setResult({
+                    accepted: false,
+                    message: `No transition defined from state ${currentState} with symbol ${symbol}`
+                });
+                return;
+            }
+
+            const fromState = currentState;
             const nextState = dfa.transitions[currentState][symbol];
+
+            // Add step before making the transition
             steps.push({
-                state: nextState,
-                remainingInput: inputString.slice(i + 1),
-                description: `Read '${symbol}', moving from ${currentState} to ${nextState}`
+                state: fromState,  // Show the state we're in before the transition
+                remainingInput: inputString.slice(i),
+                description: `In state ${fromState}, reading '${symbol}'`
             });
+
             currentState = nextState;
+
+            // Add step after making the transition
+            steps.push({
+                state: currentState,  // Show the state after the transition
+                remainingInput: inputString.slice(i + 1),
+                description: `Read '${symbol}', moved from ${fromState} to ${currentState}`
+            });
         }
 
         const accepted = dfa.acceptStates.has(currentState);
+        // Add final step
         steps.push({
             state: currentState,
             remainingInput: '',
@@ -77,12 +97,22 @@ const DFASimulator = () => {
 
     const nextStep = () => {
         if (currentStep < simulationSteps.length - 1) {
+            console.log('Moving to next step:', {
+                from: currentStep,
+                to: currentStep + 1,
+                state: simulationSteps[currentStep + 1].state
+            });
             setCurrentStep(currentStep + 1);
         }
     };
 
     const prevStep = () => {
         if (currentStep > 0) {
+            console.log('Moving to previous step:', {
+                from: currentStep,
+                to: currentStep - 1,
+                state: simulationSteps[currentStep - 1].state
+            });
             setCurrentStep(currentStep - 1);
         }
     };
@@ -170,7 +200,7 @@ const DFASimulator = () => {
                             transitions={dfa.transitions}
                             startState={dfa.startState}
                             acceptStates={dfa.acceptStates}
-                            currentState={currentStep >= 0 ? simulationSteps[currentStep].state : null}
+                            currentState={simulationSteps.length > 0 && currentStep >= 0 ? simulationSteps[currentStep].state : null}
                             isPlaying={isPlaying}
                         />
                     </div>
@@ -226,9 +256,17 @@ const DFASimulator = () => {
                                         {dfa.alphabet.map(symbol => (
                                             <td key={`${state}-${symbol}`}>
                                                 <select
-                                                    value={dfa.transitions[state][symbol]}
-                                                    onChange={(e) => dfa.updateTransition(state, symbol, e.target.value)}
+                                                    value={dfa.hasTransition(state, symbol) ? dfa.transitions[state][symbol] : ''}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        if (value === '') {
+                                                            dfa.removeTransition(state, symbol);
+                                                        } else {
+                                                            dfa.updateTransition(state, symbol, value);
+                                                        }
+                                                    }}
                                                 >
+                                                    <option value="">None</option>
                                                     {dfa.states.map(s => (
                                                         <option key={s} value={s}>{s}</option>
                                                     ))}
@@ -251,6 +289,16 @@ const DFASimulator = () => {
                     {simulationSteps.length > 0 && (
                         <div className="simulation-steps">
                             <h3>Simulation Steps</h3>
+                            <div className="step-display">
+                                {currentStep >= 0 && currentStep < simulationSteps.length && (
+                                    <>
+                                        <div>Step {currentStep + 1} of {simulationSteps.length}</div>
+                                        <div>Current State: {simulationSteps[currentStep].state}</div>
+                                        <div>Remaining Input: "{simulationSteps[currentStep].remainingInput}"</div>
+                                        <div>{simulationSteps[currentStep].description}</div>
+                                    </>
+                                )}
+                            </div>
                             <div className="simulation-controls">
                                 <div className="playback-controls">
                                     <button
@@ -301,11 +349,6 @@ const DFASimulator = () => {
                                         <option value={500}>Fast</option>
                                     </select>
                                 </div>
-                            </div>
-                            <div className="step-display">
-                                <p>Step {currentStep + 1} of {simulationSteps.length}</p>
-                                <p>{simulationSteps[currentStep].description}</p>
-                                <p>Remaining Input: "{simulationSteps[currentStep].remainingInput}"</p>
                             </div>
                         </div>
                     )}
