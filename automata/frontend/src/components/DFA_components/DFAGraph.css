@@ -165,3 +165,25 @@
         box-shadow: 0 0 15px rgba(33, 150, 243, 0.4);
     }
 }
+
+.react-flow__edge.animated path {
+    stroke-dasharray: 5;
+    animation: dashdraw 0.5s linear infinite;
+}
+
+.react-flow__edge.active path {
+    stroke: #2196F3;
+    stroke-width: 2;
+}
+
+@keyframes dashdraw {
+    from {
+        stroke-dashoffset: 10;
+    }
+}
+
+.state-node.current-state {
+    background: #e3f2fd;
+    border-color: #2196F3;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3);
+}

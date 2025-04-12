@@ -32,7 +32,7 @@ const nodeTypes = {
     state: StateNode,
 };
 
-const DFAGraph = ({ states, transitions, startState, acceptStates, currentState, isPlaying }) => {
+const DFAGraph = ({ states, transitions, startState, acceptStates, currentState, currentTransition, isPlaying }) => {
     const getLayoutedElements = useCallback(() => {
         // Calculate radius and center
         const radius = Math.min(150, 600 / states.length);
@@ -53,12 +53,10 @@ const DFAGraph = ({ states, transitions, startState, acceptStates, currentState,
                 },
                 data: {
                     label: state,
-                    isAcceptState: acceptStates.has(state),
                     isStartState: state === startState,
-                    isCurrentState: isCurrentNode,
-                },
-                className: `${isCurrentNode && isPlaying ? 'active-node' : ''} 
-                           ${isCurrentNode ? 'highlight-node' : ''}`,
+                    isAcceptState: acceptStates.has(state),
+                    isCurrentState: isCurrentNode
+                }
             };
         });
 
@@ -70,12 +68,15 @@ const DFAGraph = ({ states, transitions, startState, acceptStates, currentState,
                     (e) => e.source === fromState && e.target === toState
                 );
 
+                const isActiveTransition = currentTransition &&
+                    currentTransition.from === fromState &&
+                    currentTransition.to === toState &&
+                    currentTransition.symbol === symbol;
+
                 if (existingEdge) {
-                    existingEdge.label = `${existingEdge.label}, ${symbol}`;
+                    existingEdge.label = `${existingEdge.label},${symbol}`;
                 } else {
                     const isSelfLoop = fromState === toState;
-                    const isActive = currentState === fromState;
-                    const isTransition = isPlaying && isActive;
 
                     edges.push({
                         id: `${fromState}-${symbol}-${toState}`,
@@ -83,36 +84,33 @@ const DFAGraph = ({ states, transitions, startState, acceptStates, currentState,
                         target: toState,
                         label: symbol,
                         type: isSelfLoop ? 'default' : 'smoothstep',
-                        animated: isTransition,
+                        animated: isActiveTransition,
                         style: {
-                            stroke: isActive ? '#2196F3' : '#555',
-                            strokeWidth: isActive ? 3 : 1,
-                            opacity: isActive ? 1 : 0.75,
+                            stroke: isActiveTransition ? '#2196F3' : '#555',
+                            strokeWidth: isActiveTransition ? 3 : 1,
+                            opacity: isActiveTransition ? 1 : 0.75,
                         },
                         labelStyle: {
-                            fill: isActive ? '#2196F3' : '#555',
+                            fill: isActiveTransition ? '#2196F3' : '#555',
                             fontSize: '14px',
-                            fontWeight: isActive ? 'bold' : 'normal',
-                            background: isActive ? '#e3f2fd' : 'transparent',
-                            padding: isActive ? '2px 4px' : '0',
+                            fontWeight: isActiveTransition ? 'bold' : 'normal',
+                            background: isActiveTransition ? '#e3f2fd' : 'transparent',
+                            padding: isActiveTransition ? '2px 4px' : '0',
                             borderRadius: '4px',
                         },
                         markerEnd: {
                             type: MarkerType.ArrowClosed,
                             width: 20,
                             height: 20,
-                            color: isActive ? '#2196F3' : '#555',
+                            color: isActiveTransition ? '#2196F3' : '#555',
                         },
                     });
                 }
             });
         });
 
-        return {
-            nodes,
-            edges
-        };
-    }, [states, transitions, startState, acceptStates, currentState, isPlaying]);
+        return { nodes, edges };
+    }, [states, transitions, startState, acceptStates, currentState, currentTransition, isPlaying]);
 
     const { nodes, edges } = getLayoutedElements();
 

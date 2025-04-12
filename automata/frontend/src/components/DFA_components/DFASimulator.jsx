@@ -40,6 +40,14 @@ const DFASimulator = () => {
         let steps = [];
         let currentState = dfa.startState;
 
+        // First step shows the initial state
+        steps.push({
+            state: currentState,
+            remainingInput: inputString,
+            description: `Starting in state ${currentState}`,
+            transition: null
+        });
+
         // Process each symbol
         for (let i = 0; i < inputString.length; i++) {
             const symbol = inputString[i];
@@ -62,21 +70,19 @@ const DFASimulator = () => {
             const fromState = currentState;
             const nextState = dfa.transitions[currentState][symbol];
 
-            // Add step before making the transition
+            // Add step showing the transition
             steps.push({
-                state: fromState,  // Show the state we're in before the transition
-                remainingInput: inputString.slice(i),
-                description: `In state ${fromState}, reading '${symbol}'`
+                state: nextState,
+                remainingInput: inputString.slice(i + 1),
+                description: `Read '${symbol}', moved from ${fromState} to ${nextState}`,
+                transition: {
+                    from: fromState,
+                    to: nextState,
+                    symbol: symbol
+                }
             });
 
             currentState = nextState;
-
-            // Add step after making the transition
-            steps.push({
-                state: currentState,  // Show the state after the transition
-                remainingInput: inputString.slice(i + 1),
-                description: `Read '${symbol}', moved from ${fromState} to ${currentState}`
-            });
         }
 
         const accepted = dfa.acceptStates.has(currentState);
@@ -84,7 +90,8 @@ const DFASimulator = () => {
         steps.push({
             state: currentState,
             remainingInput: '',
-            description: `Finished in state ${currentState}. String is ${accepted ? 'accepted' : 'rejected'}.`
+            description: `Finished in state ${currentState}. String is ${accepted ? 'accepted' : 'rejected'}.`,
+            transition: null
         });
 
         setSimulationSteps(steps);
@@ -201,6 +208,7 @@ const DFASimulator = () => {
                             startState={dfa.startState}
                             acceptStates={dfa.acceptStates}
                             currentState={simulationSteps.length > 0 && currentStep >= 0 ? simulationSteps[currentStep].state : null}
+                            currentTransition={simulationSteps.length > 0 && currentStep >= 0 ? simulationSteps[currentStep].transition : null}
                             isPlaying={isPlaying}
                         />
                     </div>
