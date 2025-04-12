@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { DFA, State, Symbol, TransitionFunction } from './types';
 
 export const useDFA = (initialDFA) => {
     const [states, setStates] = useState(initialDFA.states);
@@ -8,8 +7,8 @@ export const useDFA = (initialDFA) => {
     const [startState, setStartState] = useState(initialDFA.startState);
     const [acceptStates, setAcceptStates] = useState(initialDFA.acceptStates);
 
-    const addState = (statePrefix = 'q') => {
-        const newState = `${statePrefix}${states.length}`;
+    const addState = () => {
+        const newState = `q${states.length}`;
         setStates([...states, newState]);
         setTransitions({
             ...transitions,
@@ -17,8 +16,9 @@ export const useDFA = (initialDFA) => {
         });
     };
 
-    const addSymbol = (symbol: Symbol) => {
-        if (!alphabet.includes(symbol)) {
+    const addSymbol = () => {
+        const symbol = prompt('Enter new symbol:');
+        if (symbol && !alphabet.includes(symbol)) {
             setAlphabet([...alphabet, symbol]);
             const newTransitions = { ...transitions };
             states.forEach(state => {
@@ -31,7 +31,7 @@ export const useDFA = (initialDFA) => {
         }
     };
 
-    const updateTransition = (fromState: State, symbol: Symbol, toState: State) => {
+    const updateTransition = (fromState, symbol, toState) => {
         setTransitions({
             ...transitions,
             [fromState]: {
@@ -41,7 +41,7 @@ export const useDFA = (initialDFA) => {
         });
     };
 
-    const toggleAcceptState = (state: State) => {
+    const toggleAcceptState = (state) => {
         const newAcceptStates = new Set(acceptStates);
         if (newAcceptStates.has(state)) {
             newAcceptStates.delete(state);
@@ -51,7 +51,7 @@ export const useDFA = (initialDFA) => {
         setAcceptStates(newAcceptStates);
     };
 
-    const loadDFA = (dfa: DFA) => {
+    const loadDFA = (dfa) => {
         setStates(dfa.states);
         setAlphabet(dfa.alphabet);
         setTransitions(dfa.transitions);

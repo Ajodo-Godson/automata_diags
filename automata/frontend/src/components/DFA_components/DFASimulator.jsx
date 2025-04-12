@@ -3,7 +3,7 @@ import './DFASimulator.css';
 import DFAGraph from './DFAGraph';
 import { useExamples } from './examples';
 import { useDFA } from './useDFA';
-import { useSimulation } from './useSimulation'; // We can create this later
+// import { useSimulation } from './useSimulation'; // We can create this later
 
 const DFASimulator = () => {
     const { examples } = useExamples();
