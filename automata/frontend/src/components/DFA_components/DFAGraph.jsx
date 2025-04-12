@@ -110,7 +110,7 @@ const DFAGraph = ({ states, transitions, startState, acceptStates, currentState,
         });
 
         return { nodes, edges };
-    }, [states, transitions, startState, acceptStates, currentState, currentTransition, isPlaying]);
+    }, [states, transitions, startState, acceptStates, currentState, currentTransition]);
 
     const { nodes, edges } = getLayoutedElements();
 
