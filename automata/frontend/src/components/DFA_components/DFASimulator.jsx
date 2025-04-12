@@ -111,12 +111,33 @@ const DFASimulator = () => {
         setCurrentStep(0);
     };
 
+    useEffect(() => {
+        const handleAddState = () => dfa.addState();
+        const handleAddTransition = () => dfa.addTransition();
+        const handleClearAll = () => dfa.clearAll();
+        const handleUndo = () => dfa.undo();
+        const handleRedo = () => dfa.redo();
+
+        window.addEventListener('addState', handleAddState);
+        window.addEventListener('addTransition', handleAddTransition);
+        window.addEventListener('clearAll', handleClearAll);
+        window.addEventListener('undo', handleUndo);
+        window.addEventListener('redo', handleRedo);
+
+        return () => {
+            window.removeEventListener('addState', handleAddState);
+            window.removeEventListener('addTransition', handleAddTransition);
+            window.removeEventListener('clearAll', handleClearAll);
+            window.removeEventListener('undo', handleUndo);
+            window.removeEventListener('redo', handleRedo);
+        };
+    }, [dfa]);
+
     return (
         <div className="dfa-simulator">
             <h2>DFA Simulator</h2>
 
             <div className="main-content">
-                {/* Left column: Graph and Controls */}
                 <div className="left-column">
                     <div className="dfa-graph">
                         <h3>DFA Visualization</h3>
@@ -130,9 +151,70 @@ const DFASimulator = () => {
                         />
                     </div>
 
-                    <div className="control-panel">
-                        <button onClick={() => dfa.addState()}>Add State</button>
-                        <button onClick={() => dfa.addSymbol()}>Add Symbol</button>
+                    <div className="toolbox">
+                        <h3>Toolbox</h3>
+                        <div className="tool-buttons">
+                            <button
+                                onClick={() => dfa.addState()}
+                                className="tool-button"
+                            >
+                                Add State
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const symbol = prompt('Enter new symbol:');
+                                    if (symbol && symbol.trim()) {
+                                        dfa.addSymbol(symbol.trim());
+                                    }
+                                }}
+                                className="tool-button"
+                            >
+                                Add Symbol
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const newState = prompt('Enter state name (e.g., q0, q1):');
+                                    if (newState && newState.trim()) {
+                                        dfa.addState(newState.trim());
+                                    }
+                                }}
+                                className="tool-button"
+                            >
+                                Custom State
+                            </button>
+                            <button
+                                onClick={dfa.addTransition}
+                                className="tool-button"
+                            >
+                                Add Transition
+                            </button>
+                            <button
+                                onClick={dfa.clearAll}
+                                className="tool-button"
+                            >
+                                Clear All
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="history">
+                        <h3>History</h3>
+                        <div className="history-buttons">
+                            <button
+                                onClick={dfa.undo}
+                                disabled={!dfa.canUndo}
+                                className="history-button"
+                            >
+                                Undo
+                            </button>
+                            <button
+                                onClick={dfa.redo}
+                                disabled={!dfa.canRedo}
+                                className="history-button"
+                            >
+                                Redo
+                            </button>
+                        </div>
                     </div>
 
                     <div className="string-tester">
@@ -152,7 +234,6 @@ const DFASimulator = () => {
                     </div>
                 </div>
 
-                {/* Right column: Simulation Steps and Table */}
                 <div className="right-column">
                     <div className="examples-panel">
                         <h3>Load Example</h3>

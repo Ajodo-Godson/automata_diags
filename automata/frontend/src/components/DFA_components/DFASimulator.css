@@ -134,13 +134,14 @@ tr.current-state td {
 }
 
 .dfa-graph {
-    position: sticky;
-    top: 20px;
-    margin-bottom: 20px;
+    position: relative;
     background-color: white;
     border-radius: 4px;
     border: 1px solid #ddd;
     padding: 20px;
+    margin-bottom: 20px;
+    height: 500px;
+    overflow: hidden;
 }
 
 .dfa-graph h3 {
@@ -239,20 +240,32 @@ tr.current-state td {
 .right-column {
     flex: 1;
     min-width: 0;
-    max-height: calc(100vh - 100px);
-    /* Adjust based on your header height */
+    height: calc(100vh - 100px);
     overflow-y: auto;
     padding-right: 1rem;
-}
-
-/* Make the graph container taller */
-.dfa-graph-container {
-    height: 500px !important;
+    position: relative;
 }
 
 /* Ensure tables don't overflow */
 .transition-table {
-    overflow-x: auto;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    margin: 20px 0;
+    overflow: hidden;
+}
+
+.transition-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Make table header sticky */
+.transition-table thead th {
+    position: sticky;
+    top: 0;
+    background: #f5f5f5;
+    z-index: 1;
 }
 
 /* Responsive design */
@@ -269,4 +282,79 @@ tr.current-state td {
     .dfa-graph {
         position: static;
     }
+}
+
+.toolbox {
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.toolbox h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.tool-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.tool-button {
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    flex: 1;
+    min-width: 120px;
+    transition: background-color 0.2s;
+}
+
+.tool-button:hover {
+    background-color: #45a049;
+}
+
+.history {
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.history h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.history-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.history-button {
+    padding: 8px 16px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    flex: 1;
+    transition: background-color 0.2s;
+}
+
+.history-button:hover:not(:disabled) {
+    background-color: #1976D2;
+}
+
+.history-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
 }

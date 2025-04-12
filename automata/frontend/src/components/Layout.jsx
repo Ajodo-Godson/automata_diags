@@ -26,15 +26,29 @@ const Layout = ({ children }) => {
 
                     <div className="toolbox">
                         <h3>Toolbox</h3>
-                        <button>Add State</button>
-                        <button>Add Transition</button>
-                        <button>Clear All</button>
+                        <div className="tool-buttons">
+                            <button onClick={() => window.dispatchEvent(new CustomEvent('addState'))}>
+                                Add State
+                            </button>
+                            <button onClick={() => window.dispatchEvent(new CustomEvent('addTransition'))}>
+                                Add Transition
+                            </button>
+                            <button onClick={() => window.dispatchEvent(new CustomEvent('clearAll'))}>
+                                Clear All
+                            </button>
+                        </div>
                     </div>
 
                     <div className="history">
                         <h3>History</h3>
-                        <button>Undo</button>
-                        <button>Redo</button>
+                        <div className="history-buttons">
+                            <button onClick={() => window.dispatchEvent(new CustomEvent('undo'))}>
+                                Undo
+                            </button>
+                            <button onClick={() => window.dispatchEvent(new CustomEvent('redo'))}>
+                                Redo
+                            </button>
+                        </div>
                     </div>
                 </aside>
 
