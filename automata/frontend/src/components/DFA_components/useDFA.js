@@ -179,6 +179,67 @@ export const useDFA = (initialDFA) => {
         });
     }, [states, alphabet, transitions, startState, acceptStates, saveToHistory]);
 
+    const deleteState = useCallback((stateToDelete) => {
+        if (stateToDelete === startState) {
+            alert("Cannot delete start state");
+            return;
+        }
+
+        const newStates = states.filter(s => s !== stateToDelete);
+        const newTransitions = { ...transitions };
+
+        // Remove transitions from this state
+        delete newTransitions[stateToDelete];
+
+        // Remove transitions to this state
+        Object.keys(newTransitions).forEach(fromState => {
+            Object.keys(newTransitions[fromState]).forEach(symbol => {
+                if (newTransitions[fromState][symbol] === stateToDelete) {
+                    delete newTransitions[fromState][symbol];
+                }
+            });
+        });
+
+        // Remove from accept states if present
+        const newAcceptStates = new Set(acceptStates);
+        newAcceptStates.delete(stateToDelete);
+
+        setStates(newStates);
+        setTransitions(newTransitions);
+        setAcceptStates(newAcceptStates);
+
+        saveToHistory({
+            states: newStates,
+            alphabet,
+            transitions: newTransitions,
+            startState,
+            acceptStates: newAcceptStates
+        });
+    }, [states, alphabet, transitions, startState, acceptStates, saveToHistory]);
+
+    const deleteSymbol = useCallback((symbolToDelete) => {
+        const newAlphabet = alphabet.filter(s => s !== symbolToDelete);
+        const newTransitions = { ...transitions };
+
+        // Remove all transitions using this symbol
+        Object.keys(newTransitions).forEach(fromState => {
+            if (newTransitions[fromState][symbolToDelete]) {
+                delete newTransitions[fromState][symbolToDelete];
+            }
+        });
+
+        setAlphabet(newAlphabet);
+        setTransitions(newTransitions);
+
+        saveToHistory({
+            states: states,
+            alphabet: newAlphabet,
+            transitions: newTransitions,
+            startState,
+            acceptStates
+        });
+    }, [states, alphabet, transitions, startState, acceptStates, saveToHistory]);
+
     return {
         states,
         alphabet,
@@ -198,6 +259,8 @@ export const useDFA = (initialDFA) => {
         canUndo: currentHistoryIndex > 0,
         canRedo: currentHistoryIndex < history.length - 1,
         hasTransition,
-        removeTransition
+        removeTransition,
+        deleteState,
+        deleteSymbol
     };
 }; 

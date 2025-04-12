@@ -388,3 +388,42 @@ tr.current-state td {
     background-color: #ccc;
     cursor: not-allowed;
 }
+
+.delete-symbol,
+.delete-state {
+    background: none;
+    border: none;
+    color: #ff4444;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 2px 6px;
+    margin-left: 8px;
+    border-radius: 4px;
+    opacity: 0.6;
+    transition: all 0.2s;
+}
+
+.delete-symbol:hover,
+.delete-state:hover {
+    opacity: 1;
+    background-color: #ffebee;
+}
+
+.delete-symbol:disabled,
+.delete-state:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+    background: none;
+}
+
+th {
+    position: relative;
+}
+
+.delete-symbol {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    transform: translateY(-50%);
+}

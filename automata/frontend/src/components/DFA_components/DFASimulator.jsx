@@ -248,9 +248,23 @@ const DFASimulator = () => {
                                 <tr>
                                     <th>State</th>
                                     {dfa.alphabet.map(symbol => (
-                                        <th key={symbol}>{symbol}</th>
+                                        <th key={symbol}>
+                                            {symbol}
+                                            <button
+                                                className="delete-symbol"
+                                                onClick={() => {
+                                                    if (window.confirm(`Are you sure you want to delete symbol '${symbol}'?\nThis will remove all transitions using this symbol.`)) {
+                                                        dfa.deleteSymbol(symbol);
+                                                    }
+                                                }}
+                                                title="Delete symbol"
+                                            >
+                                                ×
+                                            </button>
+                                        </th>
                                     ))}
                                     <th>Accept?</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -287,6 +301,24 @@ const DFASimulator = () => {
                                                 checked={dfa.acceptStates.has(state)}
                                                 onChange={() => dfa.toggleAcceptState(state)}
                                             />
+                                        </td>
+                                        <td>
+                                            <button
+                                                className="delete-state"
+                                                onClick={() => {
+                                                    if (state === dfa.startState) {
+                                                        alert("Cannot delete start state");
+                                                        return;
+                                                    }
+                                                    if (window.confirm(`Are you sure you want to delete state '${state}'?\nThis will remove all transitions to and from this state.`)) {
+                                                        dfa.deleteState(state);
+                                                    }
+                                                }}
+                                                disabled={state === dfa.startState}
+                                                title={state === dfa.startState ? "Cannot delete start state" : "Delete state"}
+                                            >
+                                                ×
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
