@@ -23,3 +23,4 @@ def test_nfa_accept():
     assert nfa.is_accept("a") == False  # "a" leads q0->q1 but no b => no accept
     assert nfa.is_accept("ab") == True  # q0->a->q1->b->q2
     assert nfa.is_accept("b") == True  # q0->ε->q1->b->q2
+    assert nfa.is_accept("aa") == False # if a is not accepted, then aa should be rejected
