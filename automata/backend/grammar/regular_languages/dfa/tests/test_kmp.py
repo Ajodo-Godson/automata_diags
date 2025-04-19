@@ -1,4 +1,4 @@
-import pytest  # noqa: F401
+import pytest  
 from automata.backend.grammar.regular_languages.dfa.dfa_mod_algo import (
     create_dfa_from_pattern,
     find_pattern_in_text,
