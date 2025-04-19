@@ -3,6 +3,7 @@ name: Deploy React App to GitHub Pages
 on:
   push:
     branches: ["main"]
+    paths: ['automata/frontend/**']
   workflow_dispatch:
 
 permissions:
