@@ -28,4 +28,9 @@ describe('Layout', () => {
 
         expect(screen.getByTestId('test-content')).toBeInTheDocument();
     });
-}); 
+
+    test('includes export json button', () => {
+        render(<Layout />);
+        expect(screen.getByText('Export JSON')).toBeInTheDocument();
+    });
+});

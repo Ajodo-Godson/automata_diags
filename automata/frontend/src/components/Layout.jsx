@@ -42,6 +42,9 @@ const Layout = ({ children }) => {
                             <button onClick={() => window.dispatchEvent(new CustomEvent('clearAll'))}>
                                 Clear All
                             </button>
+                            <button onClick={() => window.dispatchEvent(new CustomEvent('exportJson'))}>
+                                Export JSON
+                            </button>
                         </div>
                     </div>
 

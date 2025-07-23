@@ -47,4 +47,13 @@ describe('DFASimulator', () => {
         // Check result
         expect(screen.getByText('String accepted')).toBeInTheDocument();
     });
-}); 
+
+    test('exports DFA json', () => {
+        render(<DFASimulator />);
+        const exportButton = screen.getByText('Export JSON');
+        const writeText = jest.fn(() => Promise.resolve());
+        Object.assign(navigator, { clipboard: { writeText } });
+        fireEvent.click(exportButton);
+        expect(writeText).toHaveBeenCalled();
+    });
+});
