@@ -30,7 +30,12 @@ def create_dfa_from_table(
     """
     Build a DFA from a table of transitions.
     """
+    # Collect all states that appear either as a source or target
     all_states = set(table.keys())
+    for trans_dict in table.values():
+        all_states.update(trans_dict.values())
+    all_states.add(start_state)
+    all_states.update(accept_states)
     if alphabet is None:
         alpha_set = set()
         for trans_dict in table.values():
