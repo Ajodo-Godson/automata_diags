@@ -1,5 +1,6 @@
 import pytest
-from backend.grammar.regular_languages.nfa.nfa_mod import NFA
+from automata.backend.grammar.regular_languages.nfa.nfa_mod import NFA
+from automata.backend.grammar.regular_languages.dfa.dfa_mod import DFA
 
 
 def test_nfa_accept():
@@ -24,3 +25,9 @@ def test_nfa_accept():
     assert nfa.is_accept("ab") == True  # q0->a->q1->b->q2
     assert nfa.is_accept("b") == True  # q0->ε->q1->b->q2
     assert nfa.is_accept("aa") == False # if a is not accepted, then aa should be rejected
+
+    # Convert to DFA and ensure same behaviour
+    dfa = nfa.to_dfa()
+    assert dfa.accepts("ab")
+    assert dfa.accepts("b")
+    assert not dfa.accepts("aa")
