@@ -240,6 +240,16 @@ export const useDFA = (initialDFA) => {
         });
     }, [states, alphabet, transitions, startState, acceptStates, saveToHistory]);
 
+    const exportToJSON = useCallback(() => {
+        return JSON.stringify({
+            states,
+            alphabet,
+            transitions,
+            startState,
+            acceptStates: Array.from(acceptStates)
+        }, null, 2);
+    }, [states, alphabet, transitions, startState, acceptStates]);
+
     return {
         states,
         alphabet,
@@ -261,6 +271,7 @@ export const useDFA = (initialDFA) => {
         hasTransition,
         removeTransition,
         deleteState,
-        deleteSymbol
+        deleteSymbol,
+        exportToJSON
     };
-}; 
+};

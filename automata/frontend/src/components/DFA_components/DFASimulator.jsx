@@ -174,6 +174,18 @@ const DFASimulator = () => {
         const handleClearAll = () => dfa.clearAll();
         const handleUndo = () => dfa.undo();
         const handleRedo = () => dfa.redo();
+        const handleExportJson = () => {
+            const json = dfa.exportToJSON();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(json).then(() => {
+                    alert('DFA JSON copied to clipboard');
+                }, () => {
+                    alert(json);
+                });
+            } else {
+                alert(json);
+            }
+        };
 
         window.addEventListener('addState', handleAddState);
         window.addEventListener('addSymbol', handleAddSymbol);
@@ -182,6 +194,7 @@ const DFASimulator = () => {
         window.addEventListener('clearAll', handleClearAll);
         window.addEventListener('undo', handleUndo);
         window.addEventListener('redo', handleRedo);
+        window.addEventListener('exportJson', handleExportJson);
 
         return () => {
             window.removeEventListener('addState', handleAddState);
@@ -191,6 +204,7 @@ const DFASimulator = () => {
             window.removeEventListener('clearAll', handleClearAll);
             window.removeEventListener('undo', handleUndo);
             window.removeEventListener('redo', handleRedo);
+            window.removeEventListener('exportJson', handleExportJson);
         };
     }, [dfa]);
 
