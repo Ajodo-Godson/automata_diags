@@ -1,8 +1,12 @@
 from typing import Dict, Set
-import graphviz
 from pathlib import Path
 import shutil
 import logging
+
+try:
+    import graphviz  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    graphviz = None
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +22,12 @@ class AutomataDrawer:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Check if graphviz is installed
-        if not shutil.which("dot"):
+        # Warn if the graphviz package or executable is missing
+        if graphviz is None:
+            logger.warning(
+                "Python package 'graphviz' not found. Automata drawings will be disabled."
+            )
+        elif not shutil.which("dot"):
             logger.warning(
                 "Graphviz 'dot' command not found. Please install Graphviz:\n"
                 "  - MacOS: brew install graphviz\n"
@@ -84,6 +92,10 @@ class AutomataDrawer:
         Raises:
             RuntimeError: If Graphviz is not installed
         """
+        if graphviz is None:
+            raise RuntimeError(
+                "Python package 'graphviz' is required to draw automata."
+            )
         if not shutil.which("dot"):
             raise RuntimeError(
                 "Graphviz is not installed. Please install it first:\n"
