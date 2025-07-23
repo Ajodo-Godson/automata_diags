@@ -1,7 +1,7 @@
 import React from 'react';
 import './Layout.css';
 
-const Layout = ({ children }) => {
+const Layout = ({ children, automata, setAutomata }) => {
     return (
         <div className="layout">
             <header className="header">
@@ -19,9 +19,30 @@ const Layout = ({ children }) => {
                 <aside className="sidebar">
                     <div className="automata-types">
                         <h3>Automata Types</h3>
-                        <button className="type-btn active">DFA</button>
-                        <button className="type-btn disabled">NFA (Coming Soon)</button>
-                        <button className="type-btn disabled">PDA (Coming Soon)</button>
+                        <button
+                            className={`type-btn ${automata === 'DFA' ? 'active' : ''}`}
+                            onClick={() => setAutomata('DFA')}
+                        >
+                            DFA
+                        </button>
+                        <button
+                            className={`type-btn ${automata === 'PDA' ? 'active' : ''}`}
+                            onClick={() => setAutomata('PDA')}
+                        >
+                            PDA
+                        </button>
+                        <button
+                            className={`type-btn ${automata === 'TM' ? 'active' : ''}`}
+                            onClick={() => setAutomata('TM')}
+                        >
+                            TM
+                        </button>
+                        <button
+                            className={`type-btn ${automata === 'CFG' ? 'active' : ''}`}
+                            onClick={() => setAutomata('CFG')}
+                        >
+                            CFG
+                        </button>
                     </div>
 
                     <div className="toolbox">
