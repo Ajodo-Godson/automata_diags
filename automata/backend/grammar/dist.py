@@ -49,6 +49,14 @@ class Alphabet:
         return set(self._symbols)
 
 
+class OutputAlphabet(Alphabet):
+    """
+    Represents a finite set of output symbols for a transducer.
+    Inherits from Alphabet to reuse the same underlying logic.
+    """
+    pass
+
+
 class StateSet:
     """
     Represents a finite set of states.
