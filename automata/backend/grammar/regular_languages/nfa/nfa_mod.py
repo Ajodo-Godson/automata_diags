@@ -2,6 +2,8 @@ from typing import Dict, Set
 from automata.backend.grammar.dist import Alphabet, StateSet, State, Symbol, Word
 from automata.backend.grammar.automaton_base import Automaton
 from .algo import nfa_bfs
+from automata.backend.grammar.regular_languages.dfa.dfa_mod import DFA
+
 
 class NFA(Automaton[State]):
     def __init__(
@@ -16,6 +18,13 @@ class NFA(Automaton[State]):
         super().__init__(states, alphabet, start_state, accept_states)
         self.transitions = transitions
         self.epsilon_symbol = epsilon_symbol
+
+    def to_dfa(self) -> "DFA":
+        """
+        Convert this NFA to an equivalent DFA.
+        """
+        from .nfa_to_dfa import nfa_to_dfa
+        return nfa_to_dfa(self)
 
     def accepts(self, word: Word) -> bool:
         """
