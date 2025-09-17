@@ -17,11 +17,19 @@ def main():
     B -> b
     B -> ε
     """
-    cfg = CFG.from_string(grammar_str)
+
+    #2. Define a grammar that is not in CNF
+    grammar_str2 = """
+    S -> A B A
+    A -> Aa
+    A -> epsilon
+    """
+    cfg = CFG.from_string(grammar_str2)
 
     print("Original CFG:")
     for prod in cfg.productions:
         print(f"  {prod}")
+
 
 
     # 2. Convert the grammar to CNF

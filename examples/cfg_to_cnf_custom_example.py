@@ -16,7 +16,15 @@ def main():
     A -> B
     B -> ε
     """
-    cfg = CFG.from_string(grammar_str)
+
+
+    #2. Define a grammar that is not in CNF
+    grammar_str2 = """
+    S -> A S B
+    A -> a A S | a | ε 
+    B -> S b S | A | b b
+    """
+    cfg = CFG.from_string(grammar_str2)
 
     print("Original CFG:")
     for prod in cfg.productions:
