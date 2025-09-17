@@ -24,7 +24,7 @@ class NFA(Automaton[State]):
         """
         Create an NFA from a regular expression.
         """
-        from .regex_to_nfa import regex_to_nfa
+        from ..regex_to_nfa import regex_to_nfa
         return regex_to_nfa(regex)
 
     def to_dfa(self) -> "DFA":
