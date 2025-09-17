@@ -1,18 +1,19 @@
 from collections import deque
-from typing import Dict, Set, Optional
+from typing import Dict, Set
+from automata.backend.grammar.dist import State, Symbol, Word, StateSet
 
 
 def epsilon_closure(
-    states: Set[str],
-    transitions: Dict[str, Dict[str, Set[str]]],
-    epsilon_symbol: str = "",
-) -> Set[str]:
+    states: Set[State],
+    transitions: Dict[State, Dict[Symbol, Set[State]]],
+    epsilon_symbol: Symbol,
+) -> Set[State]:
     """
     Compute the ε-closure of a set of states.
     'transitions' is a dict: transitions[state][symbol] = {next_states...}
     'epsilon_symbol' is often "" or "ε"
     """
-    stack = deque(states)
+    stack = deque(list(states))
     closure = set(states)
 
     while stack:
@@ -27,11 +28,11 @@ def epsilon_closure(
 
 
 def nfa_accept_bfs(
-    transitions: Dict[str, Dict[str, Set[str]]],
-    start_state: str,
-    accept_states: Set[str],
-    input_string: str,
-    epsilon_symbol: str = "",
+    transitions: Dict[State, Dict[Symbol, StateSet]],
+    start_state: State,
+    accept_states: StateSet,
+    input_string: Word,
+    epsilon_symbol: Symbol,
 ) -> bool:
     """
     BFS-based NFA acceptance check.
@@ -47,7 +48,7 @@ def nfa_accept_bfs(
         for s in current_states:
             # If there's a transition on this symbol
             if symbol in transitions.get(s, {}):
-                next_states |= transitions[s][symbol]
+                next_states.update(transitions[s][symbol].states())
         # Then take ε-closure of next_states
         current_states = epsilon_closure(next_states, transitions, epsilon_symbol)
         # If no states remain, we can reject early
@@ -55,4 +56,4 @@ def nfa_accept_bfs(
             return False
 
     # 3. If final set of states intersects with accept_states => accept
-    return not current_states.isdisjoint(accept_states)
+    return not current_states.isdisjoint(accept_states.states())
