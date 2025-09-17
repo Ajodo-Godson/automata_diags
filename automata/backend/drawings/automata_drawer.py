@@ -225,7 +225,8 @@ class AutomataDrawer:
         for from_state, trans in transitions.items():
             for symbol, to_states in trans.items():
                 for to_state in to_states:
-                    dot.edge(from_state, to_state, label=symbol)
+                    label = "ε" if symbol == "" else symbol
+                    dot.edge(from_state, to_state, label=label)
         
         output_path = self.output_dir / filename
         dot.render(str(output_path), format=format, cleanup=True)
