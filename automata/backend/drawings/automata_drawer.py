@@ -250,3 +250,63 @@ class AutomataDrawer:
             filename=filename,
             format=format,
         )
+
+    def draw_mealy_machine(
+        self,
+        transitions: Dict[str, Dict[str, str]],
+        output_function: Dict[str, Dict[str, str]],
+        start_state: str,
+        filename: str = "mealy_machine",
+        format: str = "png",
+    ) -> str:
+        """
+        Draw a Mealy Machine using graphviz.
+        """
+        if not shutil.which("dot"):
+            raise RuntimeError("Graphviz is not installed.")
+
+        dot = graphviz.Digraph(comment="Mealy Machine Visualization")
+        dot.attr(rankdir="LR")
+        dot.attr("graph", pad="0.5", nodesep="0.5", ranksep="1.0")
+        dot.attr("node", shape="circle")
+        dot.attr("edge", fontsize="10")
+
+        all_states = set(transitions.keys())
+        for state in all_states:
+            dot.node(state, state)
+
+        dot.node("", "", shape="none")
+        dot.edge("", start_state)
+
+        for from_state, trans in transitions.items():
+            for symbol, to_state in trans.items():
+                output = output_function[from_state][symbol]
+                label = f"{symbol} / {output}"
+                dot.edge(from_state, to_state, label=label)
+
+        output_path = self.output_dir / filename
+        dot.render(str(output_path), format=format, cleanup=True)
+        return str(output_path) + f".{format}"
+
+    def draw_mealy_machine_from_object(
+        self, mealy, filename: str = "mealy_machine", format: str = "png"
+    ) -> str:
+        """
+        Draw a Mealy Machine from a MealyMachine object.
+        """
+        primitive_transitions = {
+            str(s): {str(sym): str(t) for sym, t in trans.items()}
+            for s, trans in mealy.transitions.items()
+        }
+        primitive_output_function = {
+            str(s): {str(sym): str(out) for sym, out in out_fun.items()}
+            for s, out_fun in mealy.output_function.items()
+        }
+
+        return self.draw_mealy_machine(
+            transitions=primitive_transitions,
+            output_function=primitive_output_function,
+            start_state=str(mealy._start_state),
+            filename=filename,
+            format=format,
+        )

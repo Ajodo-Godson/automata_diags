@@ -3,6 +3,8 @@ from typing import NewType, Set, Iterable, Union, Sequence
 Symbol = NewType("Symbol", str)
 State = NewType("State", str)
 Word = Sequence[Symbol]
+NonTerminal = NewType("NonTerminal", str)
+Terminal = NewType("Terminal", str)
 
 
 class Alphabet:

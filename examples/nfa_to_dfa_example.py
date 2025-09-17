@@ -1,3 +1,7 @@
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+
 from automata.backend.grammar.dist import State, Alphabet, StateSet, Symbol
 from automata.backend.grammar.regular_languages.nfa.nfa_mod import NFA
 from automata.backend.drawings.automata_drawer import AutomataDrawer
