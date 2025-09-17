@@ -186,7 +186,66 @@ class AutomataDrawer:
         return self.draw_dfa(
             transitions=dfa._transitions,
             start_state=dfa._start_state,
-            accept_states=dfa._accept_states,
+            accept_states=dfa._accept_states.states(),
+            filename=filename,
+            format=format,
+        )
+
+    def draw_nfa(
+        self,
+        transitions: Dict[str, Dict[str, Set[str]]],
+        start_state: str,
+        accept_states: Set[str],
+        filename: str = "nfa",
+        format: str = "png",
+    ) -> str:
+        """
+        Draw an NFA using graphviz and save it to a file.
+        """
+        if not shutil.which("dot"):
+            raise RuntimeError("Graphviz is not installed.")
+
+        dot = graphviz.Digraph(comment="NFA Visualization")
+        dot.attr(rankdir="LR")
+        dot.attr("graph", pad="0.5", nodesep="0.5", ranksep="0.5")
+        dot.attr("node", shape="circle", height="0.5", width="0.5", fontsize="12", margin="0.05")
+        dot.attr("edge", fontsize="12", arrowsize="0.7")
+
+        all_states = set(transitions.keys()) | {s for t in transitions.values() for u in t.values() for s in u}
+
+        for state in all_states:
+            if state in accept_states:
+                dot.node(state, state, shape="doublecircle")
+            else:
+                dot.node(state, state, shape="circle")
+        
+        dot.node("", "", shape="none")
+        dot.edge("", start_state)
+
+        for from_state, trans in transitions.items():
+            for symbol, to_states in trans.items():
+                for to_state in to_states:
+                    dot.edge(from_state, to_state, label=symbol)
+        
+        output_path = self.output_dir / filename
+        dot.render(str(output_path), format=format, cleanup=True)
+        return str(output_path) + f".{format}"
+
+    def draw_nfa_from_object(
+        self, nfa, filename: str = "nfa", format: str = "png"
+    ) -> str:
+        """
+        Draw an NFA from an NFA object.
+        """
+        primitive_transitions: Dict[str, Dict[str, Set[str]]] = {
+            str(state): {str(symbol): {str(s) for s in next_states.states()} for symbol, next_states in trans.items()}
+            for state, trans in nfa.transitions.items()
+        }
+
+        return self.draw_nfa(
+            transitions=primitive_transitions,
+            start_state=str(nfa._start_state),
+            accept_states={str(s) for s in nfa._accept_states.states()},
             filename=filename,
             format=format,
         )
