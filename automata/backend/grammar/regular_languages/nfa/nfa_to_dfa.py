@@ -16,7 +16,7 @@ def nfa_to_dfa(nfa: NFA) -> DFA:
     dfa_accept_states: Set[State] = set()
 
     # The states in the DFA are frozensets of states from the NFA
-    nfa_start_closure = frozenset(epsilon_closure({nfa.start_state}, nfa.transitions, nfa.epsilon_symbol))
+    nfa_start_closure = frozenset(epsilon_closure({nfa._start_state}, nfa.transitions, nfa.epsilon_symbol))
     
     queue = deque([nfa_start_closure])
     processed_states = {nfa_start_closure}
@@ -27,14 +27,14 @@ def nfa_to_dfa(nfa: NFA) -> DFA:
 
     dfa_start_state = state_name(nfa_start_closure)
     dfa_states.add(dfa_start_state)
-    if not nfa_start_closure.isdisjoint(nfa.accept_states.states()):
+    if not nfa_start_closure.isdisjoint(nfa._accept_states.states()):
         dfa_accept_states.add(dfa_start_state)
 
     while queue:
         current_nfa_states = queue.popleft()
         current_dfa_state = state_name(current_nfa_states)
 
-        for symbol in nfa.alphabet.symbols():
+        for symbol in nfa._alphabet.symbols():
             next_nfa_states_set = set()
             for nfa_state in current_nfa_states:
                 if symbol in nfa.transitions.get(nfa_state, {}):
@@ -51,7 +51,7 @@ def nfa_to_dfa(nfa: NFA) -> DFA:
 
                 new_dfa_state = state_name(next_nfa_states_closure)
                 dfa_states.add(new_dfa_state)
-                if not next_nfa_states_closure.isdisjoint(nfa.accept_states.states()):
+                if not next_nfa_states_closure.isdisjoint(nfa._accept_states.states()):
                     dfa_accept_states.add(new_dfa_state)
 
             if current_dfa_state not in dfa_transitions:
@@ -60,7 +60,7 @@ def nfa_to_dfa(nfa: NFA) -> DFA:
 
     return DFA(
         states=StateSet.from_states(dfa_states),
-        alphabet=nfa.alphabet,
+        alphabet=nfa._alphabet,
         transitions=dfa_transitions,
         start_state=dfa_start_state,
         accept_states=StateSet.from_states(dfa_accept_states)

@@ -32,18 +32,18 @@ class NFA(Automaton[State]):
         """
         return nfa_bfs.nfa_accept_bfs(
             transitions=self.transitions,
-            start_state=self.start_state,
-            accept_states=self.accept_states,
+            start_state=self._start_state,
+            accept_states=self._accept_states,
             input_string=word,
             epsilon_symbol=self.epsilon_symbol,
         )
 
     def __str__(self):
         return (
-            f"NFA(states={self.states}, "
-            f"alphabet={self.alphabet}, "
+            f"NFA(states={self._states}, "
+            f"alphabet={self._alphabet}, "
             f"transitions={self.transitions}, "
-            f"start_state={self.start_state}, "
-            f"accept_states={self.accept_states}, "
+            f"start_state={self._start_state}, "
+            f"accept_states={self._accept_states}, "
             f"epsilon_symbol={self.epsilon_symbol})"
         )
