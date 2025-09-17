@@ -8,13 +8,20 @@ def main():
     """
     Shows an example of converting a user-provided CFG to Chomsky Normal Form.
     """
-    # 1. Define the user-provided grammar
+    # # 1. Define the user-provided grammar
+    # grammar_str = """
+    # S -> A A A
+    # S -> B
+    # A -> a A
+    # A -> B
+    # B -> ε
+    # """
+
+     # 1. Define the user-provided grammar
     grammar_str = """
-    S -> A A A
-    S -> B
-    A -> a A
-    A -> B
-    B -> ε
+    S -> AbA
+    A -> Aa
+    A -> epsilon
     """
     cfg = CFG.from_string(grammar_str)
 
