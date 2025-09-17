@@ -1,5 +1,7 @@
 from typing import List, Set, Tuple, Union, Dict
 from collections import defaultdict
+import itertools
+import copy
 from automata.backend.grammar.dist import NonTerminal, Terminal
 
 class Production:
@@ -41,6 +43,9 @@ class SCFG:
         self.terminals = terminals
         self.productions = productions
         self.start_symbol = start_symbol
+        self._productions_map = defaultdict(list)
+        for p in self.productions:
+            self._productions_map[p.lhs].append(p)
 
     def __repr__(self):
         return (
@@ -93,35 +98,129 @@ class SCFG:
 
     def to_cnf(self) -> "SCFG":
         """
-        Convert the grammar to Chomsky Normal Form.
-        This is a simplified version and has limitations.
+        Convert the grammar to Chomsky Normal Form using the provided algorithm.
         """
-        # This is a complex process. For now, we'll assume the grammar
-        # is already close to CNF and just handle terminal productions.
+        cnf_scfg = self._eliminate_start()
+        cnf_scfg = cnf_scfg._eliminate_null()
+        cnf_scfg = cnf_scfg._eliminate_unit()
+        cnf_scfg = cnf_scfg._binarize()
+        cnf_scfg = cnf_scfg._separate_terminals()
+        return cnf_scfg
+
+    def _eliminate_start(self) -> "SCFG":
+        """Step 1: If the start symbol appears on the RHS, create a new start symbol."""
+        scfg = copy.deepcopy(self)
+        start_on_rhs = any(scfg.start_symbol in p.rhs for p in scfg.productions)
+        
+        if start_on_rhs:
+            new_start = NonTerminal(f"{scfg.start_symbol}'")
+            scfg.non_terminals.add(new_start)
+            new_prod = Production(new_start, (scfg.start_symbol,), 1.0)
+            scfg.productions.insert(0, new_prod)
+            scfg.start_symbol = new_start
+        return scfg
+
+    def _eliminate_null(self) -> "SCFG":
+        """Step 2: Remove Null productions."""
+        scfg = copy.deepcopy(self)
+        nullable = {p.lhs for p in scfg.productions if not p.rhs}
+        
+        changed = True
+        while changed:
+            changed = False
+            for p in scfg.productions:
+                if all(s in nullable for s in p.rhs) and p.lhs not in nullable:
+                    nullable.add(p.lhs)
+                    changed = True
+        
         new_productions = []
-        new_non_terminals = set(self.non_terminals)
+        for p in scfg.productions:
+            if p.rhs:
+                new_productions.append(p)
+                
+                # Create variations of the production by removing nullable symbols
+                nullable_indices = [i for i, s in enumerate(p.rhs) if s in nullable]
+                for i in range(1, len(nullable_indices) + 1):
+                    for subset in itertools.combinations(nullable_indices, i):
+                        new_rhs = tuple(s for j, s in enumerate(p.rhs) if j not in subset)
+                        if new_rhs:
+                           new_productions.append(Production(p.lhs, new_rhs, p.probability))
+
+        scfg.productions = new_productions
+        # Re-normalizing probabilities here is complex; we'll omit for this implementation.
+        return scfg
+
+    def _eliminate_unit(self) -> "SCFG":
+        """Step 3: Remove unit productions (A -> B)."""
+        scfg = copy.deepcopy(self)
+        unit_productions = [(p.lhs, p.rhs[0]) for p in scfg.productions if len(p.rhs) == 1 and isinstance(p.rhs[0], NonTerminal)]
+        
+        while unit_productions:
+            a, b = unit_productions.pop(0)
+            a_prod = next(p for p in scfg.productions if p.lhs == a and p.rhs == (b,))
+            scfg.productions.remove(a_prod)
+
+            for b_prod in scfg._productions_map[b]:
+                new_prod = Production(a, b_prod.rhs, a_prod.probability * b_prod.probability)
+                scfg.productions.append(new_prod)
+                if len(new_prod.rhs) == 1 and isinstance(new_prod.rhs[0], NonTerminal):
+                    unit_productions.append((new_prod.lhs, new_prod.rhs[0]))
+            
+            # Re-build the map after modifications
+            scfg._productions_map = defaultdict(list)
+            for p in scfg.productions:
+                scfg._productions_map[p.lhs].append(p)
+        return scfg
+    
+    def _binarize(self) -> "SCFG":
+        """Step 4: Replace each production A -> B1..Bn where n > 2."""
+        scfg = copy.deepcopy(self)
+        new_productions = []
+        counter = 0
+        
+        for prod in scfg.productions:
+            if len(prod.rhs) > 2 and all(isinstance(s, NonTerminal) for s in prod.rhs):
+                current_lhs = prod.lhs
+                current_prob = prod.probability
+                for i in range(len(prod.rhs) - 2):
+                    new_nt = NonTerminal(f"CNF_{current_lhs}_{counter}")
+                    scfg.non_terminals.add(new_nt)
+                    counter += 1
+                    
+                    new_prod = Production(current_lhs, (prod.rhs[i], new_nt), current_prob)
+                    new_productions.append(new_prod)
+                    
+                    current_lhs = new_nt
+                    current_prob = 1.0
+                
+                final_prod = Production(current_lhs, (prod.rhs[-2], prod.rhs[-1]), 1.0)
+                new_productions.append(final_prod)
+            else:
+                new_productions.append(prod)
+        scfg.productions = new_productions
+        return scfg
+        
+    def _separate_terminals(self) -> "SCFG":
+        """Step 5: If the right side of any production is in the form A -> aB."""
+        scfg = copy.deepcopy(self)
+        new_productions = []
         terminal_map = {}
 
-        for prod in self.productions:
-            if len(prod.rhs) == 1 and isinstance(prod.rhs[0], Terminal):
-                new_productions.append(prod)
-            elif len(prod.rhs) > 1:
-                new_rhs = []
-                for symbol in prod.rhs:
-                    if isinstance(symbol, Terminal):
-                        if symbol not in terminal_map:
-                            new_nt = NonTerminal(f"T_{symbol}")
-                            new_non_terminals.add(new_nt)
-                            terminal_map[symbol] = new_nt
-                            new_productions.append(Production(new_nt, (symbol,), 1.0))
-                        new_rhs.append(terminal_map[symbol])
-                    else:
-                        new_rhs.append(symbol)
-                new_productions.append(Production(prod.lhs, tuple(new_rhs), prod.probability))
+        for terminal in scfg.terminals:
+            new_nt = NonTerminal(f"T_{terminal}")
+            scfg.non_terminals.add(new_nt)
+            terminal_map[terminal] = new_nt
+            new_productions.append(Production(new_nt, (terminal,), 1.0))
+            
+        for prod in scfg.productions:
+            if len(prod.rhs) > 1:
+                new_rhs = tuple(terminal_map.get(s, s) for s in prod.rhs)
+                new_productions.append(Production(prod.lhs, new_rhs, prod.probability))
             else:
-                 new_productions.append(prod)
-
-        return SCFG(new_non_terminals, self.terminals, new_productions, self.start_symbol)
+                new_productions.append(prod)
+        
+        scfg.productions = new_productions
+        return scfg
 
     def parse(self, sentence: List[Terminal]) -> float:
         """
