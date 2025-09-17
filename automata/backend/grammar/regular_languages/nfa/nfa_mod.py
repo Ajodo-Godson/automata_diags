@@ -19,6 +19,14 @@ class NFA(Automaton[State]):
         self.transitions = transitions
         self.epsilon_symbol = epsilon_symbol
 
+    @classmethod
+    def from_regex(cls, regex: str) -> "NFA":
+        """
+        Create an NFA from a regular expression.
+        """
+        from .regex_to_nfa import regex_to_nfa
+        return regex_to_nfa(regex)
+
     def to_dfa(self) -> "DFA":
         """
         Convert this NFA to an equivalent DFA.
