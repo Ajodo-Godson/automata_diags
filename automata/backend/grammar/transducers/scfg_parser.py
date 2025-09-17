@@ -22,11 +22,17 @@ class Production:
         Check if the production is in Chomsky Normal Form.
         A -> B C or A -> a
         """
-        if len(self.rhs) == 2 and all(isinstance(s, NonTerminal) for s in self.rhs):
+        if len(self.rhs) == 2 and all(isinstance(s, str) and s[0].isupper() for s in self.rhs):
             return True
-        if len(self.rhs) == 1 and isinstance(self.rhs[0], Terminal):
+        if len(self.rhs) == 1 and isinstance(self.rhs[0], str) and not self.rhs[0][0].isupper():
             return True
         return False
+
+    def is_unary(self) -> bool:
+        return len(self.rhs) == 1 and isinstance(self.rhs[0], str) and self.rhs[0][0].isupper()
+
+    def is_terminal(self) -> bool:
+        return len(self.rhs) == 1 and isinstance(self.rhs[0], str) and not self.rhs[0][0].isupper()
 
 class SCFG:
     """
@@ -72,15 +78,21 @@ class SCFG:
                 continue
 
             lhs_str, rest = line.split(" -> ")
-            rhs_str, prob_str = rest.rsplit(" [", 1)
             
+            if " [" in rest:
+                rhs_str, prob_str = rest.rsplit(" [", 1)
+                probability = float(prob_str[:-1])
+            else:
+                rhs_str = ""
+                prob_str = rest.strip()[1:-1]
+                probability = float(prob_str)
+
             lhs = NonTerminal(lhs_str.strip())
             if start_symbol is None:
                 start_symbol = lhs
 
             non_terminals.add(lhs)
             
-            probability = float(prob_str[:-1])
             rhs = []
             for symbol_str in rhs_str.strip().split():
                 if symbol_str[0].isupper():
@@ -129,7 +141,7 @@ class SCFG:
         while changed:
             changed = False
             for p in scfg.productions:
-                if all(s in nullable for s in p.rhs) and p.lhs not in nullable:
+                if p.rhs and all(s in nullable for s in p.rhs) and p.lhs not in nullable:
                     nullable.add(p.lhs)
                     changed = True
         
@@ -143,7 +155,7 @@ class SCFG:
                 for i in range(1, len(nullable_indices) + 1):
                     for subset in itertools.combinations(nullable_indices, i):
                         new_rhs = tuple(s for j, s in enumerate(p.rhs) if j not in subset)
-                        if new_rhs:
+                        if new_rhs and not (len(new_rhs) == 1 and new_rhs[0] == p.lhs):
                            new_productions.append(Production(p.lhs, new_rhs, p.probability))
 
         scfg.productions = new_productions
@@ -153,23 +165,40 @@ class SCFG:
     def _eliminate_unit(self) -> "SCFG":
         """Step 3: Remove unit productions (A -> B)."""
         scfg = copy.deepcopy(self)
-        unit_productions = [(p.lhs, p.rhs[0]) for p in scfg.productions if len(p.rhs) == 1 and isinstance(p.rhs[0], NonTerminal)]
         
-        while unit_productions:
-            a, b = unit_productions.pop(0)
-            a_prod = next(p for p in scfg.productions if p.lhs == a and p.rhs == (b,))
-            scfg.productions.remove(a_prod)
+        changed = True
+        while changed:
+            changed = False
+            productions_to_add = []
+            productions_to_remove = []
 
-            for b_prod in scfg._productions_map[b]:
-                new_prod = Production(a, b_prod.rhs, a_prod.probability * b_prod.probability)
-                scfg.productions.append(new_prod)
-                if len(new_prod.rhs) == 1 and isinstance(new_prod.rhs[0], NonTerminal):
-                    unit_productions.append((new_prod.lhs, new_prod.rhs[0]))
-            
-            # Re-build the map after modifications
-            scfg._productions_map = defaultdict(list)
             for p in scfg.productions:
-                scfg._productions_map[p.lhs].append(p)
+                if p.is_unary():
+                    productions_to_remove.append(p)
+                    b = p.rhs[0]
+                    
+                    if p.lhs == b:  # If we have a production like A -> A, just remove it.
+                        continue
+
+                    for b_prod in scfg._productions_map[b]:
+                        new_prob = p.probability * b_prod.probability
+                        new_prod = Production(p.lhs, b_prod.rhs, new_prob)
+                        productions_to_add.append(new_prod)
+                        changed = True
+
+            if changed:
+                temp_productions = []
+                for p in scfg.productions:
+                    if p not in productions_to_remove:
+                        temp_productions.append(p)
+                
+                temp_productions.extend(productions_to_add)
+                scfg.productions = temp_productions
+                
+                scfg._productions_map = defaultdict(list)
+                for p in scfg.productions:
+                    scfg._productions_map[p.lhs].append(p)
+                
         return scfg
     
     def _binarize(self) -> "SCFG":
@@ -179,7 +208,7 @@ class SCFG:
         counter = 0
         
         for prod in scfg.productions:
-            if len(prod.rhs) > 2 and all(isinstance(s, NonTerminal) for s in prod.rhs):
+            if len(prod.rhs) > 2:
                 current_lhs = prod.lhs
                 current_prob = prod.probability
                 for i in range(len(prod.rhs) - 2):
@@ -206,16 +235,26 @@ class SCFG:
         new_productions = []
         terminal_map = {}
 
+        # Create productions like T_a -> a for all terminals
         for terminal in scfg.terminals:
             new_nt = NonTerminal(f"T_{terminal}")
-            scfg.non_terminals.add(new_nt)
-            terminal_map[terminal] = new_nt
-            new_productions.append(Production(new_nt, (terminal,), 1.0))
-            
+            if new_nt not in scfg.non_terminals:
+                scfg.non_terminals.add(new_nt)
+                terminal_map[terminal] = new_nt
+                new_productions.append(Production(new_nt, (terminal,), 1.0))
+            else:
+                terminal_map[terminal] = new_nt
+
+        # Replace terminals in RHS of length > 1
         for prod in scfg.productions:
             if len(prod.rhs) > 1:
-                new_rhs = tuple(terminal_map.get(s, s) for s in prod.rhs)
-                new_productions.append(Production(prod.lhs, new_rhs, prod.probability))
+                new_rhs = []
+                for s in prod.rhs:
+                    if not s[0].isupper():
+                        new_rhs.append(terminal_map[s])
+                    else:
+                        new_rhs.append(s)
+                new_productions.append(Production(prod.lhs, tuple(new_rhs), prod.probability))
             else:
                 new_productions.append(prod)
         
