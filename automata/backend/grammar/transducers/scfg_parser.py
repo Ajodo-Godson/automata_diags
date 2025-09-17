@@ -50,6 +50,47 @@ class SCFG:
             f"start_symbol={self.start_symbol})"
         )
 
+    @classmethod
+    def from_string(cls, grammar_str: str) -> "SCFG":
+        """
+        Create an SCFG from a string representation.
+        Each line should be a production rule, e.g., "S -> NP VP [0.8]"
+        """
+        non_terminals = set()
+        terminals = set()
+        productions = []
+        start_symbol = None
+
+        for line in grammar_str.strip().split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+
+            lhs_str, rest = line.split(" -> ")
+            rhs_str, prob_str = rest.rsplit(" [", 1)
+            
+            lhs = NonTerminal(lhs_str.strip())
+            if start_symbol is None:
+                start_symbol = lhs
+
+            non_terminals.add(lhs)
+            
+            probability = float(prob_str[:-1])
+            rhs = []
+            for symbol_str in rhs_str.strip().split():
+                if symbol_str[0].isupper():
+                    nt = NonTerminal(symbol_str)
+                    non_terminals.add(nt)
+                    rhs.append(nt)
+                else:
+                    term = Terminal(symbol_str)
+                    terminals.add(term)
+                    rhs.append(term)
+            
+            productions.append(Production(lhs, tuple(rhs), probability))
+
+        return cls(non_terminals, terminals, productions, start_symbol)
+
     def to_cnf(self) -> "SCFG":
         """
         Convert the grammar to Chomsky Normal Form.
@@ -110,6 +151,7 @@ class SCFG:
                             prob_b = table.get((i, k, b), 0.0)
                             prob_c = table.get((k + 1, j, c), 0.0)
                             if prob_b > 0 and prob_c > 0:
-                                table[i, j, prod.lhs] += prod.probability * prob_b * prob_c
+                                new_prob = prod.probability * prob_b * prob_c
+                                table[i, j, prod.lhs] += new_prob
         
         return table.get((0, n - 1, self.start_symbol), 0.0)
