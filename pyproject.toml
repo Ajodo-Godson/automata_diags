@@ -4,21 +4,32 @@ build-backend = "hatchling.build"
 
 [project]
 name = "automata_diags"
-version = "0.1.2"
+version = "0.2.1"
 authors = [
   { name="Godson Ajodo", email="godson@uni.minerva.edu" },
 ]
-description = "A package for working with and visualizing automata"
+description = "🤖 A powerful, modern, and educational Python toolkit for automata theory. Visualize DFAs, NFAs, CFGs, minimize automata, and more with an elegant, type-safe API."
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
     "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Education",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+keywords = ["automata", "finite-automata", "DFA", "NFA", "CFG", "PDA", "formal-languages", "graph-theory", "visualization", "computer-science", "education"]
 dependencies = [
     "graphviz>=0.20.0",
     "pytest>=7.0.0",
@@ -43,7 +54,7 @@ docs = [
 [project.urls]
 "Homepage" = "https://github.com/Ajodo-Godson/automata_diags"
 "Bug Tracker" = "https://github.com/Ajodo-Godson/automata_diags/issues"
-"Documentation" = "https://github.com/Ajodo-Godson/automata_diags/docs"
+"Documentation" = "https://automata-diags.readthedocs.io/"
 
 [tool.pytest]
 pythonpath = ["."]
