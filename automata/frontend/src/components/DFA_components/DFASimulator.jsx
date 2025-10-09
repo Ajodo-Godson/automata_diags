@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './DFASimulator.css';
+import './stylings/DFASimulator.css';
 import DFAGraph from './DFAGraph';
 import { useExamples } from './examples';
 import { useDFA } from './useDFA';

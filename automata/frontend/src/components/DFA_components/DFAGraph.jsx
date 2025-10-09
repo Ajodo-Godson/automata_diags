@@ -7,7 +7,7 @@ import ReactFlow, {
     MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import './DFAGraph.css';
+import './stylings/DFAGraph.css';
 
 const StateNode = ({ data, isConnectable }) => {
     const isAcceptState = data.isAcceptState;
@@ -119,7 +119,7 @@ const DFAGraph = ({ states, transitions, startState, acceptStates, currentState,
     }, [currentState]);
 
     return (
-        <div style={{ height: '400px' }} className="dfa-graph-container">
+        <div style={{ height: '250px' }} className="dfa-graph-container">
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
