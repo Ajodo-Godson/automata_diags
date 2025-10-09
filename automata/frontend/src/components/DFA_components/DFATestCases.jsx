@@ -1,8 +1,10 @@
-import React from 'react';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle2, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import './stylings/DFATestCases.css';
 
 export function DFATestCases({ onLoadTest, currentExample }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   const getTestCases = () => {
     if (currentExample === "ends_with_ab") {
       return [
@@ -60,14 +62,29 @@ export function DFATestCases({ onLoadTest, currentExample }) {
 
   return (
     <div className="dfa-test-cases-card">
-      <div className="dfa-test-cases-header">
-        <h3 className="dfa-test-cases-title">Example Test Cases</h3>
-        <p className="dfa-test-cases-subtitle">
-          Click to load and test the current DFA
-        </p>
+      <div 
+        className="dfa-test-cases-header" 
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        style={{ cursor: 'pointer' }}
+      >
+        <div className="dfa-test-cases-header-content">
+          <div>
+            <h3 className="dfa-test-cases-title">Example Test Cases</h3>
+            <p className="dfa-test-cases-subtitle">
+              Click to load and test the current DFA
+            </p>
+          </div>
+          <button className="dfa-collapse-btn">
+            {isCollapsed ? (
+              <ChevronDown className="dfa-collapse-icon" />
+            ) : (
+              <ChevronUp className="dfa-collapse-icon" />
+            )}
+          </button>
+        </div>
       </div>
 
-      <div className="dfa-test-cases-list">
+      <div className={`dfa-test-cases-list ${isCollapsed ? 'collapsed' : ''}`}>
         {testCases.map((testCase, index) => (
           <div key={index} className="dfa-test-case-item">
             <div className="dfa-test-case-content">

@@ -1,129 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import './stylings/DFASimulator.css';
 import DFAGraph from './DFAGraph';
+import { DFAControlPanel } from './DFAControlPanel';
+import { DFATestCases } from './DFATestCases';
 import { useExamples } from './examples';
 import { useDFA } from './useDFA';
-// import { useSimulation } from './useSimulation'; // We can create this later
 
-const DFASimulator = () => {
+const DFASimulatorNew = () => {
     const { examples } = useExamples();
+    const [currentExampleName, setCurrentExampleName] = useState('ends_with_ab');
+    
     const dfa = useDFA({
-        states: ['q0'],
-        alphabet: ['a', 'b'],
-        transitions: { q0: { a: 'q0', b: 'q0' } },
-        startState: 'q0',
-        acceptStates: new Set(),
+        states: examples['ends_with_ab'].states,
+        alphabet: examples['ends_with_ab'].alphabet,
+        transitions: examples['ends_with_ab'].transitions,
+        startState: examples['ends_with_ab'].startState,
+        acceptStates: examples['ends_with_ab'].acceptStates,
     });
 
     const [inputString, setInputString] = useState('');
-    const [result, setResult] = useState(null);
     const [simulationSteps, setSimulationSteps] = useState([]);
     const [currentStep, setCurrentStep] = useState(-1);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [playbackSpeed, setPlaybackSpeed] = useState(1000); // milliseconds per step
-    const [isEditingTransitions, setIsEditingTransitions] = useState(false);
+    const [playbackSpeed, setPlaybackSpeed] = useState(500);
 
-    const loadExample = (exampleName) => {
-        const example = examples[exampleName];
-        dfa.loadDFA(example);
-        setInputString('');
-        setResult(null);
-        setSimulationSteps([]);
-        setCurrentStep(-1);
-    };
+    const isComplete = currentStep >= 0 && currentStep === simulationSteps.length - 1;
+    const isAccepted = isComplete && simulationSteps[currentStep]?.accepted;
 
-    const simulateString = () => {
-        // Reset simulation state first
-        setSimulationSteps([]);
-        setCurrentStep(-1);
-
-        let steps = [];
-        let currentState = dfa.startState;
-
-        // First step shows the initial state
-        steps.push({
-            state: currentState,
-            remainingInput: inputString,
-            description: `Starting in state ${currentState}`,
-            transition: null
-        });
-
-        // Process each symbol
-        for (let i = 0; i < inputString.length; i++) {
-            const symbol = inputString[i];
-            if (!dfa.alphabet.includes(symbol)) {
-                setResult({
-                    accepted: false,
-                    message: `Invalid symbol: ${symbol}`
-                });
-                return;
-            }
-
-            if (!dfa.hasTransition(currentState, symbol)) {
-                setResult({
-                    accepted: false,
-                    message: `No transition defined from state ${currentState} with symbol ${symbol}`
-                });
-                return;
-            }
-
-            const fromState = currentState;
-            const nextState = dfa.transitions[currentState][symbol];
-
-            // Add step showing the transition
-            steps.push({
-                state: nextState,
-                remainingInput: inputString.slice(i + 1),
-                description: `Read '${symbol}', moved from ${fromState} to ${nextState}`,
-                transition: {
-                    from: fromState,
-                    to: nextState,
-                    symbol: symbol
-                }
-            });
-
-            currentState = nextState;
-        }
-
-        const accepted = dfa.acceptStates.has(currentState);
-        // Add final step
-        steps.push({
-            state: currentState,
-            remainingInput: '',
-            description: `Finished in state ${currentState}. String is ${accepted ? 'accepted' : 'rejected'}.`,
-            transition: null
-        });
-
-        setSimulationSteps(steps);
-        setCurrentStep(0);
-        setResult({
-            accepted,
-            message: `String ${accepted ? 'accepted' : 'rejected'}`
-        });
-    };
-
-    const nextStep = () => {
-        if (currentStep < simulationSteps.length - 1) {
-            console.log('Moving to next step:', {
-                from: currentStep,
-                to: currentStep + 1,
-                state: simulationSteps[currentStep + 1].state
-            });
-            setCurrentStep(currentStep + 1);
-        }
-    };
-
-    const prevStep = () => {
-        if (currentStep > 0) {
-            console.log('Moving to previous step:', {
-                from: currentStep,
-                to: currentStep - 1,
-                state: simulationSteps[currentStep - 1].state
-            });
-            setCurrentStep(currentStep - 1);
-        }
-    };
-
+    // Auto-play simulation
     useEffect(() => {
         let timer;
         if (isPlaying && currentStep < simulationSteps.length - 1) {
@@ -136,266 +40,300 @@ const DFASimulator = () => {
         return () => clearTimeout(timer);
     }, [isPlaying, currentStep, simulationSteps.length, playbackSpeed]);
 
-    const playSimulation = () => {
-        setIsPlaying(true);
-    };
+    const simulateString = () => {
+        setSimulationSteps([]);
+        setCurrentStep(-1);
 
-    const pauseSimulation = () => {
-        setIsPlaying(false);
-    };
+        let steps = [];
+        let currentState = dfa.startState;
 
-    const restartSimulation = () => {
-        setIsPlaying(false);
+        // Initial step
+        steps.push({
+            state: currentState,
+            remainingInput: inputString,
+            description: `Starting in state ${currentState}`,
+            transition: null,
+            accepted: false
+        });
+
+        // Process each symbol
+        for (let i = 0; i < inputString.length; i++) {
+            const symbol = inputString[i];
+            
+            if (!dfa.alphabet.includes(symbol)) {
+                alert(`Invalid symbol: ${symbol}`);
+                return;
+            }
+
+            if (!dfa.hasTransition(currentState, symbol)) {
+                alert(`No transition defined from state ${currentState} with symbol ${symbol}`);
+                return;
+            }
+
+            const fromState = currentState;
+            const nextState = dfa.transitions[currentState][symbol];
+
+            steps.push({
+                state: nextState,
+                remainingInput: inputString.slice(i + 1),
+                description: `Read '${symbol}', moved from ${fromState} to ${nextState}`,
+                transition: {
+                    from: fromState,
+                    to: nextState,
+                    symbol: symbol
+                },
+                accepted: false
+            });
+
+            currentState = nextState;
+        }
+
+        // Final step with acceptance check
+        const accepted = dfa.acceptStates.has(currentState);
+        steps[steps.length - 1].accepted = accepted;
+        steps[steps.length - 1].description += ` → ${accepted ? 'ACCEPTED' : 'REJECTED'}`;
+
+        setSimulationSteps(steps);
         setCurrentStep(0);
     };
 
-    useEffect(() => {
-        const handleAddState = () => dfa.addState();
-        const handleAddSymbol = () => {
-            const symbol = prompt('Enter new symbol:');
-            if (symbol && symbol.trim()) {
-                dfa.addSymbol(symbol.trim());
-            }
-        };
-        const handleAddCustomState = () => {
-            const newState = prompt('Enter state name (e.g., q0, q1):');
-            if (newState && newState.trim()) {
-                dfa.addState(newState.trim());
-            }
-        };
-        const handleAddTransition = () => {
-            setIsEditingTransitions(true);
-            // Scroll to transition table
-            document.querySelector('.transition-table').scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
-        };
-        const handleClearAll = () => dfa.clearAll();
-        const handleUndo = () => dfa.undo();
-        const handleRedo = () => dfa.redo();
+    const handleRun = () => {
+        if (simulationSteps.length === 0) {
+            simulateString();
+        }
+        setIsPlaying(true);
+    };
 
-        window.addEventListener('addState', handleAddState);
-        window.addEventListener('addSymbol', handleAddSymbol);
-        window.addEventListener('addCustomState', handleAddCustomState);
-        window.addEventListener('addTransition', handleAddTransition);
-        window.addEventListener('clearAll', handleClearAll);
-        window.addEventListener('undo', handleUndo);
-        window.addEventListener('redo', handleRedo);
+    const handlePause = () => {
+        setIsPlaying(false);
+    };
 
-        return () => {
-            window.removeEventListener('addState', handleAddState);
-            window.removeEventListener('addSymbol', handleAddSymbol);
-            window.removeEventListener('addCustomState', handleAddCustomState);
-            window.removeEventListener('addTransition', handleAddTransition);
-            window.removeEventListener('clearAll', handleClearAll);
-            window.removeEventListener('undo', handleUndo);
-            window.removeEventListener('redo', handleRedo);
-        };
-    }, [dfa]);
+    const handleStep = () => {
+        if (simulationSteps.length === 0) {
+            simulateString();
+        } else if (currentStep < simulationSteps.length - 1) {
+            setCurrentStep(currentStep + 1);
+        }
+    };
+
+    const handleReset = () => {
+        setSimulationSteps([]);
+        setCurrentStep(-1);
+        setIsPlaying(false);
+    };
+
+    const loadExample = (exampleName) => {
+        const example = examples[exampleName];
+        setCurrentExampleName(exampleName);
+        dfa.loadDFA(example);
+        setInputString('');
+        handleReset();
+    };
+
+    const handleLoadTest = (testInput) => {
+        setInputString(testInput);
+        handleReset();
+    };
 
     return (
-        <div className="dfa-simulator">
-            <h2>DFA Simulator</h2>
+        <div className="dfa-simulator-new">
+            <div className="dfa-container">
+                {/* Header */}
+                <div className="dfa-header">
+                    <h1 className="dfa-title">DFA Simulator</h1>
+                    <p className="dfa-subtitle">
+                        Deterministic Finite Automaton - Step-by-step visualization
+                    </p>
+                </div>
 
-            <div className="main-content">
-                <div className="left-column">
-                    <div className="dfa-graph">
-                        <h3>DFA Visualization</h3>
-                        <DFAGraph
-                            states={dfa.states}
-                            transitions={dfa.transitions}
-                            startState={dfa.startState}
-                            acceptStates={dfa.acceptStates}
-                            currentState={simulationSteps.length > 0 && currentStep >= 0 ? simulationSteps[currentStep].state : null}
-                            currentTransition={simulationSteps.length > 0 && currentStep >= 0 ? simulationSteps[currentStep].transition : null}
-                            isPlaying={isPlaying}
-                        />
-                    </div>
-
-                    <div className="string-tester">
-                        <h3>Test String</h3>
-                        <input
-                            type="text"
-                            value={inputString}
-                            onChange={(e) => setInputString(e.target.value)}
-                            placeholder="Enter string to test"
-                        />
-                        <button onClick={simulateString}>Test</button>
-                        {result && (
-                            <div className={`result ${result.accepted ? 'accepted' : 'rejected'}`}>
-                                {result.message}
-                            </div>
-                        )}
+                {/* Example Selector */}
+                <div className="dfa-example-selector">
+                    <label className="dfa-selector-label">Load Example:</label>
+                    <div className="dfa-selector-buttons">
+                        {Object.entries(examples).map(([key, example]) => (
+                            <button
+                                key={key}
+                                onClick={() => loadExample(key)}
+                                className={`dfa-selector-btn ${currentExampleName === key ? 'active' : ''}`}
+                            >
+                                {example.name}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
-                <div className="right-column">
-                    <div className="examples-panel">
-                        <h3>Load Example</h3>
-                        {Object.entries(examples).map(([name, example]) => (
-                            <div key={name} className="example-item">
-                                <button onClick={() => loadExample(name)}>{name}</button>
-                                <span className="example-description">{example.description}</span>
+                {/* Main Grid */}
+                <div className="dfa-grid">
+                    {/* Left Column */}
+                    <div className="dfa-left-col">
+                        {/* Graph Visualization */}
+                        <div className="dfa-graph-card">
+                            <h3 className="dfa-card-title">State Diagram</h3>
+                            <DFAGraph
+                                states={dfa.states}
+                                transitions={dfa.transitions}
+                                startState={dfa.startState}
+                                acceptStates={dfa.acceptStates}
+                                currentState={simulationSteps.length > 0 && currentStep >= 0 
+                                    ? simulationSteps[currentStep].state 
+                                    : null}
+                                currentTransition={simulationSteps.length > 0 && currentStep >= 0 
+                                    ? simulationSteps[currentStep].transition 
+                                    : null}
+                                isPlaying={isPlaying}
+                            />
+                        </div>
+
+                        {/* Input Tester */}
+                        <div className="dfa-input-card">
+                            <h3 className="dfa-card-title">Test Input String</h3>
+                            <div className="dfa-input-group">
+                                <input
+                                    type="text"
+                                    value={inputString}
+                                    onChange={(e) => setInputString(e.target.value)}
+                                    placeholder="Enter input string (e.g., aab)"
+                                    className="dfa-input"
+                                />
+                                <button 
+                                    onClick={simulateString}
+                                    className="dfa-btn dfa-btn-primary"
+                                >
+                                    Test
+                                </button>
                             </div>
-                        ))}
+                            <p className="dfa-input-help">
+                                Alphabet: {dfa.alphabet.join(', ')}
+                            </p>
+                        </div>
+
+                        {/* Control Panel */}
+                        <DFAControlPanel
+                            currentState={simulationSteps.length > 0 && currentStep >= 0 
+                                ? simulationSteps[currentStep].state 
+                                : dfa.startState}
+                            stepCount={currentStep + 1}
+                            isPlaying={isPlaying}
+                            isComplete={isComplete}
+                            isAccepted={isAccepted}
+                            speed={playbackSpeed}
+                            onRun={handleRun}
+                            onPause={handlePause}
+                            onStep={handleStep}
+                            onReset={handleReset}
+                            onSpeedChange={setPlaybackSpeed}
+                        />
                     </div>
 
-                    <div className={`transition-table ${isEditingTransitions ? 'editing' : ''}`}>
-                        <h3>Transition Table</h3>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>State</th>
-                                    {dfa.alphabet.map(symbol => (
-                                        <th key={symbol}>
-                                            {symbol}
-                                            <button
-                                                className="delete-symbol"
-                                                onClick={() => {
-                                                    if (window.confirm(`Are you sure you want to delete symbol '${symbol}'?\nThis will remove all transitions using this symbol.`)) {
-                                                        dfa.deleteSymbol(symbol);
-                                                    }
-                                                }}
-                                                title="Delete symbol"
-                                            >
-                                                ×
-                                            </button>
-                                        </th>
-                                    ))}
-                                    <th>Accept?</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {dfa.states.map(state => (
-                                    <tr key={state} className={
-                                        currentStep >= 0 && simulationSteps[currentStep].state === state
-                                            ? 'current-state'
-                                            : ''
-                                    }>
-                                        <td>{state}</td>
-                                        {dfa.alphabet.map(symbol => (
-                                            <td key={`${state}-${symbol}`}>
-                                                <select
-                                                    value={dfa.hasTransition(state, symbol) ? dfa.transitions[state][symbol] : ''}
-                                                    onChange={(e) => {
-                                                        const value = e.target.value;
-                                                        if (value === '') {
-                                                            dfa.removeTransition(state, symbol);
-                                                        } else {
-                                                            dfa.updateTransition(state, symbol, value);
-                                                        }
-                                                    }}
-                                                >
-                                                    <option value="">None</option>
-                                                    {dfa.states.map(s => (
-                                                        <option key={s} value={s}>{s}</option>
-                                                    ))}
-                                                </select>
-                                            </td>
-                                        ))}
-                                        <td>
-                                            <input
-                                                type="checkbox"
-                                                checked={dfa.acceptStates.has(state)}
-                                                onChange={() => dfa.toggleAcceptState(state)}
-                                            />
-                                        </td>
-                                        <td>
-                                            <button
-                                                className="delete-state"
-                                                onClick={() => {
-                                                    if (state === dfa.startState) {
-                                                        alert("Cannot delete start state");
-                                                        return;
-                                                    }
-                                                    if (window.confirm(`Are you sure you want to delete state '${state}'?\nThis will remove all transitions to and from this state.`)) {
-                                                        dfa.deleteState(state);
-                                                    }
-                                                }}
-                                                disabled={state === dfa.startState}
-                                                title={state === dfa.startState ? "Cannot delete start state" : "Delete state"}
-                                            >
-                                                ×
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    {/* Right Column */}
+                    <div className="dfa-right-col">
+                        {/* Test Cases */}
+                        <DFATestCases 
+                            onLoadTest={handleLoadTest}
+                            currentExample={currentExampleName}
+                        />
 
-                    {simulationSteps.length > 0 && (
-                        <div className="simulation-steps">
-                            <h3>Simulation Steps</h3>
-                            <div className="step-display">
-                                {currentStep >= 0 && currentStep < simulationSteps.length && (
-                                    <>
-                                        <div>Step {currentStep + 1} of {simulationSteps.length}</div>
-                                        <div>Current State: {simulationSteps[currentStep].state}</div>
-                                        <div>Remaining Input: "{simulationSteps[currentStep].remainingInput}"</div>
-                                        <div>{simulationSteps[currentStep].description}</div>
-                                    </>
-                                )}
-                            </div>
-                            <div className="simulation-controls">
-                                <div className="playback-controls">
-                                    <button
-                                        onClick={restartSimulation}
-                                        className="control-button"
-                                    >
-                                        <span role="img" aria-label="restart">⏮</span>
-                                    </button>
-                                    {isPlaying ? (
-                                        <button
-                                            onClick={pauseSimulation}
-                                            className="control-button"
-                                        >
-                                            <span role="img" aria-label="pause">⏸</span>
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={playSimulation}
-                                            className="control-button"
-                                            disabled={currentStep >= simulationSteps.length - 1}
-                                        >
-                                            <span role="img" aria-label="play">▶️</span>
-                                        </button>
+                        {/* Simulation Steps */}
+                        {simulationSteps.length > 0 && (
+                            <div className="dfa-steps-card">
+                                <h3 className="dfa-card-title">Simulation Progress</h3>
+                                <div className="dfa-step-display">
+                                    {currentStep >= 0 && currentStep < simulationSteps.length && (
+                                        <>
+                                            <div className="dfa-step-info">
+                                                <strong>Step {currentStep + 1} of {simulationSteps.length}</strong>
+                                            </div>
+                                            <div className="dfa-step-state">
+                                                Current State: <span className="dfa-highlight">{simulationSteps[currentStep].state}</span>
+                                            </div>
+                                            <div className="dfa-step-remaining">
+                                                Remaining Input: <code>"{simulationSteps[currentStep].remainingInput}"</code>
+                                            </div>
+                                            <div className="dfa-step-desc">
+                                                {simulationSteps[currentStep].description}
+                                            </div>
+                                        </>
                                     )}
-                                    <button
-                                        onClick={prevStep}
-                                        disabled={currentStep <= 0}
-                                        className="control-button"
-                                    >
-                                        <span role="img" aria-label="previous">⏪</span>
-                                    </button>
-                                    <button
-                                        onClick={nextStep}
-                                        disabled={currentStep >= simulationSteps.length - 1}
-                                        className="control-button"
-                                    >
-                                        <span role="img" aria-label="next">⏩</span>
-                                    </button>
                                 </div>
-                                <div className="speed-control">
-                                    <label>Speed: </label>
-                                    <select
-                                        value={playbackSpeed}
-                                        onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-                                    >
-                                        <option value={2000}>Slow</option>
-                                        <option value={1000}>Normal</option>
-                                        <option value={500}>Fast</option>
-                                    </select>
-                                </div>
+                            </div>
+                        )}
+
+                        {/* Transition Table */}
+                        <div className="dfa-table-card">
+                            <h3 className="dfa-card-title">Transition Table</h3>
+                            <div className="dfa-table-wrapper">
+                                <table className="dfa-table">
+                                    <thead>
+                                        <tr>
+                                            <th>State</th>
+                                            {dfa.alphabet.map(symbol => (
+                                                <th key={symbol}>{symbol}</th>
+                                            ))}
+                                            <th>Accept?</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {dfa.states.map(state => {
+                                            // Get the current step data
+                                            const currentStepData = currentStep >= 0 && currentStep < simulationSteps.length 
+                                                ? simulationSteps[currentStep] 
+                                                : null;
+                                            
+                                            // Current state (where we are now)
+                                            const isCurrentState = currentStepData && currentStepData.state === state;
+                                            
+                                            // Get the transition that was taken to reach the current state
+                                            const currentTransition = currentStepData?.transition;
+                                            
+                                            // Previous state (where we came from) - only if there was a transition
+                                            const isPreviousState = currentTransition && currentTransition.from === state;
+                                            
+                                            return (
+                                                <tr 
+                                                    key={state}
+                                                    className={
+                                                        isCurrentState ? 'dfa-current-state' : 
+                                                        isPreviousState ? 'dfa-previous-state' : ''
+                                                    }
+                                                >
+                                                    <td className="dfa-state-cell">{state}</td>
+                                                    {dfa.alphabet.map(symbol => {
+                                                        // Highlight the transition cell that was just used
+                                                        // This is the cell at [from_state][symbol] that led to current state
+                                                        const isCurrentTransitionCell = currentTransition && 
+                                                            currentTransition.from === state && 
+                                                            currentTransition.symbol === symbol;
+                                                        
+                                                        return (
+                                                            <td 
+                                                                key={`${state}-${symbol}`}
+                                                                className={isCurrentTransitionCell ? 'dfa-current-transition' : ''}
+                                                                title={isCurrentTransitionCell ? `Just used: ${state} --${symbol}--> ${currentTransition.to}` : ''}
+                                                            >
+                                                                {dfa.hasTransition(state, symbol) 
+                                                                    ? dfa.transitions[state][symbol]
+                                                                    : '—'
+                                                                }
+                                                            </td>
+                                                        );
+                                                    })}
+                                                    <td>
+                                                        {dfa.acceptStates.has(state) ? '✓' : ''}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </div>
     );
 };
 
-export default DFASimulator; 
+export default DFASimulatorNew;
+
+
