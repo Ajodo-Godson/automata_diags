@@ -247,13 +247,11 @@ regex_examples()
 def complex_regex_demo():
     """Demonstrate complex regex patterns"""
     
-    # Email-like pattern (simplified)
-    # Pattern: letter followed by letters/digits, @, letters, dot, letters
-    email_pattern = "a(a|b)*"  # Simplified for demo
+    # Email-like pattern (sophisticated)
+    email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     
-    # Phone number pattern (simplified)
-    # Pattern: 3 digits, dash, 4 digits
-    phone_pattern = "(0|1)(0|1)(0|1)"  # Simplified for demo
+    # Phone number pattern (sophisticated)
+    phone_pattern = r"\d{3}-\d{4}"
     
     patterns = {
         "Simple email": email_pattern,
@@ -263,6 +261,7 @@ def complex_regex_demo():
     for name, pattern in patterns.items():
         print(f"\n{name}: {pattern}")
         nfa = NFA.from_regex(pattern)
+        print(nfa._alphabet)
         
         # Convert to DFA for efficiency
         dfa = nfa.to_dfa()
