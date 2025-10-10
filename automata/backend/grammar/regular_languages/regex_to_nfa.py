@@ -101,11 +101,19 @@ def _expand_character_class(char_class: str) -> str:
             start_char = content[i]
             end_char = content[i + 2]
             for c in range(ord(start_char), ord(end_char) + 1):
-                chars.add(chr(c))
+                char_to_add = chr(c)
+                # Replace literal dots with placeholder to avoid operator confusion
+                if char_to_add == '.':
+                    char_to_add = '•'
+                chars.add(char_to_add)
             i += 3
         else:
             # Handle individual characters
-            chars.add(content[i])
+            char_to_add = content[i]
+            # Replace literal dots with placeholder to avoid operator confusion
+            if char_to_add == '.':
+                char_to_add = '•'
+            chars.add(char_to_add)
             i += 1
     
     # Convert to union expression
@@ -114,7 +122,14 @@ def _expand_character_class(char_class: str) -> str:
     return "(" + "|".join(sorted(chars)) + ")"
 
 def _preprocess_regex(regex: str) -> str:
-    """Preprocess regex to handle character classes, plus quantifier, and escaped characters."""
+    """Preprocess regex to handle character classes, plus quantifier, escaped characters, {n} quantifiers, and anchors."""
+    # Handle anchors by removing them (simplified approach)
+    # In practice, anchors affect matching behavior but not the core automaton structure
+    if regex.startswith('^'):
+        regex = regex[1:]
+    if regex.endswith('$'):
+        regex = regex[:-1]
+    
     result = ""
     i = 0
     
@@ -152,8 +167,104 @@ def _preprocess_regex(regex: str) -> str:
                 
                 result += atom + "*"
             i += 1
+        elif regex[i] == '{' and i + 1 < len(regex):
+            # Handle {n} quantifiers
+            # Find the closing brace and extract the number
+            j = i + 1
+            while j < len(regex) and regex[j] != '}':
+                j += 1
+            
+            if j < len(regex) and result:
+                quantifier_str = regex[i+1:j]
+                try:
+                    # Handle {n} - exact repetition
+                    if quantifier_str.isdigit():
+                        n = int(quantifier_str)
+                        if n > 0:
+                            # Find the last "atom" to repeat
+                            if result.endswith(')'):
+                                # Find matching opening parenthesis
+                                paren_count = 1
+                                k = len(result) - 2
+                                while k >= 0 and paren_count > 0:
+                                    if result[k] == ')':
+                                        paren_count += 1
+                                    elif result[k] == '(':
+                                        paren_count -= 1
+                                    k -= 1
+                                atom = result[k+1:]
+                                result = result[:k+1]  # Remove the atom since we'll repeat it
+                            elif result.endswith(']'):
+                                # Find matching opening bracket for character class
+                                bracket_count = 1
+                                k = len(result) - 2
+                                while k >= 0 and bracket_count > 0:
+                                    if result[k] == ']':
+                                        bracket_count += 1
+                                    elif result[k] == '[':
+                                        bracket_count -= 1
+                                    k -= 1
+                                atom = result[k+1:]
+                                result = result[:k+1]  # Remove the atom since we'll repeat it
+                            else:
+                                # Single character
+                                atom = result[-1]
+                                result = result[:-1]  # Remove the last character since we'll repeat it
+                            
+                            # Repeat the atom n times
+                            result += atom * n
+                        i = j + 1
+                    # Handle {n,} - minimum repetition (n or more)
+                    elif quantifier_str.endswith(',') and quantifier_str[:-1].isdigit():
+                        n = int(quantifier_str[:-1])
+                        if n >= 0:
+                            # Find the last "atom" to repeat
+                            if result.endswith(')'):
+                                # Find matching opening parenthesis
+                                paren_count = 1
+                                k = len(result) - 2
+                                while k >= 0 and paren_count > 0:
+                                    if result[k] == ')':
+                                        paren_count += 1
+                                    elif result[k] == '(':
+                                        paren_count -= 1
+                                    k -= 1
+                                atom = result[k+1:]
+                                result = result[:k+1]  # Remove the atom since we'll repeat it
+                            elif result.endswith(']'):
+                                # Find matching opening bracket for character class
+                                bracket_count = 1
+                                k = len(result) - 2
+                                while k >= 0 and bracket_count > 0:
+                                    if result[k] == ']':
+                                        bracket_count += 1
+                                    elif result[k] == '[':
+                                        bracket_count -= 1
+                                    k -= 1
+                                atom = result[k+1:]
+                                result = result[:k+1]  # Remove the atom since we'll repeat it
+                            else:
+                                # Single character
+                                atom = result[-1]
+                                result = result[:-1]  # Remove the last character since we'll repeat it
+                            
+                            # Convert {n,} to: atom repeated n times + atom*
+                            # This means "at least n occurrences"
+                            result += atom * n + atom + "*"
+                        i = j + 1
+                    else:
+                        # Not a simple {n} or {n,}, treat as literal
+                        result += regex[i]
+                        i += 1
+                except ValueError:
+                    # Not a valid number, treat as literal
+                    result += regex[i]
+                    i += 1
+            else:
+                result += regex[i]
+                i += 1
         elif regex[i] == '\\' and i + 1 < len(regex):
-            # Handle escaped characters by using a placeholder that won't conflict with operators
+            # Handle escaped characters and regex shortcuts
             escaped_char = regex[i + 1]
             if escaped_char == '.':
                 result += '•'  # Use bullet character as placeholder for literal dot
@@ -163,6 +274,12 @@ def _preprocess_regex(regex: str) -> str:
                 result += '✚'  # Use plus character as placeholder for literal plus
             elif escaped_char == '|':
                 result += '┃'  # Use vertical bar as placeholder for literal pipe
+            elif escaped_char == 'd':
+                result += _expand_character_class('[0-9]')  # Convert \d to expanded digit character class
+            elif escaped_char == 'w':
+                result += _expand_character_class('[a-zA-Z0-9_]')  # Convert \w to expanded word character class
+            elif escaped_char == 's':
+                result += _expand_character_class('[ \t\n\r]')  # Convert \s to expanded whitespace character class
             else:
                 result += escaped_char  # For other escaped characters, just use the character
             i += 2
