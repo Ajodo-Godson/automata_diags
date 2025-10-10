@@ -29,5 +29,15 @@ jobs:
     - name: Build package
       run: python -m build
 
+    - name: Check built package version
+      run: |
+        echo "=== Built packages ==="
+        ls -la dist/
+        echo "=== Package version from pyproject.toml ==="
+        grep "version" pyproject.toml
+
     - name: Publish package to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        attestations: true
+        skip-existing: true
