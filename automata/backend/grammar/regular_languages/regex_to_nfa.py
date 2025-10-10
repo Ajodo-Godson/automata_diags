@@ -48,13 +48,29 @@ def _star_fragment(f: _NFAFragment, state_counter: itertools.count):
         transitions.setdefault(state, {})[Symbol('')] = StateSet.from_states({f.start_state, accept})
     return _NFAFragment(start, {accept}, transitions)
 
+def _tokenize_regex(regex: str):
+    """Tokenize regex into meaningful tokens (characters, operators, parentheses)."""
+    tokens = []
+    i = 0
+    while i < len(regex):
+        char = regex[i]
+        if char in '()|.*':
+            tokens.append(char)
+        else:
+            tokens.append(char)
+        i += 1
+    return tokens
+
 def _shunting_yard(regex: str):
     """A simple shunting-yard implementation for regex."""
     prec = {'|': 1, '.': 2, '*': 3}
     output = []
     ops = []
-    for token in regex:
-        if token.isalnum():
+    
+    tokens = _tokenize_regex(regex)
+    
+    for token in tokens:
+        if token not in '()|.*':
             output.append(token)
         elif token == '(':
             ops.append(token)
@@ -68,7 +84,93 @@ def _shunting_yard(regex: str):
             ops.append(token)
     while ops:
         output.append(ops.pop())
-    return ''.join(output)
+    return output
+
+def _expand_character_class(char_class: str) -> str:
+    """Expand a character class like [a-zA-Z] into a union expression (a|b|c|...)."""
+    if not char_class.startswith('[') or not char_class.endswith(']'):
+        return char_class
+    
+    content = char_class[1:-1]  # Remove [ and ]
+    chars = set()
+    
+    i = 0
+    while i < len(content):
+        if i + 2 < len(content) and content[i + 1] == '-':
+            # Handle ranges like a-z, A-Z, 0-9
+            start_char = content[i]
+            end_char = content[i + 2]
+            for c in range(ord(start_char), ord(end_char) + 1):
+                chars.add(chr(c))
+            i += 3
+        else:
+            # Handle individual characters
+            chars.add(content[i])
+            i += 1
+    
+    # Convert to union expression
+    if not chars:
+        return ""
+    return "(" + "|".join(sorted(chars)) + ")"
+
+def _preprocess_regex(regex: str) -> str:
+    """Preprocess regex to handle character classes, plus quantifier, and escaped characters."""
+    result = ""
+    i = 0
+    
+    while i < len(regex):
+        if regex[i] == '[':
+            # Find the end of the character class
+            j = i + 1
+            while j < len(regex) and regex[j] != ']':
+                j += 1
+            if j < len(regex):
+                char_class = regex[i:j+1]
+                result += _expand_character_class(char_class)
+                i = j + 1
+            else:
+                result += regex[i]
+                i += 1
+        elif regex[i] == '+':
+            # Convert a+ to aa*
+            if result:
+                # Find the last "atom" (could be a character or a parenthesized expression)
+                if result.endswith(')'):
+                    # Find matching opening parenthesis
+                    paren_count = 1
+                    j = len(result) - 2
+                    while j >= 0 and paren_count > 0:
+                        if result[j] == ')':
+                            paren_count += 1
+                        elif result[j] == '(':
+                            paren_count -= 1
+                        j -= 1
+                    atom = result[j+1:]
+                else:
+                    # Single character
+                    atom = result[-1]
+                
+                result += atom + "*"
+            i += 1
+        elif regex[i] == '\\' and i + 1 < len(regex):
+            # Handle escaped characters by using a placeholder that won't conflict with operators
+            escaped_char = regex[i + 1]
+            if escaped_char == '.':
+                result += '•'  # Use bullet character as placeholder for literal dot
+            elif escaped_char == '*':
+                result += '★'  # Use star character as placeholder for literal asterisk
+            elif escaped_char == '+':
+                result += '✚'  # Use plus character as placeholder for literal plus
+            elif escaped_char == '|':
+                result += '┃'  # Use vertical bar as placeholder for literal pipe
+            else:
+                result += escaped_char  # For other escaped characters, just use the character
+            i += 2
+        else:
+            result += regex[i]
+            i += 1
+    
+    return result
 
 def _add_concat_operator(regex: str) -> str:
     """Add explicit concatenation operator to regex."""
@@ -93,15 +195,29 @@ def regex_to_nfa(regex: str) -> NFA:
             accept_states=StateSet.from_states({state}),
         )
 
-    prepared_regex = _add_concat_operator(regex)
-    postfix_regex = _shunting_yard(prepared_regex)
+    # Preprocess the regex to handle character classes, +, and escaped characters
+    preprocessed_regex = _preprocess_regex(regex)
+    prepared_regex = _add_concat_operator(preprocessed_regex)
+    postfix_tokens = _shunting_yard(prepared_regex)
     
     state_counter = itertools.count()
     stack = []
     alphabet = set()
 
-    for token in postfix_regex:
-        alphabet.add(token)
+    for token in postfix_tokens:
+        if token not in '.|()*':
+            # Convert placeholders back to original characters for alphabet
+            if token == '•':
+                alphabet.add('.')
+            elif token == '★':
+                alphabet.add('*')
+            elif token == '✚':
+                alphabet.add('+')
+            elif token == '┃':
+                alphabet.add('|')
+            else:
+                alphabet.add(token)
+        
         if token == '.':
             f2 = stack.pop()
             f1 = stack.pop()
@@ -114,7 +230,17 @@ def regex_to_nfa(regex: str) -> NFA:
             f = stack.pop()
             stack.append(_star_fragment(f, state_counter))
         else:
-            stack.append(_create_fragment_for_symbol(Symbol(token), state_counter))
+            # Convert placeholders back for Symbol creation
+            symbol_char = token
+            if token == '•':
+                symbol_char = '.'
+            elif token == '★':
+                symbol_char = '*'
+            elif token == '✚':
+                symbol_char = '+'
+            elif token == '┃':
+                symbol_char = '|'
+            stack.append(_create_fragment_for_symbol(Symbol(symbol_char), state_counter))
             
     final_fragment = stack.pop()
     all_states = {final_fragment.start_state} | final_fragment.accept_states
@@ -124,7 +250,7 @@ def regex_to_nfa(regex: str) -> NFA:
 
     return NFA(
         states=StateSet.from_states(all_states),
-        alphabet=Alphabet([s for s in alphabet if s not in '.|*()']),
+        alphabet=Alphabet(list(alphabet)),  # Don't filter out characters - alphabet already contains converted chars
         transitions=final_fragment.transitions,
         start_state=final_fragment.start_state,
         accept_states=StateSet.from_states(final_fragment.accept_states)
