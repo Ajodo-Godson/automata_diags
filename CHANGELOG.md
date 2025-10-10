@@ -5,6 +5,78 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.4] - 2025-10-09
+
+### 🎉 Major Regular Expression Enhancements
+
+#### **Enhanced Regex Preprocessing**
+- **Added**: Character class expansion support (e.g., `[a-z]`, `[A-Z]`, `[0-9]`)
+- **Added**: Plus quantifier (`+`) conversion to equivalent `aa*` pattern
+- **Added**: Escaped character handling for literal dots, asterisks, plus signs, and pipes
+- **Enhanced**: Comprehensive regex preprocessing pipeline for complex patterns
+
+#### **Advanced Character Class Support**
+- **Added**: Range-based character classes with automatic expansion
+- **Added**: Mixed character classes combining ranges and individual characters
+- **Added**: Support for character class unions (converted to regex union expressions)
+- **Enhanced**: Character class parsing with proper boundary detection
+
+#### **Improved Regex-to-NFA Conversion**
+- **Enhanced**: Thompson's construction algorithm with better token handling
+- **Added**: Placeholder system for literal character preservation during parsing
+- **Enhanced**: Shunting-yard algorithm for complex expression parsing
+- **Added**: Robust postfix conversion with operator precedence handling
+
+#### **Symbol and Alphabet Management**
+- **Enhanced**: Automatic alphabet inference from regex patterns
+- **Added**: Proper symbol conversion for escaped and special characters
+- **Enhanced**: State generation and management for complex regex patterns
+- **Added**: Better handling of epsilon transitions in regex-generated NFAs
+
+### 🔧 Algorithm Improvements
+
+#### **Regex Processing Pipeline**
+- **Enhanced**: Multi-stage preprocessing (character classes → plus expansion → escaping)
+- **Added**: Explicit concatenation operator insertion for proper parsing
+- **Enhanced**: Token-based regex parsing with comprehensive operator support
+- **Added**: Proper precedence handling for nested regex operations
+
+#### **NFA Fragment Construction**
+- **Enhanced**: Fragment-based NFA construction for modular regex building
+- **Added**: Improved concatenation, union, and Kleene star fragment operations
+- **Enhanced**: State counter management for unique state generation
+- **Added**: Better epsilon transition handling in complex regex patterns
+
+### 🧪 Testing & Validation
+
+#### **Comprehensive Regex Testing**
+- **Added**: Test suite for character class expansion
+- **Added**: Plus quantifier conversion validation
+- **Added**: Escaped character handling tests
+- **Enhanced**: Complex regex pattern acceptance testing
+
+#### **Edge Case Coverage**
+- **Added**: Empty regex handling
+- **Added**: Nested parentheses and complex grouping tests
+- **Enhanced**: Special character and operator precedence validation
+- **Added**: Character range boundary testing
+
+### 📚 Documentation & Examples
+
+#### **Regex Usage Examples**
+- **Enhanced**: Comprehensive regex pattern demonstrations
+- **Added**: Character class usage examples in tutorials
+- **Added**: Plus quantifier examples and explanations
+- **Enhanced**: Complex regex-to-NFA conversion workflows
+
+#### **Educational Content**
+- **Added**: Step-by-step regex preprocessing explanations
+- **Enhanced**: Thompson's construction algorithm documentation
+- **Added**: Character class expansion algorithm details
+- **Enhanced**: Regex parsing and tokenization guides
+
+---
+
 ## [0.2.0] - 2024-12-19
 
 ### 🎉 Major New Features
