@@ -1,0 +1,217 @@
+.transitions-editor {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.editor-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.editor-subtitle {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0.25rem 0 0 0;
+}
+
+.btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #1f2937;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-add:hover {
+    background: #111827;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.transitions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.transition-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    transition: all 0.2s;
+    font-family: 'Courier New', monospace;
+}
+
+.transition-item:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.transition-text {
+    font-size: 0.95rem;
+    color: #1f2937;
+}
+
+.delta-symbol {
+    color: #3b82f6;
+    font-weight: bold;
+}
+
+.state-name {
+    color: #7c3aed;
+    font-weight: 600;
+}
+
+.symbol-name {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.equals {
+    color: #6b7280;
+    margin: 0 0.5rem;
+}
+
+.transition-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-icon {
+    padding: 0.4rem;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon-add {
+    color: #3b82f6;
+}
+
+.btn-icon-add:hover {
+    background: #dbeafe;
+}
+
+.btn-icon-delete {
+    color: #ef4444;
+}
+
+.btn-icon-delete:hover {
+    background: #fee2e2;
+}
+
+.transition-add-form {
+    padding: 1rem;
+    background: #eff6ff;
+    border: 2px dashed #3b82f6;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.form-inputs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+}
+
+.input-small {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    width: 60px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.input-small:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.separator {
+    color: #6b7280;
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-save, .btn-cancel {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-save {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-save:hover {
+    background: #2563eb;
+}
+
+.btn-cancel {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.btn-cancel:hover {
+    background: #e5e7eb;
+}
+
+.empty-state {
+    padding: 2rem;
+    text-align: center;
+    color: #9ca3af;
+}
+
+.empty-state p {
+    margin: 0.25rem 0;
+}
+
+.empty-hint {
+    font-size: 0.8rem;
+}
+

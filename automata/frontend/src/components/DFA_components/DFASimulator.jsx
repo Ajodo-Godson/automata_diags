@@ -3,6 +3,8 @@ import './stylings/DFASimulator.css';
 import DFAGraph from './DFAGraph';
 import { DFAControlPanel } from './DFAControlPanel';
 import { DFATestCases } from './DFATestCases';
+import { TransitionsEditor } from './TransitionsEditor';
+import { StatesEditor } from './StatesEditor';
 import { useExamples } from './examples';
 import { useDFA } from './useDFA';
 
@@ -467,6 +469,12 @@ const DFASimulatorNew = () => {
                                 </table>
                             </div>
                         </div>
+
+                        {/* New Transitions Editor */}
+                        <TransitionsEditor dfa={dfa} onUpdate={handleReset} />
+
+                        {/* New States Editor */}
+                        <StatesEditor dfa={dfa} onUpdate={handleReset} />
                     </div>
                 </div>
             </div>
