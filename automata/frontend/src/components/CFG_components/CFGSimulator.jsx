@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './stylings/CFGSimulator.css';
 import { CFGControlPanel } from './CFGControlPanel';
 import { CFGTestCases } from './CFGTestCases';
@@ -23,139 +23,220 @@ const CFGSimulator = () => {
     const [playbackSpeed, setPlaybackSpeed] = useState(1000);
     const [isAccepted, setIsAccepted] = useState(null);
 
-    // Auto-play derivation
-    useEffect(() => {
-        let timer;
-        if (isPlaying && currentStep < derivationSteps.length - 1) {
-            timer = setTimeout(() => {
-                setCurrentStep(currentStep + 1);
-            }, playbackSpeed);
-        } else if (currentStep >= derivationSteps.length - 1) {
-            setIsPlaying(false);
+    // Helper functions for CNF conversion and CYK parsing
+    const toCNF = (cfg) => {
+        let cnf = JSON.parse(JSON.stringify(cfg)); // Deep copy
+
+        // Eliminate start symbol from RHS
+        cnf = eliminateStart(cnf);
+
+        // Eliminate null productions
+        cnf = eliminateNull(cnf);
+
+        // Eliminate unit productions
+        cnf = eliminateUnit(cnf);
+
+        // Separate terminals
+        cnf = separateTerminals(cnf);
+
+        // Binarize
+        cnf = binarize(cnf);
+
+        return cnf;
+    };
+
+    const eliminateStart = (cfg) => {
+        const newCfg = JSON.parse(JSON.stringify(cfg));
+        if (newCfg.rules.some(r => r.right.includes(newCfg.startVariable))) {
+            const newStart = newCfg.startVariable + '0';
+            newCfg.variables.push(newStart);
+            newCfg.rules.push({ left: newStart, right: [newCfg.startVariable] });
+            newCfg.startVariable = newStart;
         }
-        return () => clearTimeout(timer);
-    }, [isPlaying, currentStep, derivationSteps.length, playbackSpeed]);
+        return newCfg;
+    };
+
+    const eliminateNull = (cfg) => {
+        const newCfg = JSON.parse(JSON.stringify(cfg));
+        const nullable = new Set();
+        newCfg.rules.forEach(r => {
+            if (r.right.length === 0) nullable.add(r.left);
+        });
+        let changed = true;
+        while (changed) {
+            changed = false;
+            for (let r of newCfg.rules) {
+                if (r.right.every(sym => nullable.has(sym))) {
+                    if (!nullable.has(r.left)) {
+                        nullable.add(r.left);
+                        changed = true;
+                    }
+                }
+            }
+        }
+        const newRules = [];
+        newCfg.rules.forEach(r => {
+            if (r.right.length === 0) return; // Remove null rules
+            const combos = generateCombos(r.right, nullable);
+            combos.forEach(combo => {
+                newRules.push({ left: r.left, right: combo });
+            });
+        });
+        newCfg.rules = newRules;
+        return newCfg;
+    };
+
+    const generateCombos = (rhs, nullable) => {
+        const combos = [[]];
+        rhs.forEach(sym => {
+            const newCombos = [];
+            combos.forEach(combo => {
+                newCombos.push([...combo, sym]);
+                if (nullable.has(sym)) {
+                    newCombos.push(combo);
+                }
+            });
+            combos.splice(0, combos.length, ...newCombos);
+        });
+        return combos.filter(c => c.length > 0);
+    };
+
+    const eliminateUnit = (cfg) => {
+        const newCfg = JSON.parse(JSON.stringify(cfg));
+        const unitPairs = new Set();
+        newCfg.rules.forEach(r => {
+            if (r.right.length === 1 && newCfg.variables.includes(r.right[0])) {
+                unitPairs.add(`${r.left}-${r.right[0]}`);
+            }
+        });
+        // Compute transitive closure (simplified)
+        const closures = {};
+        newCfg.variables.forEach(v => closures[v] = new Set([v]));
+        unitPairs.forEach(pair => {
+            const [a, b] = pair.split('-');
+            closures[a].add(b);
+        });
+        let changed = true;
+        while (changed) {
+            changed = false;
+            for (let a of newCfg.variables) {
+                for (let b of newCfg.variables) {
+                    if (closures[a].has(b)) {
+                        for (let c of closures[b]) {
+                            if (!closures[a].has(c)) {
+                                closures[a].add(c);
+                                changed = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        const newRules = [];
+        newCfg.rules.forEach(r => {
+            if (r.right.length !== 1 || !newCfg.variables.includes(r.right[0])) {
+                closures[r.left].forEach(nt => {
+                    newRules.push({ left: nt, right: r.right });
+                });
+            }
+        });
+        newCfg.rules = newRules;
+        return newCfg;
+    };
+
+    const separateTerminals = (cfg) => {
+        const newCfg = JSON.parse(JSON.stringify(cfg));
+        const terminalMap = {};
+        newCfg.terminals.forEach(t => {
+            const nt = 'X' + t.toUpperCase();
+            newCfg.variables.push(nt);
+            terminalMap[t] = nt;
+            newCfg.rules.push({ left: nt, right: [t] });
+        });
+        newCfg.rules = newCfg.rules.map(r => ({
+            left: r.left,
+            right: r.right.map(sym => terminalMap[sym] || sym)
+        }));
+        return newCfg;
+    };
+
+    const binarize = (cfg) => {
+        const newCfg = JSON.parse(JSON.stringify(cfg));
+        const newRules = [];
+        let varCounter = 0;
+        newCfg.rules.forEach(r => {
+            if (r.right.length <= 2) {
+                newRules.push(r);
+            } else {
+                let current = r.left;
+                for (let i = 0; i < r.right.length - 2; i++) {
+                    const newVar = 'BIN' + varCounter++;
+                    newCfg.variables.push(newVar);
+                    newRules.push({ left: current, right: [r.right[i], newVar] });
+                    current = newVar;
+                }
+                newRules.push({ left: current, right: [r.right[r.right.length - 2], r.right[r.right.length - 1]] });
+            }
+        });
+        newCfg.rules = newRules;
+        return newCfg;
+    };
+
+    const cykParse = (cnf, input) => {
+        const n = input.length;
+        const table = Array.from({ length: n }, () => Array.from({ length: n }, () => new Set()));
+
+        // Fill diagonal (length 1)
+        for (let i = 0; i < n; i++) {
+            cnf.rules.forEach(r => {
+                if (r.right.length === 1 && r.right[0] === input[i]) {
+                    table[i][i].add(r.left);
+                }
+            });
+        }
+
+        // Fill for lengths 2 to n
+        for (let len = 2; len <= n; len++) {
+            for (let i = 0; i <= n - len; i++) {
+                const j = i + len - 1;
+                for (let k = i; k < j; k++) {
+                    cnf.rules.forEach(r => {
+                        if (r.right.length === 2) {
+                            const [b, c] = r.right;
+                            if (table[i][k].has(b) && table[k + 1][j].has(c)) {
+                                table[i][j].add(r.left);
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        return table[0][n - 1].has(cnf.startVariable);
+    };
 
     const parseString = () => {
         setDerivationSteps([]);
         setCurrentStep(-1);
         setIsAccepted(null);
 
-        const steps = [];
-        let globalPosition = { value: 0 };
+        // Convert CFG to CNF
+        const cnfGrammar = toCNF(cfg);
 
-    // Failure cache to avoid infinite recursion on left-recursive grammars.
-    // Keys are `${nonTerminal}@${position}` for attempts that failed.
-    const failureCache = new Set();
-    // Tracks nonterminals currently being attempted at a given input position
-    // to detect and prevent immediate left-recursive re-entry.
-    const inProgress = new Set();
+        // Use CYK to parse
+        const accepted = cykParse(cnfGrammar, inputString);
 
-    // Try to parse the string starting from the start variable
-    const success = parseNonTerminal(cfg.startVariable, 0, steps, globalPosition);
-
-        // Check if we successfully parsed the entire string
-        const accepted = success && globalPosition.value >= inputString.length;
-
-        // Add final status to last step
-        if (steps.length > 0) {
-            steps[steps.length - 1].description += accepted ? ' → ACCEPTED' : ' → REJECTED';
-        }
+        // For now, just set accepted; later add derivation steps from CYK table
+        const steps = [{
+            step: 1,
+            string: inputString,
+            rule: null,
+            description: `Parsed using CNF grammar. Result: ${accepted ? 'ACCEPTED' : 'REJECTED'}`
+        }];
 
         setDerivationSteps(steps);
         setIsAccepted(accepted);
         setCurrentStep(0);
-
-        // Recursive function to parse a non-terminal at a specific position
-        function parseNonTerminal(nonTerminal, startPos, derivationSteps, position) {
-            const keyFor = (nt, pos) => `${nt}@${pos}`;
-            const startKey = keyFor(nonTerminal, startPos);
-
-            if (failureCache.has(startKey)) {
-                // Previously failed to parse this nonterminal at this position.
-                return false;
-            }
-
-            if (inProgress.has(startKey)) {
-                // Already attempting this nonTerminal at this position -> likely left recursion.
-                return false;
-            }
-
-            inProgress.add(startKey);
-
-            // Try each production rule for this non-terminal
-            for (const rule of cfg.rules) {
-                if (rule.left !== nonTerminal) continue;
-
-                const stepNum = derivationSteps.length + 1;
-                // Create a snapshot of the current parsing state
-                const snapshotPos = position.value;
-
-                // Add derivation step
-                derivationSteps.push({
-                    step: stepNum,
-                    string: inputString.substring(0, snapshotPos) +
-                           `[${rule.left} → ${rule.right}]` +
-                           inputString.substring(snapshotPos),
-                    rule: rule,
-                    description: `Trying rule ${rule.left} → ${rule.right} at position ${snapshotPos}`
-                });
-
-                let success = true;
-                position.value = snapshotPos; // Reset position for this attempt
-
-                // Try to match the right-hand side
-                if (rule.right === 'ε' || rule.right === '') {
-                    // Epsilon production - matches without consuming input
-                    derivationSteps[derivationSteps.length - 1].description +=
-                        ' → Matched ε (empty string)';
-                } else {
-                    // Parse each symbol in the RHS
-                    // Split into symbols: variables are single uppercase tokens; terminals may be multi-char
-                    const symbols = rule.right.split(/([A-Z]|\(|\)|\+|\*)/).filter(s => s && s.trim());
-                    for (const symbol of symbols) {
-                        if (cfg.variables.includes(symbol)) {
-                            // Non-terminal - recursively parse
-                            const attemptKey = keyFor(symbol, position.value);
-                            if (inProgress.has(attemptKey)) {
-                                // Avoid immediate recursion into a nonTerminal already on the stack
-                                success = false;
-                                break;
-                            }
-
-                            if (!parseNonTerminal(symbol, position.value, derivationSteps, position)) {
-                                success = false;
-                                break;
-                            }
-                        } else {
-                            // Terminal - match against input
-                            if (position.value >= inputString.length || inputString[position.value] !== symbol) {
-                                success = false;
-                                break;
-                            }
-                            position.value++;
-                        }
-                    }
-                }
-
-                if (success) {
-                    derivationSteps[derivationSteps.length - 1].description +=
-                        ` → Success, advanced to position ${position.value}`;
-                    inProgress.delete(startKey);
-                    return true;
-                }
-
-                // Backtrack - remove this derivation step
-                derivationSteps.pop();
-                position.value = snapshotPos; // Restore position
-                // Continue trying other rules
-            }
-
-            // All rules failed for this nonTerminal at this position
-            inProgress.delete(startKey);
-            failureCache.add(startKey);
-            return false;
-        }
     };
 
     const handleRun = () => {
