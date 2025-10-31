@@ -436,25 +436,21 @@ const CFGSimulator = () => {
         }
     };
 
-    // Generate leftmost derivation steps
+    // Generate leftmost derivation steps with backtracking
     const generateLeftmostDerivation = (cfg, target) => {
-        const steps = [];
-        const maxSteps = 100; // Prevent infinite loops
+        const maxSteps = 50; // Prevent infinite loops
+        const maxLength = target.length * 3; // Prevent strings from growing too long
         
-        // Start with the start variable
-        let current = cfg.startVariable;
-        steps.push({
-            step: 0,
-            string: current,
-            production: null,
-            description: `Start with ${cfg.startVariable}`
-        });
-        
-        // Try to derive the target string
-        for (let stepCount = 0; stepCount < maxSteps; stepCount++) {
-            // Check if we've reached the target
+        // Recursive backtracking function
+        const derive = (current, steps, depth) => {
+            // Base case: reached target
             if (current === target) {
                 return steps;
+            }
+            
+            // Prevent excessive depth or length
+            if (depth >= maxSteps || current.length > maxLength) {
+                return null;
             }
             
             // Find the leftmost variable
@@ -470,60 +466,59 @@ const CFGSimulator = () => {
             
             // No more variables to expand
             if (variable === null) {
-                // If we have no more variables but haven't reached target, derivation failed
-                return [];
+                // No variables left but haven't reached target
+                return null;
             }
             
             // Find applicable rules for this variable
             const applicableRules = cfg.rules.filter(r => r.left === variable);
             if (applicableRules.length === 0) {
-                return []; // No rules for this variable
+                return null; // No rules for this variable
             }
             
-            // Try each applicable rule
-            let ruleFound = false;
+            // Try each applicable rule (backtracking)
             for (const rule of applicableRules) {
                 const replacement = rule.right === 'ε' ? '' : rule.right;
                 const newString = current.substring(0, variableIndex) + replacement + current.substring(variableIndex + 1);
                 
-                // Heuristic: prefer rules that move us closer to the target
-                // (This is a simple greedy approach; for complex grammars, backtracking would be needed)
-                const targetPrefix = target.substring(0, variableIndex);
-                const newPrefix = newString.substring(0, Math.min(variableIndex + replacement.length, target.length));
+                // Skip if the terminal prefix doesn't match target
+                const terminalPrefix = newString.split('').filter((_, idx) => {
+                    return idx < variableIndex || !cfg.variables.includes(newString[idx]);
+                }).join('').substring(0, variableIndex);
                 
-                if (target.startsWith(newString.replace(/[A-Z]/g, '')) || 
-                    newString.length <= target.length * 2) {
-                    current = newString;
-                    steps.push({
-                        step: stepCount + 1,
-                        string: current,
-                        production: rule,
-                        highlightIndices: Array.from({ length: replacement.length }, (_, i) => variableIndex + i),
-                        description: `Apply ${rule.left} → ${rule.right}`
-                    });
-                    ruleFound = true;
-                    break;
+                if (terminalPrefix && !target.startsWith(terminalPrefix)) {
+                    continue; // Prune this branch
                 }
-            }
-            
-            if (!ruleFound) {
-                // Use the first applicable rule
-                const rule = applicableRules[0];
-                const replacement = rule.right === 'ε' ? '' : rule.right;
-                current = current.substring(0, variableIndex) + replacement + current.substring(variableIndex + 1);
                 
-                steps.push({
-                    step: stepCount + 1,
-                    string: current,
+                // Create new step
+                const newSteps = [...steps, {
+                    step: depth,
+                    string: newString,
                     production: rule,
                     highlightIndices: Array.from({ length: replacement.length }, (_, i) => variableIndex + i),
                     description: `Apply ${rule.left} → ${rule.right}`
-                });
+                }];
+                
+                // Recursively try to derive from this point
+                const result = derive(newString, newSteps, depth + 1);
+                if (result !== null) {
+                    return result;
+                }
             }
-        }
+            
+            // No rule worked, backtrack
+            return null;
+        };
         
-        // If we exhausted steps without reaching target, derivation failed
-        return current === target ? steps : [];
+        // Start with the start variable
+        const initialSteps = [{
+            step: 0,
+            string: cfg.startVariable,
+            production: null,
+            description: `Start with ${cfg.startVariable}`
+        }];
+        
+        return derive(cfg.startVariable, initialSteps, 1) || [];
     };
 
     const handleRun = () => {
