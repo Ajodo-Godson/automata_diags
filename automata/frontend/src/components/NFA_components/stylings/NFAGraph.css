@@ -1,0 +1,171 @@
+.nfa-graph-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    height: 600px !important;
+    margin: 20px 0;
+}
+
+.nfa-state-node {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #667eea;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    font-weight: bold;
+    font-size: 18px;
+    transition: all 0.3s ease;
+    z-index: 1;
+}
+
+.nfa-state-label {
+    color: #667eea;
+    user-select: none;
+}
+
+.nfa-accept-state {
+    border: 2px solid #667eea;
+}
+
+.nfa-accept-state::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    right: -6px;
+    bottom: -6px;
+    border: 3px solid #667eea;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.nfa-start-state::before {
+    content: '→';
+    position: absolute;
+    left: -35px;
+    font-size: 30px;
+    color: #667eea;
+    transition: all 0.3s ease;
+}
+
+.nfa-current-state {
+    background: linear-gradient(135deg, #e0e7ff, #ddd6fe);
+    border-color: #3b82f6;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.nfa-current-state .nfa-state-label {
+    color: #3b82f6;
+}
+
+.nfa-current-state::after {
+    border-color: #3b82f6;
+}
+
+.nfa-current-state::before {
+    color: #3b82f6;
+}
+
+/* Edge styling */
+.nfa-graph-container .react-flow__edge-path {
+    stroke-width: 2;
+    transition: stroke 0.3s ease, stroke-width 0.3s ease;
+}
+
+.nfa-graph-container .react-flow__edge-text {
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+/* Controls styling */
+.nfa-graph-container .react-flow__controls {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.nfa-graph-container .react-flow__controls-button {
+    border: none !important;
+    background: white !important;
+    color: #667eea !important;
+}
+
+/* Background styling */
+.nfa-graph-container .react-flow__background {
+    background-color: #f8f9fa;
+}
+
+/* Animations */
+@keyframes nfaPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+
+    70% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+}
+
+.nfa-pulse {
+    animation: nfaPulse 1.5s infinite;
+}
+
+/* Edge animation */
+.nfa-graph-container .react-flow__edge.animated .react-flow__edge-path {
+    stroke-dasharray: 8;
+    animation: nfaFlowingDash 1s linear infinite;
+}
+
+@keyframes nfaFlowingDash {
+    from {
+        stroke-dashoffset: 16;
+    }
+
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes nfaNodeHighlight {
+    0% {
+        transform: scale(1.1);
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    }
+
+    50% {
+        transform: scale(1.15);
+        box-shadow: 0 0 25px rgba(59, 130, 246, 0.6);
+    }
+
+    100% {
+        transform: scale(1.1);
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    }
+}
+
+.nfa-active-node {
+    animation: nfaNodeHighlight 1.5s infinite;
+}
+
+@keyframes nfaDashdraw {
+    from {
+        stroke-dashoffset: 10;
+    }
+}
+
+.nfa-graph-container .react-flow__edge.active path {
+    stroke: #3b82f6;
+    stroke-width: 2;
+}
+
