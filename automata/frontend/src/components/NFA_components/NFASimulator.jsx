@@ -269,7 +269,7 @@ const NFASimulator = () => {
                     </select>
                     {currentExampleName && (
                         <span className="nfa-current-example">
-                            Current: {examples[currentExampleName]?.name || 'Custom'}
+                            Current: {examples[currentExampleName]?.name || currentExampleName || 'Custom'}
                         </span>
                     )}
                 </div>
