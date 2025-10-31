@@ -140,22 +140,29 @@ const DFAGraph = ({ states, transitions, startState, acceptStates, currentState,
 
     const { nodes, edges } = getLayoutedElements();
 
+    // Auto zoom to fit when graph changes
     useEffect(() => {
-        console.log('DFAGraph current state:', currentState);
-    }, [currentState]);
+        if (reactFlowInstance) {
+            setTimeout(() => {
+                reactFlowInstance.fitView({ padding: 0.2, duration: 300 });
+            }, 100);
+        }
+    }, [nodes, edges, reactFlowInstance]);
 
     return (
-        <div style={{ height: '250px' }} className="dfa-graph-container">
+        <div style={{ height: '400px' }} className="dfa-graph-container">
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
                 nodeTypes={nodeTypes}
+                onInit={setReactFlowInstance}
                 fitView
-                minZoom={0.1}
+                attributionPosition="bottom-left"
+                minZoom={0.3}
                 maxZoom={1.5}
-                defaultZoom={0.8}
+                defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
             >
-                <Background color="#aaa" gap={16} />
+                <Background color="#e5e7eb" gap={16} />
                 <Controls />
             </ReactFlow>
         </div>
