@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './stylings/PDASimulator.css';
 import { PDAControlPanel } from './PDAControlPanel';
 import { PDATestCases } from './PDATestCases';
@@ -7,16 +7,17 @@ import { usePDA } from './usePDA';
 
 const PDASimulator = () => {
     const { examples } = useExamples();
-    const [currentExampleName, setCurrentExampleName] = useState('balanced_parentheses');
+    const [currentExampleName, setCurrentExampleName] = useState(null);
 
+    // Start with a blank PDA
     const pda = usePDA({
-        states: examples['balanced_parentheses'].states,
-        alphabet: examples['balanced_parentheses'].alphabet,
-        stackAlphabet: examples['balanced_parentheses'].stackAlphabet,
-        transitions: examples['balanced_parentheses'].transitions,
-        startState: examples['balanced_parentheses'].startState,
-        startStackSymbol: examples['balanced_parentheses'].startStackSymbol,
-        acceptStates: examples['balanced_parentheses'].acceptStates,
+        states: ['q0'],
+        alphabet: ['0', '1'],
+        stackAlphabet: ['Z', 'X'],
+        transitions: [],
+        startState: 'q0',
+        startStackSymbol: 'Z',
+        acceptStates: [],
     });
 
     const [inputString, setInputString] = useState('');
@@ -40,64 +41,6 @@ const PDASimulator = () => {
         }
         return () => clearTimeout(timer);
     }, [isPlaying, currentStep, simulationSteps.length, playbackSpeed]);
-
-    // Event listeners for toolbox actions
-    useEffect(() => {
-        const handleExport = () => {
-            const pdaDefinition = {
-                name: 'Custom PDA',
-                description: 'Exported PDA definition',
-                states: pda.states,
-                alphabet: pda.alphabet,
-                stackAlphabet: pda.stackAlphabet,
-                transitions: pda.transitions,
-                startState: pda.startState,
-                startStackSymbol: pda.startStackSymbol,
-                acceptStates: Array.from(pda.acceptStates)
-            };
-            
-            const dataStr = JSON.stringify(pdaDefinition, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            
-            const exportFileDefaultName = 'pda_definition.json';
-            
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-        };
-
-        const handleImport = () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const pdaDefinition = JSON.parse(e.target.result);
-                            pda.loadPDA(pdaDefinition);
-                            setCurrentExampleName('Custom Import');
-                        } catch (error) {
-                            alert('Invalid JSON file or PDA definition format');
-                        }
-                    };
-                    reader.readAsText(file);
-                }
-            };
-            input.click();
-        };
-
-        window.addEventListener('export', handleExport);
-        window.addEventListener('import', handleImport);
-
-        return () => {
-            window.removeEventListener('export', handleExport);
-            window.removeEventListener('import', handleImport);
-        };
-    }, [pda]);
 
     const simulateString = () => {
         setSimulationSteps([]);
@@ -187,24 +130,154 @@ const PDASimulator = () => {
         }
     };
 
-    const handleReset = () => {
+    const handleReset = useCallback(() => {
         setSimulationSteps([]);
         setCurrentStep(-1);
         setIsPlaying(false);
-    };
+    }, []);
 
-    const loadExample = (exampleName) => {
+    const loadExample = useCallback((exampleName) => {
         const example = examples[exampleName];
         setCurrentExampleName(exampleName);
         pda.loadPDA(example);
         setInputString('');
         handleReset();
-    };
+    }, [examples, pda, setCurrentExampleName, setInputString, handleReset]);
 
     const handleLoadTest = (testInput) => {
         setInputString(testInput);
         handleReset();
     };
+
+    // Event listeners for toolbox actions
+    useEffect(() => {
+        const handleExport = () => {
+            const pdaDefinition = {
+                name: currentExampleName || 'Custom PDA',
+                description: 'Exported PDA definition',
+                states: pda.states,
+                alphabet: pda.alphabet,
+                stackAlphabet: pda.stackAlphabet,
+                transitions: pda.transitions,
+                startState: pda.startState,
+                startStackSymbol: pda.startStackSymbol,
+                acceptStates: Array.from(pda.acceptStates)
+            };
+            
+            const dataStr = JSON.stringify(pdaDefinition, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'pda_definition.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        };
+
+        const handleAddState = () => {
+            const stateName = prompt('Enter new state name (e.g., q1, q2):');
+            if (stateName && stateName.trim()) {
+                pda.addState(stateName.trim());
+                handleReset();
+            }
+        };
+
+        const handleAddTransition = () => {
+            const from = prompt(`Enter source state:\nAvailable states: ${pda.states.join(', ')}`);
+            if (!from || !pda.states.includes(from.trim())) {
+                if (from) alert(`State "${from}" does not exist`);
+                return;
+            }
+            
+            const input = prompt(`Enter input symbol (or ε for epsilon):\nAlphabet: ${pda.alphabet.join(', ')}, ε`);
+            if (!input) return;
+            
+            const pop = prompt(`Enter symbol to pop from stack:\nStack alphabet: ${pda.stackAlphabet.join(', ')}`);
+            if (!pop) return;
+            
+            const to = prompt(`Enter destination state:\nAvailable states: ${pda.states.join(', ')}`);
+            if (!to || !pda.states.includes(to.trim())) {
+                if (to) alert(`State "${to}" does not exist`);
+                return;
+            }
+            
+            const push = prompt(`Enter symbol(s) to push onto stack (or ε for nothing):\nStack alphabet: ${pda.stackAlphabet.join(', ')}, ε`);
+            if (!push) return;
+            
+            pda.addTransition(from.trim(), to.trim(), input.trim(), pop.trim(), push.trim());
+            handleReset();
+        };
+
+        const handleDeleteState = () => {
+            const stateName = prompt(`Enter state to delete:\nAvailable states: ${pda.states.join(', ')}`);
+            if (stateName && pda.states.includes(stateName.trim())) {
+                if (pda.states.length <= 1) {
+                    alert('Cannot delete the only state');
+                    return;
+                }
+                pda.removeState(stateName.trim());
+                handleReset();
+            } else if (stateName) {
+                alert(`State "${stateName}" does not exist`);
+            }
+        };
+
+        const handleSetStartState = () => {
+            const newStartState = prompt(`Enter the state to set as start state:\nAvailable states: ${pda.states.join(', ')}`);
+            if (newStartState && pda.states.includes(newStartState.trim())) {
+                pda.setStart(newStartState.trim());
+                handleReset();
+            } else if (newStartState) {
+                alert(`State "${newStartState}" does not exist`);
+            }
+        };
+
+        const handleToggleAccept = () => {
+            const stateName = prompt(`Enter state to toggle accept status:\nAvailable states: ${pda.states.join(', ')}\nCurrent accept states: ${Array.from(pda.acceptStates).join(', ') || 'none'}`);
+            if (stateName && pda.states.includes(stateName.trim())) {
+                pda.toggleAcceptState(stateName.trim());
+                handleReset();
+            } else if (stateName) {
+                alert(`State "${stateName}" does not exist`);
+            }
+        };
+
+        const handleClearAll = () => {
+            // Create a blank PDA
+            if (confirm('Are you sure you want to clear all and start fresh?')) {
+                pda.loadPDA({
+                    states: ['q0'],
+                    alphabet: ['0', '1'],
+                    stackAlphabet: ['Z', 'X'],
+                    transitions: [],
+                    startState: 'q0',
+                    startStackSymbol: 'Z',
+                    acceptStates: []
+                });
+                setCurrentExampleName(null);
+                handleReset();
+            }
+        };
+
+        window.addEventListener('export', handleExport);
+        window.addEventListener('addState', handleAddState);
+        window.addEventListener('addTransition', handleAddTransition);
+        window.addEventListener('deleteState', handleDeleteState);
+        window.addEventListener('setStartState', handleSetStartState);
+        window.addEventListener('toggleAccept', handleToggleAccept);
+        window.addEventListener('clearAll', handleClearAll);
+
+        return () => {
+            window.removeEventListener('export', handleExport);
+            window.removeEventListener('addState', handleAddState);
+            window.removeEventListener('addTransition', handleAddTransition);
+            window.removeEventListener('deleteState', handleDeleteState);
+            window.removeEventListener('setStartState', handleSetStartState);
+            window.removeEventListener('toggleAccept', handleToggleAccept);
+            window.removeEventListener('clearAll', handleClearAll);
+        };
+    }, [pda, currentExampleName, handleReset]);
 
     return (
         <div className="pda-simulator-new">
@@ -217,20 +290,30 @@ const PDASimulator = () => {
                     </p>
                 </div>
 
-                {/* Example Selector */}
+                {/* Example Selector - Dropdown */}
                 <div className="pda-example-selector">
-                    <label className="pda-selector-label">Load Example:</label>
-                    <div className="pda-selector-buttons">
+                    <label className="pda-selector-label">Quick Load Example:</label>
+                    <select 
+                        onChange={(e) => {
+                            if (e.target.value) {
+                                loadExample(e.target.value);
+                            }
+                        }}
+                        value={currentExampleName || ''}
+                        className="pda-example-dropdown"
+                    >
+                        <option value="">-- Select an example --</option>
                         {Object.entries(examples).map(([key, example]) => (
-                            <button
-                                key={key}
-                                onClick={() => loadExample(key)}
-                                className={`pda-selector-btn ${currentExampleName === key ? 'active' : ''}`}
-                            >
+                            <option key={key} value={key}>
                                 {example.name}
-                            </button>
+                            </option>
                         ))}
-                    </div>
+                    </select>
+                    {currentExampleName && (
+                        <span className="pda-current-example">
+                            Current: {examples[currentExampleName]?.name || 'Custom'}
+                        </span>
+                    )}
                 </div>
 
                 {/* Main Grid */}
