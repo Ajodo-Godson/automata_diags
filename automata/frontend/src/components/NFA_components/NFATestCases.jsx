@@ -90,4 +90,3 @@ export const NFATestCases = ({ nfa, onTestString, currentExample }) => {
   );
 };
 
-export default NFATestCases;
