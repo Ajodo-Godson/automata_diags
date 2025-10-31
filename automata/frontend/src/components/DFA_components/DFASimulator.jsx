@@ -298,11 +298,6 @@ const DFASimulatorNew = () => {
                             </option>
                         ))}
                     </select>
-                    {currentExampleName && (
-                        <span className="dfa-current-example">
-                            Current: {examples[currentExampleName]?.name || 'Custom'}
-                        </span>
-                    )}
                 </div>
 
                 {/* Main Grid */}

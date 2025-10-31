@@ -247,7 +247,7 @@
   border-radius: 8px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: white;
-  color: #1f2937;
+  color: #000000;
   position: relative;
 }
 
@@ -785,7 +785,7 @@
 /* Dark mode support (optional) */
 @media (prefers-color-scheme: dark) {
   .dfa-simulator-new {
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+    background: linear-gradient(135deg, #6b6798 0%, #312e81 50%, #000000 100%);
   }
   
   .dfa-example-selector {

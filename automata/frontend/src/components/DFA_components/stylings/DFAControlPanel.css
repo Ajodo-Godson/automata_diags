@@ -5,10 +5,24 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.dfa-control-panel-card-compact {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  padding: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
 .dfa-control-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+}
+
+.dfa-control-grid-compact {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 1rem;
+  align-items: center;
 }
 
 @media (max-width: 768px) {
@@ -36,9 +50,25 @@
   color: #374151;
 }
 
+.dfa-control-label-compact {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .dfa-button-group {
   display: flex;
   gap: 8px;
+}
+
+.dfa-button-group-compact {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .dfa-btn {
@@ -98,6 +128,13 @@
 .dfa-btn-large {
   padding: 12px 20px;
   font-size: 15px;
+}
+
+.dfa-btn-small {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  gap: 0.35rem;
 }
 
 .dfa-speed-control-group {
@@ -163,6 +200,57 @@
   gap: 16px;
 }
 
+.dfa-state-display-section-compact {
+  display: flex;
+  align-items: center;
+}
+
+.dfa-info-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.dfa-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.dfa-info-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dfa-state-badge {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 50px;
+  text-align: center;
+}
+
+.dfa-step-badge {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  background: #f3f4f6;
+  color: #1f2937;
+  min-width: 50px;
+  text-align: center;
+}
+
 .dfa-state-group,
 .dfa-steps-group {
   display: flex;
@@ -215,6 +303,47 @@
   font-family: 'Courier New', monospace;
   font-size: 24px;
   font-weight: bold;
+}
+
+.dfa-speed-control-group-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dfa-speed-slider-compact {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: #e5e7eb;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.dfa-speed-slider-compact::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+}
+
+.dfa-speed-slider-compact::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: none;
+}
+
+.dfa-speed-value-compact {
+  font-size: 0.7rem;
+  color: #6b7280;
+  font-weight: 600;
+  min-width: 50px;
 }
 
 

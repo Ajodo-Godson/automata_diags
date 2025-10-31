@@ -27,28 +27,28 @@ export function DFAControlPanel({
   };
 
   return (
-    <div className="dfa-control-panel-card">
-      <div className="dfa-control-grid">
+    <div className="dfa-control-panel-card-compact">
+      <div className="dfa-control-grid-compact">
         {/* Left: Controls */}
         <div className="dfa-controls-section">
           <div className="dfa-control-group">
-            <label className="dfa-control-label">Simulation Controls</label>
-            <div className="dfa-button-group">
+            <label className="dfa-control-label-compact">Simulation Controls</label>
+            <div className="dfa-button-group-compact">
               {!isPlaying ? (
                 <button
                   onClick={onRun}
                   disabled={isComplete}
-                  className="dfa-btn dfa-btn-primary dfa-btn-large"
+                  className="dfa-btn dfa-btn-primary dfa-btn-small"
                 >
-                  <Play className="dfa-btn-icon" />
-                  Run
+                  <Play size={14} />
+                  RUN
                 </button>
               ) : (
                 <button
                   onClick={onPause}
-                  className="dfa-btn dfa-btn-secondary dfa-btn-large"
+                  className="dfa-btn dfa-btn-secondary dfa-btn-small"
                 >
-                  <Pause className="dfa-btn-icon" />
+                  <Pause size={14} />
                   Pause
                 </button>
               )}
@@ -56,18 +56,18 @@ export function DFAControlPanel({
               <button
                 onClick={onStep}
                 disabled={isPlaying || isComplete}
-                className="dfa-btn dfa-btn-outline dfa-btn-large"
+                className="dfa-btn dfa-btn-outline dfa-btn-small"
               >
-                <SkipForward className="dfa-btn-icon" />
-                Step
+                <SkipForward size={14} />
+                STEP
               </button>
               
               <button
                 onClick={onReset}
-                className="dfa-btn dfa-btn-outline dfa-btn-large"
+                className="dfa-btn dfa-btn-outline dfa-btn-small"
               >
-                <RotateCcw className="dfa-btn-icon" />
-                Reset
+                <RotateCcw size={14} />
+                RESET
               </button>
             </div>
           </div>
