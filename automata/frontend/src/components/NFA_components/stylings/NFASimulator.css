@@ -1,9 +1,9 @@
 .nfa-simulator-new {
-  min-height: 100vh;
+  min-height: 100%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%);
   background-size: 200% 200%;
   animation: gradientShift 8s ease infinite;
-  padding: 24px;
+  padding: 1rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -147,9 +147,9 @@
 .nfa-table-card {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 28px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -186,9 +186,9 @@
 }
 
 .nfa-card-title {
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0 0 20px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
   color: #1f2937;
   display: flex;
   align-items: center;
