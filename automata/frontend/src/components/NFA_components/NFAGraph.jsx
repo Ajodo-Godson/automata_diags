@@ -33,6 +33,17 @@ const nodeTypes = {
 };
 
 const NFAGraph = ({ nfa, currentStates = [], highlightTransition = null }) => {
+    const [reactFlowInstance, setReactFlowInstance] = React.useState(null);
+
+    // Auto zoom out to fit all nodes when NFA changes
+    React.useEffect(() => {
+        if (reactFlowInstance) {
+            setTimeout(() => {
+                reactFlowInstance.fitView({ padding: 0.2, duration: 300 });
+            }, 100);
+        }
+    }, [nfa.states, nfa.transitions, reactFlowInstance]);
+
     const getLayoutedElements = useCallback(() => {
         // Calculate radius and center
         const radius = Math.min(150, 600 / nfa.states.length);
@@ -109,10 +120,12 @@ const NFAGraph = ({ nfa, currentStates = [], highlightTransition = null }) => {
                 nodes={nodes}
                 edges={edges}
                 nodeTypes={nodeTypes}
+                onInit={setReactFlowInstance}
                 fitView
                 attributionPosition="bottom-left"
-                minZoom={0.5}
-                maxZoom={2}
+                minZoom={0.3}
+                maxZoom={1.5}
+                defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
                 defaultEdgeOptions={{
                     type: 'smoothstep',
                 }}

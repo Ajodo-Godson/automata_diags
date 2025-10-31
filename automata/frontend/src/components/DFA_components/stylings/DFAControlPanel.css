@@ -1,14 +1,14 @@
 .dfa-control-panel-card {
   background: white;
   border-radius: 8px;
-  padding: 24px;
+  padding: 1rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .dfa-control-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 1rem;
 }
 
 @media (max-width: 768px) {
@@ -20,18 +20,18 @@
 .dfa-controls-section {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 0.75rem;
 }
 
 .dfa-control-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.5rem;
 }
 
 .dfa-control-label {
   display: block;
-  font-size: 14px;
+  font-size: 0.8rem;
   font-weight: 500;
   color: #374151;
 }
@@ -45,9 +45,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
-  font-size: 14px;
+  gap: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
   font-weight: 500;
   border-radius: 6px;
   border: none;
