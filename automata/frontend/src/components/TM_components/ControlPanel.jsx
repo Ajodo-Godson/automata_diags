@@ -32,6 +32,7 @@ export function ControlPanel({
 
   return (
     <div className="control-panel-card">
+      <h3 className="tm-card-title">🎮 Control Panel</h3>
       <div className="control-grid">
         {/* Left: Controls */}
         <div className="controls-section">

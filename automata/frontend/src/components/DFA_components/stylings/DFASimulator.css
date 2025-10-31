@@ -154,13 +154,6 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  max-width: 100%;
-}
-
-/* Special sizing for graph card to ensure it fits screen */
-.dfa-graph-card {
-  max-height: 80vh;
-  overflow-y: auto;
 }
 
 .dfa-graph-card::before,
@@ -671,11 +664,6 @@
   .dfa-steps-card,
   .dfa-table-card {
     padding: 20px;
-    max-height: 60vh;
-  }
-  
-  .dfa-graph-card {
-    max-height: 50vh;
   }
   
   .dfa-card-title {
@@ -735,11 +723,6 @@
   .dfa-steps-card,
   .dfa-table-card {
     padding: 16px;
-    max-height: 50vh;
-  }
-  
-  .dfa-graph-card {
-    max-height: 40vh;
   }
   
   .dfa-card-title {

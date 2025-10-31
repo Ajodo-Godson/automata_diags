@@ -98,7 +98,7 @@ export function ExampleTestCases({ onLoadExample, currentExample }) {
   return (
     <div className="examples-card">
       <div className="examples-header">
-        <h3 className="examples-title">Example Test Cases</h3>
+        <h3 className="tm-card-title">🧪 Example Test Cases</h3>
         <p className="examples-subtitle">
           Click to load and test the current machine
         </p>

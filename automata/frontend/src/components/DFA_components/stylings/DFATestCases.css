@@ -50,9 +50,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 600px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  max-height: 400px;
+  overflow: hidden;
   transition: max-height 0.3s ease, opacity 0.3s ease;
   opacity: 1;
 }
@@ -144,21 +143,4 @@
   font-size: 13px;
 }
 
-/* Scrollbar styling for test cases list */
-.dfa-test-cases-list::-webkit-scrollbar {
-  width: 6px;
-}
 
-.dfa-test-cases-list::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
-}
-
-.dfa-test-cases-list::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  border-radius: 3px;
-}
-
-.dfa-test-cases-list::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
-}

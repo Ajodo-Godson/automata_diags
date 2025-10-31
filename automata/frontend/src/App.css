@@ -15,18 +15,23 @@
 
 .App-header {
   background-color: #282c34;
-  padding: 20px;
+  padding: 10px;
   color: white;
   margin-bottom: 20px;
 }
 
 .App-header h1 {
   margin: 0;
-  font-size: 2em;
+  font-size: 1em;
 }
 
 main {
-  padding: 20px;
+  padding: 10px;
+}
+
+h1{
+  font-size: 1em;
+  margin-bottom: 10px;
 }
 
 .App-link {
