@@ -8,14 +8,15 @@ import { useDFA } from './useDFA';
 
 const DFASimulatorNew = () => {
     const { examples } = useExamples();
-    const [currentExampleName, setCurrentExampleName] = useState('ends_with_ab');
+    const [currentExampleName, setCurrentExampleName] = useState(null);
     
+    // Start with a blank DFA
     const dfa = useDFA({
-        states: examples['ends_with_ab'].states,
-        alphabet: examples['ends_with_ab'].alphabet,
-        transitions: examples['ends_with_ab'].transitions,
-        startState: examples['ends_with_ab'].startState,
-        acceptStates: examples['ends_with_ab'].acceptStates,
+        states: ['q0'],
+        alphabet: ['0', '1'],
+        transitions: {},
+        startState: 'q0',
+        acceptStates: new Set(),
     });
 
     const [inputString, setInputString] = useState('');
@@ -39,94 +40,6 @@ const DFASimulatorNew = () => {
         }
         return () => clearTimeout(timer);
     }, [isPlaying, currentStep, simulationSteps.length, playbackSpeed]);
-
-    // Event listeners for toolbox actions
-    useEffect(() => {
-        const handleExport = () => {
-            const dfaDefinition = {
-                name: 'Custom DFA',
-                description: 'Exported DFA definition',
-                states: dfa.states,
-                alphabet: dfa.alphabet,
-                transitions: dfa.transitions,
-                startState: dfa.startState,
-                acceptStates: Array.from(dfa.acceptStates)
-            };
-            
-            const dataStr = JSON.stringify(dfaDefinition, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            
-            const exportFileDefaultName = 'dfa_definition.json';
-            
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-        };
-
-        const handleImport = () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const dfaDefinition = JSON.parse(e.target.result);
-                            dfa.loadDFA(dfaDefinition);
-                            setCurrentExampleName('Custom Import');
-                        } catch (error) {
-                            alert('Invalid JSON file or DFA definition format');
-                        }
-                    };
-                    reader.readAsText(file);
-                }
-            };
-            input.click();
-        };
-
-        const handleAddState = () => {
-            alert('Adding states is not implemented for DFA. Use Import to load a custom DFA.');
-        };
-
-        const handleAddTransition = () => {
-            alert('Adding transitions is not implemented for DFA. Use Import to load a custom DFA.');
-        };
-
-        const handleSetStartState = () => {
-            alert('Setting start state is not implemented for DFA. Use Import to load a custom DFA.');
-        };
-
-        const handleToggleAccept = () => {
-            alert('Toggling accept states is not implemented for DFA. Use Import to load a custom DFA.');
-        };
-
-        const handleClearAll = () => {
-            // Reset to first example
-            const firstExample = Object.keys(examples)[0];
-            loadExample(firstExample);
-        };
-
-        window.addEventListener('export', handleExport);
-        window.addEventListener('import', handleImport);
-        window.addEventListener('addState', handleAddState);
-        window.addEventListener('addTransition', handleAddTransition);
-        window.addEventListener('setStartState', handleSetStartState);
-        window.addEventListener('toggleAccept', handleToggleAccept);
-        window.addEventListener('clearAll', handleClearAll);
-
-        return () => {
-            window.removeEventListener('export', handleExport);
-            window.removeEventListener('import', handleImport);
-            window.removeEventListener('addState', handleAddState);
-            window.removeEventListener('addTransition', handleAddTransition);
-            window.removeEventListener('setStartState', handleSetStartState);
-            window.removeEventListener('toggleAccept', handleToggleAccept);
-            window.removeEventListener('clearAll', handleClearAll);
-        };
-    }, [dfa, examples, loadExample]);
 
     const simulateString = () => {
         setSimulationSteps([]);
@@ -223,6 +136,135 @@ const DFASimulatorNew = () => {
         handleReset();
     };
 
+    // Event listeners for toolbox actions
+    useEffect(() => {
+        const handleExport = () => {
+            const dfaDefinition = {
+                name: currentExampleName || 'Custom DFA',
+                description: 'Exported DFA definition',
+                states: dfa.states,
+                alphabet: dfa.alphabet,
+                transitions: dfa.transitions,
+                startState: dfa.startState,
+                acceptStates: Array.from(dfa.acceptStates)
+            };
+            
+            const dataStr = JSON.stringify(dfaDefinition, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'dfa_definition.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        };
+
+        const handleAddState = () => {
+            const stateName = prompt('Enter new state name (e.g., q1, q2):');
+            if (stateName && stateName.trim()) {
+                dfa.addState(stateName.trim());
+                handleReset();
+            }
+        };
+
+        const handleAddTransition = () => {
+            const from = prompt(`Enter source state:\nAvailable states: ${dfa.states.join(', ')}`);
+            if (!from || !dfa.states.includes(from.trim())) {
+                if (from) alert(`State "${from}" does not exist`);
+                return;
+            }
+            
+            const symbol = prompt(`Enter input symbol:\nAlphabet: ${dfa.alphabet.join(', ')}`);
+            if (!symbol || !dfa.alphabet.includes(symbol.trim())) {
+                if (symbol) alert(`Symbol "${symbol}" is not in alphabet`);
+                return;
+            }
+            
+            const to = prompt(`Enter destination state:\nAvailable states: ${dfa.states.join(', ')}`);
+            if (!to || !dfa.states.includes(to.trim())) {
+                if (to) alert(`State "${to}" does not exist`);
+                return;
+            }
+            
+            dfa.updateTransition(from.trim(), symbol.trim(), to.trim());
+            handleReset();
+        };
+
+        const handleDeleteState = () => {
+            const stateName = prompt(`Enter state to delete:\nAvailable states: ${dfa.states.join(', ')}`);
+            if (stateName && dfa.states.includes(stateName.trim())) {
+                if (dfa.states.length <= 1) {
+                    alert('Cannot delete the only state');
+                    return;
+                }
+                dfa.deleteState(stateName.trim());
+                handleReset();
+            } else if (stateName) {
+                alert(`State "${stateName}" does not exist`);
+            }
+        };
+
+        const handleSetStartState = () => {
+            const newStartState = prompt(`Enter the state to set as start state:\nAvailable states: ${dfa.states.join(', ')}`);
+            if (newStartState && dfa.states.includes(newStartState.trim())) {
+                dfa.loadDFA({
+                    states: dfa.states,
+                    alphabet: dfa.alphabet,
+                    transitions: dfa.transitions,
+                    startState: newStartState.trim(),
+                    acceptStates: dfa.acceptStates
+                });
+                handleReset();
+            } else if (newStartState) {
+                alert(`State "${newStartState}" does not exist`);
+            }
+        };
+
+        const handleToggleAccept = () => {
+            const stateName = prompt(`Enter state to toggle accept status:\nAvailable states: ${dfa.states.join(', ')}\nCurrent accept states: ${Array.from(dfa.acceptStates).join(', ') || 'none'}`);
+            if (stateName && dfa.states.includes(stateName.trim())) {
+                dfa.toggleAcceptState(stateName.trim());
+                handleReset();
+            } else if (stateName) {
+                alert(`State "${stateName}" does not exist`);
+            }
+        };
+
+        const handleClearAll = () => {
+            // Create a blank DFA
+            if (confirm('Are you sure you want to clear all and start fresh?')) {
+                dfa.loadDFA({
+                    states: ['q0'],
+                    alphabet: ['0', '1'],
+                    transitions: {},
+                    startState: 'q0',
+                    acceptStates: new Set()
+                });
+                setCurrentExampleName(null);
+                handleReset();
+            }
+        };
+
+        window.addEventListener('export', handleExport);
+        window.addEventListener('addState', handleAddState);
+        window.addEventListener('addTransition', handleAddTransition);
+        window.addEventListener('deleteState', handleDeleteState);
+        window.addEventListener('setStartState', handleSetStartState);
+        window.addEventListener('toggleAccept', handleToggleAccept);
+        window.addEventListener('clearAll', handleClearAll);
+
+        return () => {
+            window.removeEventListener('export', handleExport);
+            window.removeEventListener('addState', handleAddState);
+            window.removeEventListener('addTransition', handleAddTransition);
+            window.removeEventListener('deleteState', handleDeleteState);
+            window.removeEventListener('setStartState', handleSetStartState);
+            window.removeEventListener('toggleAccept', handleToggleAccept);
+            window.removeEventListener('clearAll', handleClearAll);
+        };
+    }, [dfa, currentExampleName, handleReset]);
+
     return (
         <div className="dfa-simulator-new">
             <div className="dfa-container">
@@ -234,20 +276,30 @@ const DFASimulatorNew = () => {
                     </p>
                 </div>
 
-                {/* Example Selector */}
+                {/* Example Selector - Dropdown */}
                 <div className="dfa-example-selector">
-                    <label className="dfa-selector-label">Load Example:</label>
-                    <div className="dfa-selector-buttons">
+                    <label className="dfa-selector-label">Quick Load Example:</label>
+                    <select 
+                        onChange={(e) => {
+                            if (e.target.value) {
+                                loadExample(e.target.value);
+                            }
+                        }}
+                        value={currentExampleName || ''}
+                        className="dfa-example-dropdown"
+                    >
+                        <option value="">-- Select an example --</option>
                         {Object.entries(examples).map(([key, example]) => (
-                            <button
-                                key={key}
-                                onClick={() => loadExample(key)}
-                                className={`dfa-selector-btn ${currentExampleName === key ? 'active' : ''}`}
-                            >
+                            <option key={key} value={key}>
                                 {example.name}
-                            </button>
+                            </option>
                         ))}
-                    </div>
+                    </select>
+                    {currentExampleName && (
+                        <span className="dfa-current-example">
+                            Current: {examples[currentExampleName]?.name || 'Custom'}
+                        </span>
+                    )}
                 </div>
 
                 {/* Main Grid */}
