@@ -143,6 +143,19 @@ const CFGSimulator = () => {
         };
     }, [cfg, currentExampleName]);
 
+    // Auto-play derivation steps
+    useEffect(() => {
+        let timer;
+        if (isPlaying && currentStep < derivationSteps.length - 1) {
+            timer = setTimeout(() => {
+                setCurrentStep(currentStep + 1);
+            }, playbackSpeed);
+        } else if (currentStep >= derivationSteps.length - 1) {
+            setIsPlaying(false);
+        }
+        return () => clearTimeout(timer);
+    }, [isPlaying, currentStep, derivationSteps.length, playbackSpeed]);
+
     // Helper functions for CNF conversion and CYK parsing
     const normalizeCFG = (cfg) => {
         const newCfg = JSON.parse(JSON.stringify(cfg));
