@@ -69,7 +69,7 @@ export default function TMSimulator() {
               if (tmDefinition.rejectState) setRejectState(tmDefinition.rejectState);
               if (tmDefinition.blankSymbol) setBlankSymbol(tmDefinition.blankSymbol);
               if (tmDefinition.initialInput) setInitialInput(tmDefinition.initialInput);
-              setCurrentExampleName('Custom Import');
+              setCurrentExampleName(tmDefinition.name || 'Imported TM');
             } catch (error) {
               alert('Invalid JSON file or TM definition format');
             }
