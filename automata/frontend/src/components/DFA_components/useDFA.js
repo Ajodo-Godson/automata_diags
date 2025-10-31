@@ -261,6 +261,12 @@ export const useDFA = (initialDFA) => {
         hasTransition,
         removeTransition,
         deleteState,
-        deleteSymbol
+        deleteSymbol,
+        // Expose setters for editors
+        setAlphabet,
+        setStates,
+        setTransitions,
+        setStartState,
+        setAcceptStates
     };
 }; 
