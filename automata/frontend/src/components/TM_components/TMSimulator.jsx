@@ -90,74 +90,75 @@ export default function TMSimulator() {
   }, [rules, acceptState, rejectState, blankSymbol, initialInput]);
 
   const executeStep = useCallback(() => {
-    const currentSymbol = machineState.tape[machineState.headPosition] || blankSymbol;
-    const matchingRule = rules.find(
-      rule =>
-        rule.currentState === machineState.currentState &&
-        rule.readSymbol === currentSymbol
-    );
+    setMachineState(prev => {
+      const currentSymbol = prev.tape[prev.headPosition] || blankSymbol;
+      const matchingRule = rules.find(
+        rule =>
+          rule.currentState === prev.currentState &&
+          rule.readSymbol === currentSymbol
+      );
 
-    if (!matchingRule) {
-      // No matching rule found - machine halts in current state
-      // Check if current state is an accept state
-      const isCurrentlyAccepting = machineState.currentState.toLowerCase() === acceptState.toLowerCase();
+      if (!matchingRule) {
+        // No matching rule found - machine halts in current state
+        // Check if current state is an accept state
+        const isCurrentlyAccepting = prev.currentState.toLowerCase() === acceptState.toLowerCase();
+        
+        setActiveRuleId(null);
+        return {
+          ...prev,
+          isRunning: false,
+          isHalted: true,
+          haltReason: isCurrentlyAccepting ? 'accept' : 'reject'
+        };
+      }
+
+      setActiveRuleId(matchingRule.id);
+
+      // Create new tape
+      const newTape = [...prev.tape];
+      newTape[prev.headPosition] = matchingRule.writeSymbol;
+
+      // Calculate new head position
+      let newHeadPosition = prev.headPosition;
+      if (matchingRule.moveDirection === 'R') {
+        newHeadPosition++;
+        // Extend tape if needed
+        if (newHeadPosition >= newTape.length) {
+          newTape.push(blankSymbol);
+        }
+      } else {
+        newHeadPosition--;
+        // Extend tape to the left if needed
+        if (newHeadPosition < 0) {
+          newTape.unshift(blankSymbol);
+          newHeadPosition = 0;
+        }
+      }
+
+      // Apply the transition
+      const newState = matchingRule.newState;
       
-      setMachineState(prev => ({
+      // Check if new state is a halting state
+      const isAcceptState = newState.toLowerCase() === acceptState.toLowerCase();
+      const isRejectState = newState.toLowerCase() === rejectState.toLowerCase();
+      const isHalted = isAcceptState || isRejectState;
+
+      if (isHalted) {
+        setTimeout(() => setActiveRuleId(null), 1000);
+      }
+
+      return {
         ...prev,
-        isRunning: false,
-        isHalted: true,
-        haltReason: isCurrentlyAccepting ? 'accept' : 'reject'
-      }));
-      setActiveRuleId(null);
-      return;
-    }
-
-    setActiveRuleId(matchingRule.id);
-
-    // Create new tape
-    const newTape = [...machineState.tape];
-    newTape[machineState.headPosition] = matchingRule.writeSymbol;
-
-    // Calculate new head position
-    let newHeadPosition = machineState.headPosition;
-    if (matchingRule.moveDirection === 'R') {
-      newHeadPosition++;
-      // Extend tape if needed
-      if (newHeadPosition >= newTape.length) {
-        newTape.push(blankSymbol);
-      }
-    } else {
-      newHeadPosition--;
-      // Extend tape to the left if needed
-      if (newHeadPosition < 0) {
-        newTape.unshift(blankSymbol);
-        newHeadPosition = 0;
-      }
-    }
-
-    // Apply the transition
-    const newState = matchingRule.newState;
-    
-    // Check if new state is a halting state
-    const isAcceptState = newState.toLowerCase() === acceptState.toLowerCase();
-    const isRejectState = newState.toLowerCase() === rejectState.toLowerCase();
-    const isHalted = isAcceptState || isRejectState;
-
-    setMachineState(prev => ({
-      ...prev,
-      tape: newTape,
-      headPosition: newHeadPosition,
-      currentState: newState,
-      stepCount: prev.stepCount + 1,
-      isRunning: !isHalted,
-      isHalted: isHalted,
-      haltReason: isAcceptState ? 'accept' : isRejectState ? 'reject' : undefined
-    }));
-
-    if (isHalted) {
-      setTimeout(() => setActiveRuleId(null), 1000);
-    }
-  }, [machineState, rules, acceptState, rejectState, blankSymbol, setMachineState, setActiveRuleId]);
+        tape: newTape,
+        headPosition: newHeadPosition,
+        currentState: newState,
+        stepCount: prev.stepCount + 1,
+        isRunning: !isHalted,
+        isHalted: isHalted,
+        haltReason: isAcceptState ? 'accept' : isRejectState ? 'reject' : undefined
+      };
+    });
+  }, [rules, acceptState, rejectState, blankSymbol]);
 
   // Run simulation
   useEffect(() => {
