@@ -40,6 +40,94 @@ const NFASimulator = () => {
         return () => clearTimeout(timer);
     }, [isPlaying, currentStep, simulationSteps.length, playbackSpeed]);
 
+    // Event listeners for toolbox actions
+    useEffect(() => {
+        const handleExport = () => {
+            const nfaDefinition = {
+                name: 'Custom NFA',
+                description: 'Exported NFA definition',
+                states: nfa.states,
+                alphabet: nfa.alphabet,
+                transitions: nfa.transitions,
+                startState: nfa.startState,
+                acceptStates: nfa.acceptStates
+            };
+            
+            const dataStr = JSON.stringify(nfaDefinition, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'nfa_definition.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        };
+
+        const handleImport = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const nfaDefinition = JSON.parse(e.target.result);
+                            nfa.loadDefinition(nfaDefinition);
+                            setCurrentExampleName('Custom Import');
+                        } catch (error) {
+                            alert('Invalid JSON file or NFA definition format');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        };
+
+        const handleAddState = () => {
+            alert('Adding states is not implemented for NFA. Use Import to load a custom NFA.');
+        };
+
+        const handleAddTransition = () => {
+            alert('Adding transitions is not implemented for NFA. Use Import to load a custom NFA.');
+        };
+
+        const handleSetStartState = () => {
+            alert('Setting start state is not implemented for NFA. Use Import to load a custom NFA.');
+        };
+
+        const handleToggleAccept = () => {
+            alert('Toggling accept states is not implemented for NFA. Use Import to load a custom NFA.');
+        };
+
+        const handleClearAll = () => {
+            // Reset to first example
+            const firstExample = Object.keys(examples)[0];
+            loadExample(firstExample);
+        };
+
+        window.addEventListener('export', handleExport);
+        window.addEventListener('import', handleImport);
+        window.addEventListener('addState', handleAddState);
+        window.addEventListener('addTransition', handleAddTransition);
+        window.addEventListener('setStartState', handleSetStartState);
+        window.addEventListener('toggleAccept', handleToggleAccept);
+        window.addEventListener('clearAll', handleClearAll);
+
+        return () => {
+            window.removeEventListener('export', handleExport);
+            window.removeEventListener('import', handleImport);
+            window.removeEventListener('addState', handleAddState);
+            window.removeEventListener('addTransition', handleAddTransition);
+            window.removeEventListener('setStartState', handleSetStartState);
+            window.removeEventListener('toggleAccept', handleToggleAccept);
+            window.removeEventListener('clearAll', handleClearAll);
+        };
+    }, [nfa]);
+
     const simulateString = () => {
         setSimulationSteps([]);
         setCurrentStep(-1);

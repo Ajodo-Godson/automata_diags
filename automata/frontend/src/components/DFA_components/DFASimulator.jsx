@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './stylings/DFASimulator.css';
 import DFAGraph from './DFAGraph';
 import { DFAControlPanel } from './DFAControlPanel';
@@ -39,6 +39,94 @@ const DFASimulatorNew = () => {
         }
         return () => clearTimeout(timer);
     }, [isPlaying, currentStep, simulationSteps.length, playbackSpeed]);
+
+    // Event listeners for toolbox actions
+    useEffect(() => {
+        const handleExport = () => {
+            const dfaDefinition = {
+                name: 'Custom DFA',
+                description: 'Exported DFA definition',
+                states: dfa.states,
+                alphabet: dfa.alphabet,
+                transitions: dfa.transitions,
+                startState: dfa.startState,
+                acceptStates: Array.from(dfa.acceptStates)
+            };
+            
+            const dataStr = JSON.stringify(dfaDefinition, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'dfa_definition.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        };
+
+        const handleImport = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const dfaDefinition = JSON.parse(e.target.result);
+                            dfa.loadDFA(dfaDefinition);
+                            setCurrentExampleName('Custom Import');
+                        } catch (error) {
+                            alert('Invalid JSON file or DFA definition format');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        };
+
+        const handleAddState = () => {
+            alert('Adding states is not implemented for DFA. Use Import to load a custom DFA.');
+        };
+
+        const handleAddTransition = () => {
+            alert('Adding transitions is not implemented for DFA. Use Import to load a custom DFA.');
+        };
+
+        const handleSetStartState = () => {
+            alert('Setting start state is not implemented for DFA. Use Import to load a custom DFA.');
+        };
+
+        const handleToggleAccept = () => {
+            alert('Toggling accept states is not implemented for DFA. Use Import to load a custom DFA.');
+        };
+
+        const handleClearAll = () => {
+            // Reset to first example
+            const firstExample = Object.keys(examples)[0];
+            loadExample(firstExample);
+        };
+
+        window.addEventListener('export', handleExport);
+        window.addEventListener('import', handleImport);
+        window.addEventListener('addState', handleAddState);
+        window.addEventListener('addTransition', handleAddTransition);
+        window.addEventListener('setStartState', handleSetStartState);
+        window.addEventListener('toggleAccept', handleToggleAccept);
+        window.addEventListener('clearAll', handleClearAll);
+
+        return () => {
+            window.removeEventListener('export', handleExport);
+            window.removeEventListener('import', handleImport);
+            window.removeEventListener('addState', handleAddState);
+            window.removeEventListener('addTransition', handleAddTransition);
+            window.removeEventListener('setStartState', handleSetStartState);
+            window.removeEventListener('toggleAccept', handleToggleAccept);
+            window.removeEventListener('clearAll', handleClearAll);
+        };
+    }, [dfa, examples, loadExample]);
 
     const simulateString = () => {
         setSimulationSteps([]);
@@ -116,19 +204,19 @@ const DFASimulatorNew = () => {
         }
     };
 
-    const handleReset = () => {
+    const handleReset = useCallback(() => {
         setSimulationSteps([]);
         setCurrentStep(-1);
         setIsPlaying(false);
-    };
+    }, []);
 
-    const loadExample = (exampleName) => {
+    const loadExample = useCallback((exampleName) => {
         const example = examples[exampleName];
         setCurrentExampleName(exampleName);
         dfa.loadDFA(example);
         setInputString('');
         handleReset();
-    };
+    }, [examples, dfa, setCurrentExampleName, setInputString, handleReset]);
 
     const handleLoadTest = (testInput) => {
         setInputString(testInput);

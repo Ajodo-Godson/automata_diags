@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { TapeVisualizer } from './TapeVisualizer';
 import { ControlPanel } from './ControlPanel';
 import { ProgramEditor } from './ProgramEditor';
@@ -28,18 +28,67 @@ export default function TMSimulator() {
   const [rejectState, setRejectState] = useState('qreject');
   const [blankSymbol, setBlankSymbol] = useState('□');
 
-  // Run simulation
+  // Event listeners for toolbox actions
   useEffect(() => {
-    if (!machineState.isRunning || machineState.isHalted) return;
+    const handleExport = () => {
+      const tmDefinition = {
+        name: 'Custom TM',
+        description: 'Exported TM definition',
+        rules: rules,
+        acceptState: acceptState,
+        rejectState: rejectState,
+        blankSymbol: blankSymbol,
+        initialInput: initialInput
+      };
+      
+      const dataStr = JSON.stringify(tmDefinition, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = 'tm_definition.json';
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    };
 
-    const timer = setTimeout(() => {
-      executeStep();
-    }, speed);
+    const handleImport = () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const tmDefinition = JSON.parse(e.target.result);
+              if (tmDefinition.rules) setRules(tmDefinition.rules);
+              if (tmDefinition.acceptState) setAcceptState(tmDefinition.acceptState);
+              if (tmDefinition.rejectState) setRejectState(tmDefinition.rejectState);
+              if (tmDefinition.blankSymbol) setBlankSymbol(tmDefinition.blankSymbol);
+              if (tmDefinition.initialInput) setInitialInput(tmDefinition.initialInput);
+              setCurrentExampleName('Custom Import');
+            } catch (error) {
+              alert('Invalid JSON file or TM definition format');
+            }
+          };
+          reader.readAsText(file);
+        }
+      };
+      input.click();
+    };
 
-    return () => clearTimeout(timer);
-  }, [machineState.isRunning, machineState.isHalted, machineState.stepCount, speed]);
+    window.addEventListener('export', handleExport);
+    window.addEventListener('import', handleImport);
 
-  const executeStep = () => {
+    return () => {
+      window.removeEventListener('export', handleExport);
+      window.removeEventListener('import', handleImport);
+    };
+  }, [rules, acceptState, rejectState, blankSymbol, initialInput]);
+
+  const executeStep = useCallback(() => {
     const currentSymbol = machineState.tape[machineState.headPosition] || blankSymbol;
     const matchingRule = rules.find(
       rule =>
@@ -107,7 +156,18 @@ export default function TMSimulator() {
     if (isHalted) {
       setTimeout(() => setActiveRuleId(null), 1000);
     }
-  };
+  }, [machineState, rules, acceptState, rejectState, blankSymbol, setMachineState, setActiveRuleId]);
+
+  // Run simulation
+  useEffect(() => {
+    if (!machineState.isRunning || machineState.isHalted) return;
+
+    const timer = setTimeout(() => {
+      executeStep();
+    }, speed);
+
+    return () => clearTimeout(timer);
+  }, [machineState.isRunning, machineState.isHalted, machineState.stepCount, speed, executeStep]);
 
   const handleRun = () => {
     if (machineState.isHalted) return;

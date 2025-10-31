@@ -41,6 +41,64 @@ const PDASimulator = () => {
         return () => clearTimeout(timer);
     }, [isPlaying, currentStep, simulationSteps.length, playbackSpeed]);
 
+    // Event listeners for toolbox actions
+    useEffect(() => {
+        const handleExport = () => {
+            const pdaDefinition = {
+                name: 'Custom PDA',
+                description: 'Exported PDA definition',
+                states: pda.states,
+                alphabet: pda.alphabet,
+                stackAlphabet: pda.stackAlphabet,
+                transitions: pda.transitions,
+                startState: pda.startState,
+                startStackSymbol: pda.startStackSymbol,
+                acceptStates: Array.from(pda.acceptStates)
+            };
+            
+            const dataStr = JSON.stringify(pdaDefinition, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'pda_definition.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        };
+
+        const handleImport = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const pdaDefinition = JSON.parse(e.target.result);
+                            pda.loadPDA(pdaDefinition);
+                            setCurrentExampleName('Custom Import');
+                        } catch (error) {
+                            alert('Invalid JSON file or PDA definition format');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        };
+
+        window.addEventListener('export', handleExport);
+        window.addEventListener('import', handleImport);
+
+        return () => {
+            window.removeEventListener('export', handleExport);
+            window.removeEventListener('import', handleImport);
+        };
+    }, [pda]);
+
     const simulateString = () => {
         setSimulationSteps([]);
         setCurrentStep(-1);

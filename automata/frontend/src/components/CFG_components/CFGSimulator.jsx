@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './stylings/CFGSimulator.css';
 import { CFGControlPanel } from './CFGControlPanel';
 import { CFGTestCases } from './CFGTestCases';
@@ -22,6 +22,61 @@ const CFGSimulator = () => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [playbackSpeed, setPlaybackSpeed] = useState(1000);
     const [isAccepted, setIsAccepted] = useState(null);
+
+    // Event listeners for toolbox actions
+    useEffect(() => {
+        const handleExport = () => {
+            const cfgDefinition = {
+                name: 'Custom CFG',
+                description: 'Exported CFG definition',
+                variables: cfg.variables,
+                terminals: cfg.terminals,
+                rules: cfg.rules,
+                startVariable: cfg.startVariable
+            };
+            
+            const dataStr = JSON.stringify(cfgDefinition, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'cfg_definition.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        };
+
+        const handleImport = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const cfgDefinition = JSON.parse(e.target.result);
+                            cfg.loadCFG(cfgDefinition);
+                            setCurrentExampleName('Custom Import');
+                        } catch (error) {
+                            alert('Invalid JSON file or CFG definition format');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        };
+
+        window.addEventListener('export', handleExport);
+        window.addEventListener('import', handleImport);
+
+        return () => {
+            window.removeEventListener('export', handleExport);
+            window.removeEventListener('import', handleImport);
+        };
+    }, [cfg]);
 
     // Helper functions for CNF conversion and CYK parsing
     const normalizeCFG = (cfg) => {
