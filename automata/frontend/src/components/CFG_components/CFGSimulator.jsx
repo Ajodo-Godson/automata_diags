@@ -411,23 +411,119 @@ const CFGSimulator = () => {
         setCurrentStep(-1);
         setIsAccepted(null);
 
-        // Convert CFG to CNF
-        const cnfGrammar = toCNF(cfg);
+        // Try leftmost derivation
+        const steps = generateLeftmostDerivation(cfg, inputString);
+        
+        if (steps.length > 0) {
+            setDerivationSteps(steps);
+            setIsAccepted(true);
+            setCurrentStep(0);
+        } else {
+            // If leftmost derivation fails, try CYK parsing
+            const cnfGrammar = toCNF(cfg);
+            const accepted = cykParse(cnfGrammar, inputString);
+            
+            const steps = [{
+                step: 1,
+                string: inputString,
+                production: null,
+                description: `No derivation found. CYK Result: ${accepted ? 'ACCEPTED' : 'REJECTED'}`
+            }];
+            
+            setDerivationSteps(steps);
+            setIsAccepted(accepted);
+            setCurrentStep(0);
+        }
+    };
 
-        // Use CYK to parse
-        const accepted = cykParse(cnfGrammar, inputString);
-
-        // For now, just set accepted; later add derivation steps from CYK table
-        const steps = [{
-            step: 1,
-            string: inputString,
-            rule: null,
-            description: `Parsed using CNF grammar. Result: ${accepted ? 'ACCEPTED' : 'REJECTED'}`
-        }];
-
-        setDerivationSteps(steps);
-        setIsAccepted(accepted);
-        setCurrentStep(0);
+    // Generate leftmost derivation steps
+    const generateLeftmostDerivation = (cfg, target) => {
+        const steps = [];
+        const maxSteps = 100; // Prevent infinite loops
+        
+        // Start with the start variable
+        let current = cfg.startVariable;
+        steps.push({
+            step: 0,
+            string: current,
+            production: null,
+            description: `Start with ${cfg.startVariable}`
+        });
+        
+        // Try to derive the target string
+        for (let stepCount = 0; stepCount < maxSteps; stepCount++) {
+            // Check if we've reached the target
+            if (current === target) {
+                return steps;
+            }
+            
+            // Find the leftmost variable
+            let variableIndex = -1;
+            let variable = null;
+            for (let i = 0; i < current.length; i++) {
+                if (cfg.variables.includes(current[i])) {
+                    variableIndex = i;
+                    variable = current[i];
+                    break;
+                }
+            }
+            
+            // No more variables to expand
+            if (variable === null) {
+                // If we have no more variables but haven't reached target, derivation failed
+                return [];
+            }
+            
+            // Find applicable rules for this variable
+            const applicableRules = cfg.rules.filter(r => r.left === variable);
+            if (applicableRules.length === 0) {
+                return []; // No rules for this variable
+            }
+            
+            // Try each applicable rule
+            let ruleFound = false;
+            for (const rule of applicableRules) {
+                const replacement = rule.right === 'ε' ? '' : rule.right;
+                const newString = current.substring(0, variableIndex) + replacement + current.substring(variableIndex + 1);
+                
+                // Heuristic: prefer rules that move us closer to the target
+                // (This is a simple greedy approach; for complex grammars, backtracking would be needed)
+                const targetPrefix = target.substring(0, variableIndex);
+                const newPrefix = newString.substring(0, Math.min(variableIndex + replacement.length, target.length));
+                
+                if (target.startsWith(newString.replace(/[A-Z]/g, '')) || 
+                    newString.length <= target.length * 2) {
+                    current = newString;
+                    steps.push({
+                        step: stepCount + 1,
+                        string: current,
+                        production: rule,
+                        highlightIndices: Array.from({ length: replacement.length }, (_, i) => variableIndex + i),
+                        description: `Apply ${rule.left} → ${rule.right}`
+                    });
+                    ruleFound = true;
+                    break;
+                }
+            }
+            
+            if (!ruleFound) {
+                // Use the first applicable rule
+                const rule = applicableRules[0];
+                const replacement = rule.right === 'ε' ? '' : rule.right;
+                current = current.substring(0, variableIndex) + replacement + current.substring(variableIndex + 1);
+                
+                steps.push({
+                    step: stepCount + 1,
+                    string: current,
+                    production: rule,
+                    highlightIndices: Array.from({ length: replacement.length }, (_, i) => variableIndex + i),
+                    description: `Apply ${rule.left} → ${rule.right}`
+                });
+            }
+        }
+        
+        // If we exhausted steps without reaching target, derivation failed
+        return current === target ? steps : [];
     };
 
     const handleRun = () => {
