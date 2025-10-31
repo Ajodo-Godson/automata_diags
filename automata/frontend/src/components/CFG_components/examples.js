@@ -37,11 +37,16 @@ export const useExamples = () => {
         },
         equal_as_bs: {
             name: 'Equal a\'s and b\'s',
-            variables: ['S'],
+            // Nonterminals S, A, B (A -> a, B -> b)
+            variables: ['S', 'A', 'B'],
+            // terminals are lowercase only
             terminals: ['a', 'b'],
             rules: [
-                { left: 'S', right: 'aSb' },
-                { left: 'S', right: 'ab' }
+                { left: 'S', right: 'ε' },
+                { left: 'S', right: 'SaSbS' },
+                { left: 'S', right: 'SbSaS' },
+                { left: 'A', right: 'a' },
+                { left: 'B', right: 'b' }
             ],
             startVariable: 'S'
         }

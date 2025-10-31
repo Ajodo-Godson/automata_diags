@@ -24,8 +24,18 @@ const CFGSimulator = () => {
     const [isAccepted, setIsAccepted] = useState(null);
 
     // Helper functions for CNF conversion and CYK parsing
+    const normalizeCFG = (cfg) => {
+        const newCfg = JSON.parse(JSON.stringify(cfg));
+        if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
+        newCfg.rules = newCfg.rules.map(r => ({
+            left: r.left,
+            right: r.right === 'ε' ? [] : r.right.split('')
+        }));
+        return newCfg;
+    };
+
     const toCNF = (cfg) => {
-        let cnf = JSON.parse(JSON.stringify(cfg)); // Deep copy
+        let cnf = normalizeCFG(cfg); // Normalize first
 
         // Eliminate start symbol from RHS
         cnf = eliminateStart(cnf);
@@ -42,14 +52,32 @@ const CFGSimulator = () => {
         // Binarize
         cnf = binarize(cnf);
 
+        // Remove duplicates
+        cnf = removeDuplicates(cnf);
+
+        //Sort productions
+        cnf.rules.sort((a, b) => {
+            const leftComparison = a.left.localeCompare(b.left);
+            if (leftComparison !== 0) return leftComparison;
+            return a.right.join(' ').localeCompare(b.right.join(' '));
+        });
+
+        console.log(cnf);
+
         return cnf;
     };
 
     const eliminateStart = (cfg) => {
         const newCfg = JSON.parse(JSON.stringify(cfg));
+        // Defensive guards for malformed input
+        if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
+        if (!Array.isArray(newCfg.variables)) newCfg.variables = [];
+        // Ensure each rule has a right-hand side array
+        newCfg.rules = newCfg.rules.map(r => ({ left: r.left, right: Array.isArray(r.right) ? r.right : (r.right === 'ε' ? [] : (typeof r.right === 'string' ? r.right.split('') : [])) }));
+
         if (newCfg.rules.some(r => r.right.includes(newCfg.startVariable))) {
             const newStart = newCfg.startVariable + '0';
-            newCfg.variables.push(newStart);
+            if (!newCfg.variables.includes(newStart)) newCfg.variables.push(newStart);
             newCfg.rules.push({ left: newStart, right: [newCfg.startVariable] });
             newCfg.startVariable = newStart;
         }
@@ -58,9 +86,13 @@ const CFGSimulator = () => {
 
     const eliminateNull = (cfg) => {
         const newCfg = JSON.parse(JSON.stringify(cfg));
+        if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
         const nullable = new Set();
         newCfg.rules.forEach(r => {
-            if (r.right.length === 0) nullable.add(r.left);
+            const rhs = Array.isArray(r.right) ? r.right : (r.right === 'ε' ? [] : (typeof r.right === 'string' ? r.right.split('') : []));
+            if (rhs.length === 0) nullable.add(r.left);
+            // normalize rule RHS
+            r.right = rhs;
         });
         let changed = true;
         while (changed) {
@@ -76,35 +108,36 @@ const CFGSimulator = () => {
         }
         const newRules = [];
         newCfg.rules.forEach(r => {
-            if (r.right.length === 0) return; // Remove null rules
-            const combos = generateCombos(r.right, nullable);
-            combos.forEach(combo => {
-                newRules.push({ left: r.left, right: combo });
+            if (r.right.length === 0) return; // Skip null rules
+            const nullableIndices = [];
+            r.right.forEach((sym, i) => {
+                if (nullable.has(sym)) nullableIndices.push(i);
             });
+            const numCombos = 1 << nullableIndices.length;
+            for (let i = 0; i < numCombos; i++) {
+                const newRhs = [...r.right];
+                for (let j = 0; j < nullableIndices.length; j++) {
+                    if ((i >> j) & 1) {
+                        newRhs[nullableIndices[j]] = null;
+                    }
+                }
+                const finalRhs = newRhs.filter(sym => sym !== null);
+                if (finalRhs.length > 0) {
+                    newRules.push({ left: r.left, right: finalRhs });
+                }
+            }
         });
         newCfg.rules = newRules;
         return newCfg;
     };
 
-    const generateCombos = (rhs, nullable) => {
-        const combos = [[]];
-        rhs.forEach(sym => {
-            const newCombos = [];
-            combos.forEach(combo => {
-                newCombos.push([...combo, sym]);
-                if (nullable.has(sym)) {
-                    newCombos.push(combo);
-                }
-            });
-            combos.splice(0, combos.length, ...newCombos);
-        });
-        return combos.filter(c => c.length > 0);
-    };
-
     const eliminateUnit = (cfg) => {
         const newCfg = JSON.parse(JSON.stringify(cfg));
+        if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
+        if (!Array.isArray(newCfg.variables)) newCfg.variables = [];
         const unitPairs = new Set();
         newCfg.rules.forEach(r => {
+            if (!Array.isArray(r.right)) r.right = (r.right === 'ε' ? [] : (typeof r.right === 'string' ? r.right.split('') : []));
             if (r.right.length === 1 && newCfg.variables.includes(r.right[0])) {
                 unitPairs.add(`${r.left}-${r.right[0]}`);
             }
@@ -133,13 +166,16 @@ const CFGSimulator = () => {
             }
         }
         const newRules = [];
-        newCfg.rules.forEach(r => {
-            if (r.right.length !== 1 || !newCfg.variables.includes(r.right[0])) {
-                closures[r.left].forEach(nt => {
-                    newRules.push({ left: nt, right: r.right });
+        for (let A of newCfg.variables) {
+            const closureA = closures[A] || new Set([A]);
+            for (let B of closureA) {
+                newCfg.rules.forEach(p => {
+                    if (p.left === B && !(p.right.length === 1 && newCfg.variables.includes(p.right[0]))) {
+                        newRules.push({ left: A, right: p.right });
+                    }
                 });
             }
-        });
+        }
         newCfg.rules = newRules;
         return newCfg;
     };
@@ -153,33 +189,69 @@ const CFGSimulator = () => {
             terminalMap[t] = nt;
             newCfg.rules.push({ left: nt, right: [t] });
         });
-        newCfg.rules = newCfg.rules.map(r => ({
-            left: r.left,
-            right: r.right.map(sym => terminalMap[sym] || sym)
-        }));
+        newCfg.rules = newCfg.rules.map(r => {
+            if (r.right.length > 1) {
+                return {
+                    left: r.left,
+                    right: r.right.map(sym => terminalMap[sym] || sym)
+                };
+            } else {
+                return r;
+            }
+        });
         return newCfg;
     };
 
     const binarize = (cfg) => {
         const newCfg = JSON.parse(JSON.stringify(cfg));
         const newRules = [];
+        const productionsToProcess = [...newCfg.rules];
+        const binarizationVars = ['P', 'Q', 'R', 'T'];
         let varCounter = 0;
-        newCfg.rules.forEach(r => {
-            if (r.right.length <= 2) {
-                newRules.push(r);
-            } else {
-                let current = r.left;
-                for (let i = 0; i < r.right.length - 2; i++) {
-                    const newVar = 'BIN' + varCounter++;
-                    newCfg.variables.push(newVar);
-                    newRules.push({ left: current, right: [r.right[i], newVar] });
-                    current = newVar;
+
+        while (productionsToProcess.length > 0) {
+            const p = productionsToProcess.shift();
+            if (p.right.length > 2) {
+                let newVar;
+                if (varCounter < binarizationVars.length) {
+                    newVar = binarizationVars[varCounter];
+                    varCounter++;
+                } else {
+                    newVar = 'BIN_' + varCounter;
+                    varCounter++;
                 }
-                newRules.push({ left: current, right: [r.right[r.right.length - 2], r.right[r.right.length - 1]] });
+                newCfg.variables.push(newVar);
+                newRules.push({ left: p.left, right: [p.right[0], newVar] });
+                productionsToProcess.push({ left: newVar, right: p.right.slice(1) });
+            } else {
+                newRules.push(p);
+            }
+        }
+
+        // Remove duplicates
+        const uniqueRules = [];
+        const seen = new Set();
+        newRules.forEach(r => {
+            const key = `${r.left}-${r.right.join(',')}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                uniqueRules.push(r);
             }
         });
-        newCfg.rules = newRules;
+
+        newCfg.rules = uniqueRules;
         return newCfg;
+    };
+
+    const removeDuplicates = (cfg) => {
+        const seen = new Set();
+        cfg.rules = cfg.rules.filter(r => {
+            const key = `${r.left}->${r.right.join(' ')}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+        return cfg;
     };
 
     const cykParse = (cnf, input) => {
