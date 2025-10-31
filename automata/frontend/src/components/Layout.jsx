@@ -2,54 +2,14 @@ import React from 'react';
 import './Layout.css';
 
 const getToolboxButtons = (automatonType) => {
+    // Keep only essential buttons - editors handle state/transition management
     const commonTools = [
-        { label: 'Clear All', event: 'clearAll', description: 'Clear and create new machine' },
-        { label: 'Export', event: 'export', description: 'Export machine definition as JSON' }
+        { label: 'Export', event: 'export', description: 'Export machine definition as JSON' },
+        { label: 'Clear All', event: 'clearAll', description: 'Clear and create new machine' }
     ];
 
-    switch (automatonType) {
-        case 'DFA':
-        case 'NFA':
-            return [
-                { label: 'Add State', event: 'addState', description: 'Add a new state' },
-                { label: 'Add Transition', event: 'addTransition', description: 'Add state transition' },
-                { label: 'Delete State', event: 'deleteState', description: 'Remove a state' },
-                { label: 'Set Start State', event: 'setStartState', description: 'Set initial state' },
-                { label: 'Toggle Accept', event: 'toggleAccept', description: 'Toggle accept state' },
-                ...commonTools
-            ];
-        
-        case 'PDA':
-            return [
-                { label: 'Add State', event: 'addState', description: 'Add a new state' },
-                { label: 'Add Transition', event: 'addTransition', description: 'Add PDA transition' },
-                { label: 'Delete State', event: 'deleteState', description: 'Remove a state' },
-                { label: 'Set Start State', event: 'setStartState', description: 'Set initial state' },
-                { label: 'Toggle Accept', event: 'toggleAccept', description: 'Toggle accept state' },
-                ...commonTools
-            ];
-        
-        case 'CFG':
-            return [
-                { label: 'Add Production', event: 'addProduction', description: 'Add grammar production rule' },
-                { label: 'Delete Production', event: 'deleteProduction', description: 'Remove a production rule' },
-                { label: 'Add Variable', event: 'addVariable', description: 'Add non-terminal variable' },
-                { label: 'Set Start Symbol', event: 'setStartSymbol', description: 'Set start symbol' },
-                ...commonTools
-            ];
-        
-        case 'TM':
-            return [
-                { label: 'Add Rule', event: 'addRule', description: 'Add TM transition rule' },
-                { label: 'Delete Rule', event: 'deleteRule', description: 'Remove a transition rule' },
-                { label: 'Set Accept State', event: 'setAcceptState', description: 'Set accept state name' },
-                { label: 'Set Reject State', event: 'setRejectState', description: 'Set reject state name' },
-                ...commonTools
-            ];
-        
-        default:
-            return commonTools;
-    }
+    // All automaton types use the same essential tools now
+    return commonTools;
 };
 
 const Layout = ({ children, currentAutomaton, setCurrentAutomaton }) => {
