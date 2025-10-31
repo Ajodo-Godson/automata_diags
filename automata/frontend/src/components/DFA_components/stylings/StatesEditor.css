@@ -140,3 +140,29 @@
     cursor: not-allowed;
 }
 
+.btn-icon {
+    padding: 0.4rem;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon-delete {
+    color: #dc2626;
+    font-size: 0.85rem;
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.btn-icon-delete:hover {
+    background: #fee2e2;
+    border-color: #dc2626;
+    color: #991b1b;
+    transform: scale(1.1);
+}
+

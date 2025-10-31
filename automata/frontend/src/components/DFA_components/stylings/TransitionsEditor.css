@@ -132,11 +132,17 @@
 }
 
 .btn-icon-delete {
-    color: #ef4444;
+    color: #dc2626;
+    font-size: 0.85rem;
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
 .btn-icon-delete:hover {
     background: #fee2e2;
+    border-color: #dc2626;
+    color: #991b1b;
+    transform: scale(1.1);
 }
 
 .transition-add-form {
