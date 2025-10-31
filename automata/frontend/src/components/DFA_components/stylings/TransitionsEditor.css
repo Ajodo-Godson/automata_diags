@@ -16,7 +16,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
 .editor-title {
@@ -27,7 +27,7 @@
 }
 
 .editor-subtitle {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: #6b7280;
     margin: 0;
 }
@@ -35,13 +35,13 @@
 .btn-add {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.4rem 0.75rem;
+    gap: 0.25rem;
+    padding: 0.3rem 0.6rem;
     background: #1f2937;
     color: white;
     border: none;
-    border-radius: 6px;
-    font-size: 0.75rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
@@ -56,8 +56,8 @@
 .transitions-list {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    max-height: 300px;
+    gap: 0.3rem;
+    max-height: 250px;
     overflow-y: auto;
 }
 
@@ -65,13 +65,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5rem 0.75rem;
+    padding: 0.35rem 0.5rem;
     background: #f9fafb;
     border: 1px solid #e5e7eb;
-    border-radius: 6px;
+    border-radius: 4px;
     transition: all 0.2s;
     font-family: 'Courier New', monospace;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
 }
 
 .transition-item:hover {
@@ -80,7 +80,7 @@
 }
 
 .transition-text {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     color: #1f2937;
 }
 
