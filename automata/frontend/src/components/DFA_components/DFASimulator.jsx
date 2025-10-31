@@ -140,7 +140,7 @@ const DFASimulatorNew = () => {
         handleReset();
     };
 
-    // Event listeners for toolbox actions
+    // Event listeners for toolbox actions (Export and Clear All)
     useEffect(() => {
         const handleExport = () => {
             const dfaDefinition = {
@@ -164,79 +164,7 @@ const DFASimulatorNew = () => {
             linkElement.click();
         };
 
-        const handleAddState = () => {
-            const stateName = prompt('Enter new state name (e.g., q1, q2):');
-            if (stateName && stateName.trim()) {
-                dfa.addState(stateName.trim());
-                handleReset();
-            }
-        };
-
-        const handleAddTransition = () => {
-            const from = prompt(`Enter source state:\nAvailable states: ${dfa.states.join(', ')}`);
-            if (!from || !dfa.states.includes(from.trim())) {
-                if (from) alert(`State "${from}" does not exist`);
-                return;
-            }
-            
-            const symbol = prompt(`Enter input symbol:\nAlphabet: ${dfa.alphabet.join(', ')}`);
-            if (!symbol || !dfa.alphabet.includes(symbol.trim())) {
-                if (symbol) alert(`Symbol "${symbol}" is not in alphabet`);
-                return;
-            }
-            
-            const to = prompt(`Enter destination state:\nAvailable states: ${dfa.states.join(', ')}`);
-            if (!to || !dfa.states.includes(to.trim())) {
-                if (to) alert(`State "${to}" does not exist`);
-                return;
-            }
-            
-            dfa.updateTransition(from.trim(), symbol.trim(), to.trim());
-            handleReset();
-        };
-
-        const handleDeleteState = () => {
-            const stateName = prompt(`Enter state to delete:\nAvailable states: ${dfa.states.join(', ')}`);
-            if (stateName && dfa.states.includes(stateName.trim())) {
-                if (dfa.states.length <= 1) {
-                    alert('Cannot delete the only state');
-                    return;
-                }
-                dfa.deleteState(stateName.trim());
-                handleReset();
-            } else if (stateName) {
-                alert(`State "${stateName}" does not exist`);
-            }
-        };
-
-        const handleSetStartState = () => {
-            const newStartState = prompt(`Enter the state to set as start state:\nAvailable states: ${dfa.states.join(', ')}`);
-            if (newStartState && dfa.states.includes(newStartState.trim())) {
-                dfa.loadDFA({
-                    states: dfa.states,
-                    alphabet: dfa.alphabet,
-                    transitions: dfa.transitions,
-                    startState: newStartState.trim(),
-                    acceptStates: dfa.acceptStates
-                });
-                handleReset();
-            } else if (newStartState) {
-                alert(`State "${newStartState}" does not exist`);
-            }
-        };
-
-        const handleToggleAccept = () => {
-            const stateName = prompt(`Enter state to toggle accept status:\nAvailable states: ${dfa.states.join(', ')}\nCurrent accept states: ${Array.from(dfa.acceptStates).join(', ') || 'none'}`);
-            if (stateName && dfa.states.includes(stateName.trim())) {
-                dfa.toggleAcceptState(stateName.trim());
-                handleReset();
-            } else if (stateName) {
-                alert(`State "${stateName}" does not exist`);
-            }
-        };
-
         const handleClearAll = () => {
-            // Create a blank DFA
             if (window.confirm('Are you sure you want to clear all and start fresh?')) {
                 dfa.loadDFA({
                     states: ['q0'],
@@ -251,20 +179,10 @@ const DFASimulatorNew = () => {
         };
 
         window.addEventListener('export', handleExport);
-        window.addEventListener('addState', handleAddState);
-        window.addEventListener('addTransition', handleAddTransition);
-        window.addEventListener('deleteState', handleDeleteState);
-        window.addEventListener('setStartState', handleSetStartState);
-        window.addEventListener('toggleAccept', handleToggleAccept);
         window.addEventListener('clearAll', handleClearAll);
 
         return () => {
             window.removeEventListener('export', handleExport);
-            window.removeEventListener('addState', handleAddState);
-            window.removeEventListener('addTransition', handleAddTransition);
-            window.removeEventListener('deleteState', handleDeleteState);
-            window.removeEventListener('setStartState', handleSetStartState);
-            window.removeEventListener('toggleAccept', handleToggleAccept);
             window.removeEventListener('clearAll', handleClearAll);
         };
     }, [dfa, currentExampleName, handleReset]);
