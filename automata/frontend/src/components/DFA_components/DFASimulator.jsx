@@ -5,6 +5,7 @@ import { DFAControlPanel } from './DFAControlPanel';
 import { DFATestCases } from './DFATestCases';
 import { TransitionsEditor } from './TransitionsEditor';
 import { StatesEditor } from './StatesEditor';
+import { AlphabetEditor } from './AlphabetEditor';
 import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { useDFA } from './useDFA';
@@ -365,6 +366,21 @@ const DFASimulatorNew = () => {
 
                     {/* Right Column */}
                     <div className="dfa-right-col">
+                        {/* States Editor */}
+                        <CollapsibleSection title="States Editor" defaultOpen={false}>
+                            <StatesEditor dfa={dfa} onUpdate={handleReset} />
+                        </CollapsibleSection>
+
+                        {/* Alphabet Editor */}
+                        <CollapsibleSection title="Alphabet" defaultOpen={false}>
+                            <AlphabetEditor dfa={dfa} onUpdate={handleReset} />
+                        </CollapsibleSection>
+
+                        {/* Transitions Editor */}
+                        <CollapsibleSection title="Transitions Editor" defaultOpen={false}>
+                            <TransitionsEditor dfa={dfa} onUpdate={handleReset} />
+                        </CollapsibleSection>
+
                         {/* Test Cases */}
                         <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
                             <DFATestCases 
