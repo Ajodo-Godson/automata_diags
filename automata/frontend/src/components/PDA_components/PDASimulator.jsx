@@ -245,7 +245,7 @@ const PDASimulator = () => {
 
         const handleClearAll = () => {
             // Create a blank PDA
-            if (confirm('Are you sure you want to clear all and start fresh?')) {
+            if (window.confirm('Are you sure you want to clear all and start fresh?')) {
                 pda.loadPDA({
                     states: ['q0'],
                     alphabet: ['0', '1'],

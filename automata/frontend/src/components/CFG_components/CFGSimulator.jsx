@@ -105,7 +105,7 @@ const CFGSimulator = () => {
         };
 
         const handleClearAll = () => {
-            if (confirm('Are you sure you want to clear all and start fresh?')) {
+            if (window.confirm('Are you sure you want to clear all and start fresh?')) {
                 cfg.loadCFG({
                     variables: ['S'],
                     terminals: ['a', 'b'],

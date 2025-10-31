@@ -233,7 +233,7 @@ const DFASimulatorNew = () => {
 
         const handleClearAll = () => {
             // Create a blank DFA
-            if (confirm('Are you sure you want to clear all and start fresh?')) {
+            if (window.confirm('Are you sure you want to clear all and start fresh?')) {
                 dfa.loadDFA({
                     states: ['q0'],
                     alphabet: ['0', '1'],

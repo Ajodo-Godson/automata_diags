@@ -132,11 +132,11 @@ const NFASimulator = () => {
         }
     }, [examples, nfa, setCurrentExampleName, setInputString, setSimulationSteps, setCurrentStep, setIsPlaying]);
 
-    const resetSimulation = () => {
+    const resetSimulation = useCallback(() => {
         setCurrentStep(-1);
         setSimulationSteps([]);
         setIsPlaying(false);
-    };
+    }, []);
 
     // Event listeners for toolbox actions
     useEffect(() => {
@@ -226,7 +226,7 @@ const NFASimulator = () => {
 
         const handleClearAll = () => {
             // Create a blank NFA
-            if (confirm('Are you sure you want to clear all and start fresh?')) {
+            if (window.confirm('Are you sure you want to clear all and start fresh?')) {
                 nfa.loadDefinition({
                     states: ['q0'],
                     alphabet: ['0', '1'],
