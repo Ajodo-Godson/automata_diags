@@ -156,22 +156,22 @@ const NFASimulator = () => {
     };
 
     return (
-        <div className="nfa-simulator-new">
-            <div className="nfa-container">
-                <div className="nfa-header">
-                    <h1 className="nfa-title">NFA Simulator</h1>
-                    <p className="nfa-subtitle">
+        <div className="dfa-simulator-new">
+            <div className="dfa-container">
+                <div className="dfa-header">
+                    <h1 className="dfa-title">NFA Simulator</h1>
+                    <p className="dfa-subtitle">
                         Interactive Non-deterministic Finite Automaton with ε-transitions
                     </p>
                 </div>
 
-                <div className="nfa-example-selector">
-                    <span className="nfa-selector-label">Choose Example:</span>
-                    <div className="nfa-selector-buttons">
+                <div className="dfa-example-selector">
+                    <label className="dfa-selector-label">Load Example:</label>
+                    <div className="dfa-selector-buttons">
                         {Object.keys(examples).map(name => (
                             <button
                                 key={name}
-                                className={`nfa-selector-btn ${currentExampleName === name ? 'active' : ''}`}
+                                className={`dfa-selector-btn ${currentExampleName === name ? 'active' : ''}`}
                                 onClick={() => loadExample(name)}
                             >
                                 {examples[name].name}
@@ -180,10 +180,10 @@ const NFASimulator = () => {
                     </div>
                 </div>
 
-                <div className="nfa-grid">
-                    <div className="nfa-left-col">
-                        <div className="nfa-graph-card">
-                            <h3 className="nfa-card-title">NFA Visualization</h3>
+                <div className="dfa-grid">
+                    <div className="dfa-left-col">
+                        <div className="dfa-graph-card">
+                            <h3 className="dfa-card-title">NFA Visualization</h3>
                             <NFAGraph 
                                 nfa={nfa} 
                                 currentStates={currentStep >= 0 ? simulationSteps[currentStep]?.states || [] : []}
@@ -191,35 +191,35 @@ const NFASimulator = () => {
                             />
                         </div>
 
-                        <div className="nfa-input-card">
-                            <h3 className="nfa-card-title">Input String</h3>
-                            <div className="nfa-input-group">
+                        <div className="dfa-input-card">
+                            <h3 className="dfa-card-title">Input String</h3>
+                            <div className="dfa-input-group">
                                 <input
                                     type="text"
                                     value={inputString}
                                     onChange={(e) => setInputString(e.target.value)}
                                     placeholder="Enter input string..."
-                                    className="nfa-input"
+                                    className="dfa-input"
                                 />
                                 <button 
                                     onClick={simulateString}
-                                    className="nfa-simulate-btn"
+                                    className="dfa-btn dfa-btn-primary"
                                 >
                                     Simulate
                                 </button>
                             </div>
-                            <p className="nfa-input-help">
+                            <p className="dfa-input-help">
                                 Use alphabet: {nfa.alphabet.join(', ')}. ε represents epsilon transitions.
                             </p>
                             {isComplete && (
-                                <div className={`nfa-result ${isAccepted ? 'accepted' : 'rejected'}`}>
+                                <div className={`dfa-result ${isAccepted ? 'accepted' : 'rejected'}`}>
                                     String is {isAccepted ? 'ACCEPTED' : 'REJECTED'}
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="nfa-right-col">
+                    <div className="dfa-right-col">
                         <NFAControlPanel 
                             onTogglePlayback={togglePlayback}
                             onStepForward={stepForward}
@@ -232,11 +232,11 @@ const NFASimulator = () => {
                             onSpeedChange={setPlaybackSpeed}
                         />
 
-                        <div className="nfa-steps-card">
-                            <h3 className="nfa-card-title">Simulation Steps</h3>
-                            <div className="nfa-step-display">
+                        <div className="dfa-steps-card">
+                            <h3 className="dfa-card-title">Simulation Steps</h3>
+                            <div className="dfa-step-display">
                                 {currentStep >= 0 && simulationSteps[currentStep] ? (
-                                    <div className="nfa-current-step">
+                                    <div className="dfa-current-step">
                                         <div className="step-number">Step {currentStep + 1}</div>
                                         <div className="step-description">
                                             {simulationSteps[currentStep].description}
@@ -247,7 +247,7 @@ const NFASimulator = () => {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="no-step">
+                                    <div className="dfa-no-step">
                                         Click "Simulate" to begin simulation
                                     </div>
                                 )}
