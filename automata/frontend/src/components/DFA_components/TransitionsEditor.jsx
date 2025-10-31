@@ -82,7 +82,7 @@ export function TransitionsEditor({ dfa, onUpdate }) {
                     className="btn-add"
                     onClick={() => setIsAdding(true)}
                 >
-                    <Plus size={16} />
+                    <Plus size={11} />
                     Add
                 </button>
             </div>

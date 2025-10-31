@@ -282,8 +282,8 @@
 
 .dfa-state-name {
   font-family: 'Courier New', monospace;
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .dfa-state-status {
