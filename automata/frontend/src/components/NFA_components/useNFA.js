@@ -131,6 +131,14 @@ export const useNFA = (initialDefinition) => {
         removeTransition,
         setStart,
         toggleAcceptState,
-        simulate
+        simulate,
+        setAlphabet,
+        setStates,
+        setTransitions,
+        setStartState,
+        setAcceptStates,
+        removeTransition: (index) => {
+            setTransitions(transitions.filter((_, i) => i !== index));
+        }
     };
 };
