@@ -3,6 +3,9 @@ import './stylings/NFASimulator.css';
 import NFAGraph from './NFAGraph';
 import { NFAControlPanel } from './NFAControlPanel';
 import { NFATestCases } from './NFATestCases';
+import { NFATransitionsEditor } from './TransitionsEditor';
+import { NFAStatesEditor } from './StatesEditor';
+import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { useNFA } from './useNFA';
 
