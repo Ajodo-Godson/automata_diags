@@ -89,15 +89,16 @@
     font-weight: bold;
 }
 
-.state-name {
+.transition-text .state-name {
     color: #7c3aed;
     font-weight: 500;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
 }
 
 .symbol-name {
     color: #dc2626;
     font-weight: 600;
+    font-size: 0.7rem;
 }
 
 .equals {
