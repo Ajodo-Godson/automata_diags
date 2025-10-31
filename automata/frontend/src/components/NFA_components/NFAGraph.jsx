@@ -10,19 +10,34 @@ import 'reactflow/dist/style.css';
 import './stylings/NFAGraph.css';
 
 const StateNode = ({ data, isConnectable }) => {
+    const [showDelete, setShowDelete] = React.useState(false);
     const isAcceptState = data.isAcceptState;
     const isStartState = data.isStartState;
     const isCurrentState = data.isCurrentState;
+
+    const handleDelete = (e) => {
+        e.stopPropagation();
+        if (window.confirm(`Delete state "${data.label}"?`)) {
+            window.dispatchEvent(new CustomEvent('deleteState', { detail: data.label }));
+        }
+    };
 
     return (
         <div
             className={`nfa-state-node ${isAcceptState ? 'nfa-accept-state' : ''} 
                        ${isStartState ? 'nfa-start-state' : ''} 
                        ${isCurrentState ? 'nfa-current-state' : ''}`}
+            onMouseEnter={() => setShowDelete(true)}
+            onMouseLeave={() => setShowDelete(false)}
         >
             <Handle type="target" position={Position.Left} isConnectable={isConnectable} />
             <div className="nfa-state-label">{data.label}</div>
             {isAcceptState && <div className="nfa-accept-circle" />}
+            {showDelete && (
+                <button className="state-delete-btn" onClick={handleDelete} title="Delete state">
+                    ×
+                </button>
+            )}
             <Handle type="source" position={Position.Right} isConnectable={isConnectable} />
         </div>
     );
