@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './stylings/PDASimulator.css';
 import { PDAControlPanel } from './PDAControlPanel';
 import { PDATestCases } from './PDATestCases';
+import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { usePDA } from './usePDA';
 
@@ -409,10 +410,12 @@ const PDASimulator = () => {
                     {/* Right Column */}
                     <div className="pda-right-col">
                         {/* Test Cases */}
-                        <PDATestCases
-                            onLoadTest={handleLoadTest}
-                            currentExample={currentExampleName}
-                        />
+                        <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
+                            <PDATestCases
+                                onLoadTest={handleLoadTest}
+                                currentExample={currentExampleName}
+                            />
+                        </CollapsibleSection>
 
                         {/* Simulation Steps */}
                         {simulationSteps.length > 0 && (

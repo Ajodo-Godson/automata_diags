@@ -3,6 +3,7 @@ import { TapeVisualizer } from './TapeVisualizer';
 import { ControlPanel } from './ControlPanel';
 import { ProgramEditor } from './ProgramEditor';
 import { ExampleTestCases } from './ExampleTestCases';
+import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import './stylings/TMSimulator.css';
 
@@ -319,10 +320,12 @@ export default function TMSimulator() {
               onSpeedChange={setSpeed}
             />
 
-            <ExampleTestCases 
-              onLoadExample={handleLoadExample}
-              currentExample={currentExampleName}
-            />
+            <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
+              <ExampleTestCases 
+                onLoadExample={handleLoadExample}
+                currentExample={currentExampleName}
+              />
+            </CollapsibleSection>
           </div>
 
           {/* Right Column: Program Editor */}

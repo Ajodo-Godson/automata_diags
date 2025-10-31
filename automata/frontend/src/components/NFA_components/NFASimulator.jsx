@@ -369,16 +369,18 @@ const NFASimulator = () => {
                     {/* Right Column */}
                     <div className="nfa-right-col">
                         {/* Test Cases */}
-                        <NFATestCases 
-                            nfa={nfa}
-                            currentExample={currentExampleName}
-                            onTestString={(testString) => {
-                                setInputString(testString);
-                                setSimulationSteps([]);
-                                setCurrentStep(-1);
-                                setIsPlaying(false);
-                            }}
-                        />
+                        <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
+                            <NFATestCases 
+                                nfa={nfa}
+                                currentExample={currentExampleName}
+                                onTestString={(testString) => {
+                                    setInputString(testString);
+                                    setSimulationSteps([]);
+                                    setCurrentStep(-1);
+                                    setIsPlaying(false);
+                                }}
+                            />
+                        </CollapsibleSection>
 
                         {/* Simulation Progress */}
                         {simulationSteps.length > 0 && (

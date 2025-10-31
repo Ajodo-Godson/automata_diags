@@ -366,10 +366,12 @@ const DFASimulatorNew = () => {
                     {/* Right Column */}
                     <div className="dfa-right-col">
                         {/* Test Cases */}
-                        <DFATestCases 
-                            onLoadTest={handleLoadTest}
-                            currentExample={currentExampleName}
-                        />
+                        <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
+                            <DFATestCases 
+                                onLoadTest={handleLoadTest}
+                                currentExample={currentExampleName}
+                            />
+                        </CollapsibleSection>
 
                         {/* Simulation Steps */}
                         {simulationSteps.length > 0 && (

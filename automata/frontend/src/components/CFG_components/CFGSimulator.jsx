@@ -3,6 +3,7 @@ import './stylings/CFGSimulator.css';
 import { CFGControlPanel } from './CFGControlPanel';
 import { CFGTestCases } from './CFGTestCases';
 import { ParseTree } from './ParseTree';
+import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { useCFG } from './useCFG';
 
@@ -696,10 +697,12 @@ const CFGSimulator = () => {
                     {/* Right Column */}
                     <div className="cfg-right-col">
                         {/* Test Cases */}
-                        <CFGTestCases
-                            onLoadTest={handleLoadTest}
-                            currentExample={currentExampleName}
-                        />
+                        <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
+                            <CFGTestCases
+                                onLoadTest={handleLoadTest}
+                                currentExample={currentExampleName}
+                            />
+                        </CollapsibleSection>
 
                         {/* Derivation Steps */}
                         {derivationSteps.length > 0 && (
