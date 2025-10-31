@@ -262,6 +262,11 @@ const DFASimulatorNew = () => {
                             <p className="dfa-input-help-compact">
                                 Alphabet: {dfa.alphabet.join(', ')}
                             </p>
+                            {isComplete && (
+                                <div className={`dfa-result-indicator ${isAccepted ? 'dfa-result-accepted' : 'dfa-result-rejected'}`}>
+                                    {isAccepted ? '✓ ACCEPTED' : '✗ REJECTED'}
+                                </div>
+                            )}
                         </div>
 
                         {/* Control Panel */}

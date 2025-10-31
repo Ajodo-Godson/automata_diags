@@ -372,6 +372,11 @@ const PDASimulator = () => {
                             <p className="pda-input-help">
                                 Alphabet: {pda.alphabet.join(', ')}
                             </p>
+                            {isComplete && (
+                                <div className={`pda-result-indicator ${isAccepted ? 'pda-result-accepted' : 'pda-result-rejected'}`}>
+                                    {isAccepted ? '✓ ACCEPTED' : '✗ REJECTED'}
+                                </div>
+                            )}
                             {simulationSteps.length > 0 && currentStep >= 0 && (
                                 <div className="pda-input-visualization">
                                     {inputString.split('').map((char, index) => (

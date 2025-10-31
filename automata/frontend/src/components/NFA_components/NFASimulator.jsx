@@ -351,6 +351,11 @@ const NFASimulator = () => {
                             <p className="nfa-input-help">
                                 Alphabet: {nfa.alphabet.join(', ')} (ε for epsilon)
                             </p>
+                            {isComplete && (
+                                <div className={`nfa-result-indicator ${isAccepted ? 'nfa-result-accepted' : 'nfa-result-rejected'}`}>
+                                    {isAccepted ? '✓ ACCEPTED' : '✗ REJECTED'}
+                                </div>
+                            )}
                         </div>
 
                         {/* Control Panel */}
