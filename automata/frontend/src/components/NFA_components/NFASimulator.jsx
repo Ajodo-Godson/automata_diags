@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './stylings/NFASimulator.css';
 import NFAGraph from './NFAGraph';
 import { NFAControlPanel } from './NFAControlPanel';
@@ -8,14 +8,15 @@ import { useNFA } from './useNFA';
 
 const NFASimulator = () => {
     const { examples } = useExamples();
-    const [currentExampleName, setCurrentExampleName] = useState('basic_nfa');
+    const [currentExampleName, setCurrentExampleName] = useState(null);
     
+    // Start with a blank NFA
     const nfa = useNFA({
-        states: examples['basic_nfa'].states,
-        alphabet: examples['basic_nfa'].alphabet,
-        transitions: examples['basic_nfa'].transitions,
-        startState: examples['basic_nfa'].startState,
-        acceptStates: examples['basic_nfa'].acceptStates,
+        states: ['q0'],
+        alphabet: ['0', '1'],
+        transitions: [],
+        startState: 'q0',
+        acceptStates: [],
     });
 
     const [inputString, setInputString] = useState('');
@@ -39,94 +40,6 @@ const NFASimulator = () => {
         }
         return () => clearTimeout(timer);
     }, [isPlaying, currentStep, simulationSteps.length, playbackSpeed]);
-
-    // Event listeners for toolbox actions
-    useEffect(() => {
-        const handleExport = () => {
-            const nfaDefinition = {
-                name: 'Custom NFA',
-                description: 'Exported NFA definition',
-                states: nfa.states,
-                alphabet: nfa.alphabet,
-                transitions: nfa.transitions,
-                startState: nfa.startState,
-                acceptStates: nfa.acceptStates
-            };
-            
-            const dataStr = JSON.stringify(nfaDefinition, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            
-            const exportFileDefaultName = 'nfa_definition.json';
-            
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-        };
-
-        const handleImport = () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const nfaDefinition = JSON.parse(e.target.result);
-                            nfa.loadDefinition(nfaDefinition);
-                            setCurrentExampleName('Custom Import');
-                        } catch (error) {
-                            alert('Invalid JSON file or NFA definition format');
-                        }
-                    };
-                    reader.readAsText(file);
-                }
-            };
-            input.click();
-        };
-
-        const handleAddState = () => {
-            alert('Adding states is not implemented for NFA. Use Import to load a custom NFA.');
-        };
-
-        const handleAddTransition = () => {
-            alert('Adding transitions is not implemented for NFA. Use Import to load a custom NFA.');
-        };
-
-        const handleSetStartState = () => {
-            alert('Setting start state is not implemented for NFA. Use Import to load a custom NFA.');
-        };
-
-        const handleToggleAccept = () => {
-            alert('Toggling accept states is not implemented for NFA. Use Import to load a custom NFA.');
-        };
-
-        const handleClearAll = () => {
-            // Reset to first example
-            const firstExample = Object.keys(examples)[0];
-            loadExample(firstExample);
-        };
-
-        window.addEventListener('export', handleExport);
-        window.addEventListener('import', handleImport);
-        window.addEventListener('addState', handleAddState);
-        window.addEventListener('addTransition', handleAddTransition);
-        window.addEventListener('setStartState', handleSetStartState);
-        window.addEventListener('toggleAccept', handleToggleAccept);
-        window.addEventListener('clearAll', handleClearAll);
-
-        return () => {
-            window.removeEventListener('export', handleExport);
-            window.removeEventListener('import', handleImport);
-            window.removeEventListener('addState', handleAddState);
-            window.removeEventListener('addTransition', handleAddTransition);
-            window.removeEventListener('setStartState', handleSetStartState);
-            window.removeEventListener('toggleAccept', handleToggleAccept);
-            window.removeEventListener('clearAll', handleClearAll);
-        };
-    }, [nfa]);
 
     const simulateString = () => {
         setSimulationSteps([]);
@@ -207,7 +120,7 @@ const NFASimulator = () => {
         return closure;
     };
 
-    const loadExample = (exampleName) => {
+    const loadExample = useCallback((exampleName) => {
         const example = examples[exampleName];
         if (example) {
             setCurrentExampleName(exampleName);
@@ -217,12 +130,133 @@ const NFASimulator = () => {
             setCurrentStep(-1);
             setIsPlaying(false);
         }
-    };
+    }, [examples, nfa, setCurrentExampleName, setInputString, setSimulationSteps, setCurrentStep, setIsPlaying]);
 
     const resetSimulation = () => {
         setCurrentStep(-1);
+        setSimulationSteps([]);
         setIsPlaying(false);
     };
+
+    // Event listeners for toolbox actions
+    useEffect(() => {
+        const handleExport = () => {
+            const nfaDefinition = {
+                name: currentExampleName || 'Custom NFA',
+                description: 'Exported NFA definition',
+                states: nfa.states,
+                alphabet: nfa.alphabet,
+                transitions: nfa.transitions,
+                startState: nfa.startState,
+                acceptStates: nfa.acceptStates
+            };
+            
+            const dataStr = JSON.stringify(nfaDefinition, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'nfa_definition.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        };
+
+        const handleAddState = () => {
+            const stateName = prompt('Enter new state name (e.g., q1, q2):');
+            if (stateName && stateName.trim()) {
+                nfa.addState(stateName.trim());
+                resetSimulation();
+            }
+        };
+
+        const handleAddTransition = () => {
+            const from = prompt(`Enter source state:\nAvailable states: ${nfa.states.join(', ')}`);
+            if (!from || !nfa.states.includes(from.trim())) {
+                if (from) alert(`State "${from}" does not exist`);
+                return;
+            }
+            
+            const symbol = prompt(`Enter symbol (use ε for epsilon):\nAlphabet: ${nfa.alphabet.join(', ')}, ε`);
+            if (!symbol) return;
+            
+            const to = prompt(`Enter destination state:\nAvailable states: ${nfa.states.join(', ')}`);
+            if (!to || !nfa.states.includes(to.trim())) {
+                if (to) alert(`State "${to}" does not exist`);
+                return;
+            }
+            
+            nfa.addTransition(from.trim(), to.trim(), symbol.trim());
+            resetSimulation();
+        };
+
+        const handleDeleteState = () => {
+            const stateName = prompt(`Enter state to delete:\nAvailable states: ${nfa.states.join(', ')}`);
+            if (stateName && nfa.states.includes(stateName.trim())) {
+                if (nfa.states.length <= 1) {
+                    alert('Cannot delete the only state');
+                    return;
+                }
+                nfa.removeState(stateName.trim());
+                resetSimulation();
+            } else if (stateName) {
+                alert(`State "${stateName}" does not exist`);
+            }
+        };
+
+        const handleSetStartState = () => {
+            const newStartState = prompt(`Enter the state to set as start state:\nAvailable states: ${nfa.states.join(', ')}`);
+            if (newStartState && nfa.states.includes(newStartState.trim())) {
+                nfa.setStart(newStartState.trim());
+                resetSimulation();
+            } else if (newStartState) {
+                alert(`State "${newStartState}" does not exist`);
+            }
+        };
+
+        const handleToggleAccept = () => {
+            const stateName = prompt(`Enter state to toggle accept status:\nAvailable states: ${nfa.states.join(', ')}\nCurrent accept states: ${nfa.acceptStates.join(', ') || 'none'}`);
+            if (stateName && nfa.states.includes(stateName.trim())) {
+                nfa.toggleAcceptState(stateName.trim());
+                resetSimulation();
+            } else if (stateName) {
+                alert(`State "${stateName}" does not exist`);
+            }
+        };
+
+        const handleClearAll = () => {
+            // Create a blank NFA
+            if (confirm('Are you sure you want to clear all and start fresh?')) {
+                nfa.loadDefinition({
+                    states: ['q0'],
+                    alphabet: ['0', '1'],
+                    transitions: [],
+                    startState: 'q0',
+                    acceptStates: []
+                });
+                setCurrentExampleName(null);
+                resetSimulation();
+            }
+        };
+
+        window.addEventListener('export', handleExport);
+        window.addEventListener('addState', handleAddState);
+        window.addEventListener('addTransition', handleAddTransition);
+        window.addEventListener('deleteState', handleDeleteState);
+        window.addEventListener('setStartState', handleSetStartState);
+        window.addEventListener('toggleAccept', handleToggleAccept);
+        window.addEventListener('clearAll', handleClearAll);
+
+        return () => {
+            window.removeEventListener('export', handleExport);
+            window.removeEventListener('addState', handleAddState);
+            window.removeEventListener('addTransition', handleAddTransition);
+            window.removeEventListener('deleteState', handleDeleteState);
+            window.removeEventListener('setStartState', handleSetStartState);
+            window.removeEventListener('toggleAccept', handleToggleAccept);
+            window.removeEventListener('clearAll', handleClearAll);
+        };
+    }, [nfa, currentExampleName, resetSimulation]);
 
     const stepForward = () => {
         if (currentStep < simulationSteps.length - 1) {
@@ -244,34 +278,44 @@ const NFASimulator = () => {
     };
 
     return (
-        <div className="dfa-simulator-new">
-            <div className="dfa-container">
-                <div className="dfa-header">
-                    <h1 className="dfa-title">NFA Simulator</h1>
-                    <p className="dfa-subtitle">
+        <div className="nfa-simulator-new">
+            <div className="nfa-container">
+                <div className="nfa-header">
+                    <h1 className="nfa-title">NFA Simulator</h1>
+                    <p className="nfa-subtitle">
                         Interactive Non-deterministic Finite Automaton with ε-transitions
                     </p>
                 </div>
 
-                <div className="dfa-example-selector">
-                    <label className="dfa-selector-label">Load Example:</label>
-                    <div className="dfa-selector-buttons">
+                <div className="nfa-example-selector">
+                    <label className="nfa-selector-label">Quick Load Example:</label>
+                    <select 
+                        onChange={(e) => {
+                            if (e.target.value) {
+                                loadExample(e.target.value);
+                            }
+                        }}
+                        value={currentExampleName || ''}
+                        className="nfa-example-dropdown"
+                    >
+                        <option value="">-- Select an example --</option>
                         {Object.keys(examples).map(name => (
-                            <button
-                                key={name}
-                                className={`dfa-selector-btn ${currentExampleName === name ? 'active' : ''}`}
-                                onClick={() => loadExample(name)}
-                            >
+                            <option key={name} value={name}>
                                 {examples[name].name}
-                            </button>
+                            </option>
                         ))}
-                    </div>
+                    </select>
+                    {currentExampleName && (
+                        <span className="nfa-current-example">
+                            Current: {examples[currentExampleName]?.name || 'Custom'}
+                        </span>
+                    )}
                 </div>
 
-                <div className="dfa-grid">
-                    <div className="dfa-left-col">
-                        <div className="dfa-graph-card">
-                            <h3 className="dfa-card-title">NFA Visualization</h3>
+                <div className="nfa-grid">
+                    <div className="nfa-left-col">
+                        <div className="nfa-graph-card">
+                            <h3 className="nfa-card-title">NFA Visualization</h3>
                             <NFAGraph 
                                 nfa={nfa} 
                                 currentStates={currentStep >= 0 ? simulationSteps[currentStep]?.states || [] : []}
@@ -279,35 +323,35 @@ const NFASimulator = () => {
                             />
                         </div>
 
-                        <div className="dfa-input-card">
-                            <h3 className="dfa-card-title">Input String</h3>
-                            <div className="dfa-input-group">
+                        <div className="nfa-input-card">
+                            <h3 className="nfa-card-title">Input String</h3>
+                            <div className="nfa-input-group">
                                 <input
                                     type="text"
                                     value={inputString}
                                     onChange={(e) => setInputString(e.target.value)}
                                     placeholder="Enter input string..."
-                                    className="dfa-input"
+                                    className="nfa-input"
                                 />
                                 <button 
                                     onClick={simulateString}
-                                    className="dfa-btn dfa-btn-primary"
+                                    className="nfa-simulate-btn"
                                 >
                                     Simulate
                                 </button>
                             </div>
-                            <p className="dfa-input-help">
+                            <p className="nfa-input-help">
                                 Use alphabet: {nfa.alphabet.join(', ')}. ε represents epsilon transitions.
                             </p>
                             {isComplete && (
-                                <div className={`dfa-result ${isAccepted ? 'accepted' : 'rejected'}`}>
+                                <div className={`nfa-result ${isAccepted ? 'accepted' : 'rejected'}`}>
                                     String is {isAccepted ? 'ACCEPTED' : 'REJECTED'}
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="dfa-right-col">
+                    <div className="nfa-right-col">
                         <NFAControlPanel 
                             onTogglePlayback={togglePlayback}
                             onStepForward={stepForward}
@@ -320,11 +364,11 @@ const NFASimulator = () => {
                             onSpeedChange={setPlaybackSpeed}
                         />
 
-                        <div className="dfa-steps-card">
-                            <h3 className="dfa-card-title">Simulation Steps</h3>
-                            <div className="dfa-step-display">
+                        <div className="nfa-steps-card">
+                            <h3 className="nfa-card-title">Simulation Steps</h3>
+                            <div className="nfa-step-display">
                                 {currentStep >= 0 && simulationSteps[currentStep] ? (
-                                    <div className="dfa-current-step">
+                                    <div className="nfa-current-step">
                                         <div className="step-number">Step {currentStep + 1}</div>
                                         <div className="step-description">
                                             {simulationSteps[currentStep].description}
@@ -335,7 +379,7 @@ const NFASimulator = () => {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="dfa-no-step">
+                                    <div className="no-step">
                                         Click "Simulate" to begin simulation
                                     </div>
                                 )}
