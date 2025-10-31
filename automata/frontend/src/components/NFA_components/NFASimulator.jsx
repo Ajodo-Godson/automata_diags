@@ -5,6 +5,7 @@ import { NFAControlPanel } from './NFAControlPanel';
 import { NFATestCases } from './NFATestCases';
 import { NFATransitionsEditor } from './TransitionsEditor';
 import { NFAStatesEditor } from './StatesEditor';
+import { NFAAlphabetEditor } from './AlphabetEditor';
 import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { useNFA } from './useNFA';
@@ -368,6 +369,21 @@ const NFASimulator = () => {
 
                     {/* Right Column */}
                     <div className="nfa-right-col">
+                        {/* States Editor */}
+                        <CollapsibleSection title="States Editor" defaultOpen={false}>
+                            <NFAStatesEditor nfa={nfa} onUpdate={resetSimulation} />
+                        </CollapsibleSection>
+
+                        {/* Alphabet Editor */}
+                        <CollapsibleSection title="Alphabet" defaultOpen={false}>
+                            <NFAAlphabetEditor nfa={nfa} onUpdate={resetSimulation} />
+                        </CollapsibleSection>
+
+                        {/* Transitions Editor */}
+                        <CollapsibleSection title="Transitions Editor" defaultOpen={false}>
+                            <NFATransitionsEditor nfa={nfa} onUpdate={resetSimulation} />
+                        </CollapsibleSection>
+
                         {/* Test Cases */}
                         <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
                             <NFATestCases 
