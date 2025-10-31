@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './stylings/PDASimulator.css';
 import { PDAControlPanel } from './PDAControlPanel';
 import { PDATestCases } from './PDATestCases';
+import { PDAStatesEditor } from './StatesEditor';
+import { PDATransitionsEditor } from './TransitionsEditor';
+import { PDAAlphabetEditor } from './AlphabetEditor';
 import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { usePDA } from './usePDA';
@@ -409,6 +412,21 @@ const PDASimulator = () => {
 
                     {/* Right Column */}
                     <div className="pda-right-col">
+                        {/* States Editor */}
+                        <CollapsibleSection title="States Editor" defaultOpen={false}>
+                            <PDAStatesEditor pda={pda} onUpdate={handleReset} />
+                        </CollapsibleSection>
+
+                        {/* Alphabet Editor */}
+                        <CollapsibleSection title="Alphabets" defaultOpen={false}>
+                            <PDAAlphabetEditor pda={pda} onUpdate={handleReset} />
+                        </CollapsibleSection>
+
+                        {/* Transitions Editor */}
+                        <CollapsibleSection title="Transitions Editor" defaultOpen={false}>
+                            <PDATransitionsEditor pda={pda} onUpdate={handleReset} />
+                        </CollapsibleSection>
+
                         {/* Test Cases */}
                         <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
                             <PDATestCases
