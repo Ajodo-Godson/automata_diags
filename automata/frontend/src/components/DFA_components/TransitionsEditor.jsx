@@ -156,17 +156,15 @@ export function TransitionsEditor({ dfa, onUpdate }) {
                             <span className="equals"> = </span>
                             <span className="state-name">{trans.to}</span>
                         </span>
-                        {hoveredIndex === index && (
-                            <div className="transition-actions">
-                                <button 
-                                    className="btn-icon btn-icon-delete"
-                                    onClick={() => handleDelete(trans.from, trans.symbol)}
-                                    title="Delete transition"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            </div>
-                        )}
+                        <div className="transition-actions">
+                            <button 
+                                className="btn-icon btn-icon-delete"
+                                onClick={() => handleDelete(trans.from, trans.symbol)}
+                                title="Delete transition"
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        </div>
                     </div>
                 ))}
 

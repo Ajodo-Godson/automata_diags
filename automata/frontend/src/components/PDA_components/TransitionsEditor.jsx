@@ -174,17 +174,15 @@ export function PDATransitionsEditor({ pda, onUpdate }) {
                             <span className="symbol-name">, {trans.push}</span>
                             <span>)</span>
                         </span>
-                        {hoveredIndex === index && (
-                            <div className="transition-actions">
-                                <button 
-                                    className="btn-icon btn-icon-delete"
-                                    onClick={() => handleDelete(trans.from, trans.to, trans.input, trans.pop, trans.push)}
-                                    title="Delete transition"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            </div>
-                        )}
+                        <div className="transition-actions">
+                            <button 
+                                className="btn-icon btn-icon-delete"
+                                onClick={() => handleDelete(trans.from, trans.to, trans.input, trans.pop, trans.push)}
+                                title="Delete transition"
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        </div>
                     </div>
                 ))}
 
