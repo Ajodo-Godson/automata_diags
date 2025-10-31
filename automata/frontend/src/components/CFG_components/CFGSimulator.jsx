@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './stylings/CFGSimulator.css';
 import { CFGControlPanel } from './CFGControlPanel';
 import { CFGTestCases } from './CFGTestCases';
@@ -7,13 +7,14 @@ import { useCFG } from './useCFG';
 
 const CFGSimulator = () => {
     const { examples } = useExamples();
-    const [currentExampleName, setCurrentExampleName] = useState('balanced_parentheses');
+    const [currentExampleName, setCurrentExampleName] = useState(null);
 
+    // Start with a blank CFG
     const cfg = useCFG({
-        variables: examples['balanced_parentheses'].variables,
-        terminals: examples['balanced_parentheses'].terminals,
-        rules: examples['balanced_parentheses'].rules,
-        startVariable: examples['balanced_parentheses'].startVariable,
+        variables: ['S'],
+        terminals: ['a', 'b'],
+        rules: [],
+        startVariable: 'S',
     });
 
     const [inputString, setInputString] = useState('');
@@ -27,7 +28,7 @@ const CFGSimulator = () => {
     useEffect(() => {
         const handleExport = () => {
             const cfgDefinition = {
-                name: 'Custom CFG',
+                name: currentExampleName || 'Custom CFG',
                 description: 'Exported CFG definition',
                 variables: cfg.variables,
                 terminals: cfg.terminals,
@@ -46,37 +47,99 @@ const CFGSimulator = () => {
             linkElement.click();
         };
 
-        const handleImport = () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const cfgDefinition = JSON.parse(e.target.result);
-                            cfg.loadCFG(cfgDefinition);
-                            setCurrentExampleName('Custom Import');
-                        } catch (error) {
-                            alert('Invalid JSON file or CFG definition format');
-                        }
-                    };
-                    reader.readAsText(file);
+        const handleAddProduction = () => {
+            const variable = prompt(`Enter variable (left-hand side of production):\nAvailable variables: ${cfg.variables.join(', ')}`);
+            if (!variable || !cfg.variables.includes(variable.trim())) {
+                if (variable) alert(`Variable "${variable}" does not exist. Add it first using "Add Variable".`);
+                return;
+            }
+            
+            const production = prompt(`Enter production (right-hand side):\nUse variables: ${cfg.variables.join(', ')}\nUse terminals: ${cfg.terminals.join(', ')}\nUse ε for epsilon\nExample: aSb or ab or ε`);
+            if (!production) return;
+            
+            cfg.addProduction(variable.trim(), production.trim());
+            resetDerivation();
+        };
+
+        const handleDeleteProduction = () => {
+            if (cfg.rules.length === 0) {
+                alert('No production rules to delete');
+                return;
+            }
+            
+            const rulesList = cfg.rules.map((r, idx) => `${idx + 1}. ${r.left} → ${r.right}`).join('\n');
+            const index = prompt(`Enter rule number to delete:\n${rulesList}`);
+            
+            if (index && !isNaN(index)) {
+                const idx = parseInt(index) - 1;
+                if (idx >= 0 && idx < cfg.rules.length) {
+                    cfg.deleteProduction(idx);
+                    resetDerivation();
+                } else {
+                    alert('Invalid rule number');
                 }
-            };
-            input.click();
+            }
+        };
+
+        const handleAddVariable = () => {
+            const variable = prompt('Enter new variable (single uppercase letter, e.g., A, B):');
+            if (variable && variable.trim()) {
+                const v = variable.trim();
+                if (v.length === 1 && /[A-Z]/.test(v)) {
+                    cfg.addVariable(v);
+                    resetDerivation();
+                } else {
+                    alert('Variable must be a single uppercase letter');
+                }
+            }
+        };
+
+        const handleSetStartSymbol = () => {
+            const newStartSymbol = prompt(`Enter the variable to set as start symbol:\nAvailable variables: ${cfg.variables.join(', ')}`);
+            if (newStartSymbol && cfg.variables.includes(newStartSymbol.trim())) {
+                cfg.setStartVariable(newStartSymbol.trim());
+                resetDerivation();
+            } else if (newStartSymbol) {
+                alert(`Variable "${newStartSymbol}" does not exist`);
+            }
+        };
+
+        const handleClearAll = () => {
+            if (confirm('Are you sure you want to clear all and start fresh?')) {
+                cfg.loadCFG({
+                    variables: ['S'],
+                    terminals: ['a', 'b'],
+                    rules: [],
+                    startVariable: 'S'
+                });
+                setCurrentExampleName(null);
+                resetDerivation();
+            }
+        };
+
+        const resetDerivation = () => {
+            setDerivationSteps([]);
+            setCurrentStep(-1);
+            setIsPlaying(false);
+            setIsAccepted(null);
         };
 
         window.addEventListener('export', handleExport);
-        window.addEventListener('import', handleImport);
+        window.addEventListener('addProduction', handleAddProduction);
+        window.addEventListener('deleteProduction', handleDeleteProduction);
+        window.addEventListener('addVariable', handleAddVariable);
+        window.addEventListener('setStartSymbol', handleSetStartSymbol);
+        window.addEventListener('clearAll', handleClearAll);
 
         return () => {
             window.removeEventListener('export', handleExport);
-            window.removeEventListener('import', handleImport);
+            window.removeEventListener('addProduction', handleAddProduction);
+            window.removeEventListener('deleteProduction', handleDeleteProduction);
+            window.removeEventListener('addVariable', handleAddVariable);
+            window.removeEventListener('setStartSymbol', handleSetStartSymbol);
+            window.removeEventListener('clearAll', handleClearAll);
         };
-    }, [cfg]);
+    }, [cfg, currentExampleName]);
 
     // Helper functions for CNF conversion and CYK parsing
     const normalizeCFG = (cfg) => {
@@ -385,25 +448,64 @@ const CFGSimulator = () => {
         }
     };
 
-    const handleReset = () => {
+    const handleReset = useCallback(() => {
         setDerivationSteps([]);
         setCurrentStep(-1);
         setIsPlaying(false);
         setIsAccepted(null);
-    };
+    }, []);
 
-    const loadExample = (exampleName) => {
+    const loadExample = useCallback((exampleName) => {
         const example = examples[exampleName];
         setCurrentExampleName(exampleName);
         cfg.loadCFG(example);
         setInputString('');
         handleReset();
-    };
+    }, [examples, cfg, setCurrentExampleName, setInputString, handleReset]);
 
     const handleLoadTest = (testInput) => {
         setInputString(testInput);
         handleReset();
     };
+
+    // Event listeners for toolbox actions
+    useEffect(() => {
+        const handleAddRule = () => {
+            alert('Adding rules is not implemented for CFG. Use Import to load a custom CFG.');
+        };
+
+        const handleEditRule = () => {
+            alert('Editing rules is not implemented for CFG. Use Import to load a custom CFG.');
+        };
+
+        const handleSetStartSymbol = () => {
+            alert('Setting start symbol is not implemented for CFG. Use Import to load a custom CFG.');
+        };
+
+        const handleConvertCNF = () => {
+            alert('Converting to CNF is not implemented in the toolbox. Use the Convert to CNF button in the simulator.');
+        };
+
+        const handleClearAll = () => {
+            // Reset to first example
+            const firstExample = Object.keys(examples)[0];
+            loadExample(firstExample);
+        };
+
+        window.addEventListener('addRule', handleAddRule);
+        window.addEventListener('editRule', handleEditRule);
+        window.addEventListener('setStartSymbol', handleSetStartSymbol);
+        window.addEventListener('convertCNF', handleConvertCNF);
+        window.addEventListener('clearAll', handleClearAll);
+
+        return () => {
+            window.removeEventListener('addRule', handleAddRule);
+            window.removeEventListener('editRule', handleEditRule);
+            window.removeEventListener('setStartSymbol', handleSetStartSymbol);
+            window.removeEventListener('convertCNF', handleConvertCNF);
+            window.removeEventListener('clearAll', handleClearAll);
+        };
+    }, [examples, loadExample]);
 
     return (
         <div className="cfg-simulator-new">

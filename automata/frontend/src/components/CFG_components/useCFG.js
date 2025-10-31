@@ -23,6 +23,22 @@ export const useCFG = (initialCFG) => {
         setRules(newRules);
     };
 
+    const addProduction = (left, right) => {
+        const newRule = { left, right };
+        setRules([...rules, newRule]);
+    };
+
+    const deleteProduction = (index) => {
+        const newRules = rules.filter((_, i) => i !== index);
+        setRules(newRules);
+    };
+
+    const addVariable = (variable) => {
+        if (!variables.includes(variable)) {
+            setVariables([...variables, variable]);
+        }
+    };
+
     return {
         variables,
         terminals,
@@ -31,6 +47,9 @@ export const useCFG = (initialCFG) => {
         loadCFG,
         addRule,
         removeRule,
+        addProduction,
+        deleteProduction,
+        addVariable,
         setVariables,
         setTerminals,
         setRules,
