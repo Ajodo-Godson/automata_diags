@@ -13,6 +13,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     flex-shrink: 0;
 }
@@ -61,66 +62,41 @@
     overflow: hidden;
 }
 
-.sidebar-compact {
-    width: 180px;
-    background: #f8f9fa;
-    padding: 0.75rem;
-    border-right: 1px solid #e0e0e0;
-    overflow-y: auto;
-    flex-shrink: 0;
-}
-
-.workspace {
+.workspace-full {
     flex: 1;
     padding: 1rem;
     background: #fff;
     overflow-y: auto;
 }
 
-.toolbox-compact {
-    background: white;
-    border-radius: 8px;
-    padding: 0.75rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.toolbox-compact h3 {
-    margin: 0 0 0.75rem 0;
-    color: #333;
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.tool-buttons {
+/* Header tool buttons */
+.header-tools {
     display: flex;
-    flex-direction: column;
     gap: 0.5rem;
+    align-items: center;
 }
 
-.tool-btn-compact {
-    padding: 0.5rem 0.75rem;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
+.header-tool-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 500;
     transition: all 0.2s ease;
-    text-align: left;
+    white-space: nowrap;
 }
 
-.tool-btn-compact:hover:not(:disabled) {
-    background-color: #45a049;
-    transform: translateX(2px);
+.header-tool-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
 }
 
-.tool-btn-compact:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-    transform: none;
+.header-tool-btn:active {
+    transform: translateY(0);
 }
 
 @media (max-width: 768px) {

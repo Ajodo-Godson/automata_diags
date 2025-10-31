@@ -53,28 +53,24 @@ const Layout = ({ children, currentAutomaton, setCurrentAutomaton }) => {
                         TM
                     </button>
                 </nav>
+
+                {/* Tool buttons in header */}
+                <div className="header-tools">
+                    {getToolboxButtons(currentAutomaton).map((tool, index) => (
+                        <button 
+                            key={index}
+                            onClick={() => window.dispatchEvent(new CustomEvent(tool.event, { detail: tool.data }))}
+                            className="header-tool-btn"
+                            title={tool.description}
+                        >
+                            {tool.label}
+                        </button>
+                    ))}
+                </div>
             </header>
 
             <div className="main-content">
-                <aside className="sidebar-compact">
-                    <div className="toolbox-compact">
-                        <h3>Tools</h3>
-                        <div className="tool-buttons">
-                            {getToolboxButtons(currentAutomaton).map((tool, index) => (
-                                <button 
-                                    key={index}
-                                    onClick={() => window.dispatchEvent(new CustomEvent(tool.event, { detail: tool.data }))}
-                                    className="tool-btn-compact"
-                                    title={tool.description}
-                                >
-                                    {tool.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </aside>
-
-                <main className="workspace">
+                <main className="workspace-full">
                     {children}
                 </main>
             </div>
