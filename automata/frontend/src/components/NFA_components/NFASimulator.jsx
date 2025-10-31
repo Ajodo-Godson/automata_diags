@@ -312,10 +312,13 @@ const NFASimulator = () => {
                     )}
                 </div>
 
+                {/* Main Grid - Same layout as DFA */}
                 <div className="nfa-grid">
+                    {/* Left Column */}
                     <div className="nfa-left-col">
+                        {/* Graph Visualization */}
                         <div className="nfa-graph-card">
-                            <h3 className="nfa-card-title">NFA Visualization</h3>
+                            <h3 className="nfa-card-title">State Diagram</h3>
                             <NFAGraph 
                                 nfa={nfa} 
                                 currentStates={currentStep >= 0 ? simulationSteps[currentStep]?.states || [] : []}
@@ -323,35 +326,30 @@ const NFASimulator = () => {
                             />
                         </div>
 
+                        {/* Input Tester */}
                         <div className="nfa-input-card">
-                            <h3 className="nfa-card-title">Input String</h3>
+                            <h3 className="nfa-card-title">Test Input String</h3>
                             <div className="nfa-input-group">
                                 <input
                                     type="text"
                                     value={inputString}
                                     onChange={(e) => setInputString(e.target.value)}
-                                    placeholder="Enter input string..."
+                                    placeholder="Enter input string (e.g., 010)"
                                     className="nfa-input"
                                 />
                                 <button 
                                     onClick={simulateString}
-                                    className="nfa-simulate-btn"
+                                    className="nfa-btn nfa-btn-primary"
                                 >
-                                    Simulate
+                                    Test
                                 </button>
                             </div>
                             <p className="nfa-input-help">
-                                Use alphabet: {nfa.alphabet.join(', ')}. ε represents epsilon transitions.
+                                Alphabet: {nfa.alphabet.join(', ')} (ε for epsilon)
                             </p>
-                            {isComplete && (
-                                <div className={`nfa-result ${isAccepted ? 'accepted' : 'rejected'}`}>
-                                    String is {isAccepted ? 'ACCEPTED' : 'REJECTED'}
-                                </div>
-                            )}
                         </div>
-                    </div>
 
-                    <div className="nfa-right-col">
+                        {/* Control Panel */}
                         <NFAControlPanel 
                             onTogglePlayback={togglePlayback}
                             onStepForward={stepForward}
@@ -363,29 +361,11 @@ const NFASimulator = () => {
                             speed={playbackSpeed}
                             onSpeedChange={setPlaybackSpeed}
                         />
+                    </div>
 
-                        <div className="nfa-steps-card">
-                            <h3 className="nfa-card-title">Simulation Steps</h3>
-                            <div className="nfa-step-display">
-                                {currentStep >= 0 && simulationSteps[currentStep] ? (
-                                    <div className="nfa-current-step">
-                                        <div className="step-number">Step {currentStep + 1}</div>
-                                        <div className="step-description">
-                                            {simulationSteps[currentStep].description}
-                                        </div>
-                                        <div className="step-details">
-                                            <div>Current States: {simulationSteps[currentStep].states.join(', ')}</div>
-                                            <div>Remaining Input: "{simulationSteps[currentStep].remainingInput}"</div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="no-step">
-                                        Click "Simulate" to begin simulation
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
+                    {/* Right Column */}
+                    <div className="nfa-right-col">
+                        {/* Test Cases */}
                         <NFATestCases 
                             nfa={nfa}
                             currentExample={currentExampleName}
@@ -396,6 +376,89 @@ const NFASimulator = () => {
                                 setIsPlaying(false);
                             }}
                         />
+
+                        {/* Simulation Progress */}
+                        {simulationSteps.length > 0 && (
+                            <div className="nfa-steps-card">
+                                <h3 className="nfa-card-title">Simulation Progress</h3>
+                                <div className="nfa-step-display">
+                                    {currentStep >= 0 && currentStep < simulationSteps.length && (
+                                        <>
+                                            <div className="nfa-step-info">
+                                                <strong>Step {currentStep + 1} of {simulationSteps.length}</strong>
+                                            </div>
+                                            <div className="nfa-step-state">
+                                                Current States: <span className="nfa-highlight">{simulationSteps[currentStep].states.join(', ')}</span>
+                                            </div>
+                                            <div className="nfa-step-remaining">
+                                                Remaining Input: <code>"{simulationSteps[currentStep].remainingInput}"</code>
+                                            </div>
+                                            <div className="nfa-step-desc">
+                                                {simulationSteps[currentStep].description}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Transition Table */}
+                        <div className="nfa-table-card">
+                            <h3 className="nfa-card-title">Transition Table</h3>
+                            <div className="nfa-table-wrapper">
+                                <table className="nfa-table">
+                                    <thead>
+                                        <tr>
+                                            <th>State</th>
+                                            {nfa.alphabet.map(symbol => (
+                                                <th key={symbol}>{symbol}</th>
+                                            ))}
+                                            <th>ε</th>
+                                            <th>Accept?</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {nfa.states.map(state => {
+                                            const isCurrentState = currentStep >= 0 && 
+                                                simulationSteps[currentStep]?.states.includes(state);
+                                            
+                                            return (
+                                                <tr 
+                                                    key={state}
+                                                    className={isCurrentState ? 'nfa-current-state' : ''}
+                                                >
+                                                    <td className="nfa-state-cell">{state}</td>
+                                                    {nfa.alphabet.map(symbol => {
+                                                        const transitions = nfa.transitions.filter(t => 
+                                                            t.from === state && t.symbol === symbol
+                                                        );
+                                                        const toStates = transitions.map(t => t.to).join(', ');
+                                                        
+                                                        return (
+                                                            <td key={`${state}-${symbol}`}>
+                                                                {toStates || '—'}
+                                                            </td>
+                                                        );
+                                                    })}
+                                                    <td>
+                                                        {(() => {
+                                                            const epsilonTransitions = nfa.transitions.filter(t => 
+                                                                t.from === state && (t.symbol === 'ε' || t.symbol === 'epsilon')
+                                                            );
+                                                            const toStates = epsilonTransitions.map(t => t.to).join(', ');
+                                                            return toStates || '—';
+                                                        })()}
+                                                    </td>
+                                                    <td>
+                                                        {nfa.acceptStates.includes(state) ? '✓' : ''}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

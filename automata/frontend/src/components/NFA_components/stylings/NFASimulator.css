@@ -435,6 +435,128 @@
   line-height: 1.5;
 }
 
+/* Transition Table Styling */
+.nfa-table-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nfa-table-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.nfa-table-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
+  background-size: 200% 100%;
+  animation: gradientMove 3s ease infinite;
+}
+
+.nfa-table-wrapper {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.nfa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.nfa-table thead {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.nfa-table th {
+  padding: 14px 12px;
+  text-align: left;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  border-bottom: 3px solid #5a67d8;
+}
+
+.nfa-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
+  transition: all 0.2s ease;
+}
+
+.nfa-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.nfa-table tbody tr:hover {
+  background: linear-gradient(90deg, rgba(102, 126, 234, 0.05), transparent);
+}
+
+.nfa-state-cell {
+  font-weight: 600;
+  color: #667eea;
+  font-size: 15px;
+}
+
+.nfa-current-state {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.1)) !important;
+  border-left: 4px solid #3b82f6;
+}
+
+.nfa-current-state .nfa-state-cell {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.nfa-highlight {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.nfa-step-info,
+.nfa-step-state,
+.nfa-step-remaining,
+.nfa-step-desc {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border-left: 3px solid #667eea;
+}
+
+.nfa-btn {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nfa-btn-primary {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+}
+
+.nfa-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .nfa-grid {
