@@ -3,9 +3,8 @@ import './Layout.css';
 
 const getToolboxButtons = (automatonType) => {
     const commonTools = [
-        { label: 'Clear All', event: 'clearAll', description: 'Clear current automaton' },
-        { label: 'Export', event: 'export', description: 'Export automaton definition' },
-        { label: 'Import', event: 'import', description: 'Import automaton definition' }
+        { label: 'Clear All', event: 'clearAll', description: 'Clear and create new machine' },
+        { label: 'Export', event: 'export', description: 'Export machine definition as JSON' }
     ];
 
     switch (automatonType) {
@@ -14,6 +13,7 @@ const getToolboxButtons = (automatonType) => {
             return [
                 { label: 'Add State', event: 'addState', description: 'Add a new state' },
                 { label: 'Add Transition', event: 'addTransition', description: 'Add state transition' },
+                { label: 'Delete State', event: 'deleteState', description: 'Remove a state' },
                 { label: 'Set Start State', event: 'setStartState', description: 'Set initial state' },
                 { label: 'Toggle Accept', event: 'toggleAccept', description: 'Toggle accept state' },
                 ...commonTools
@@ -23,26 +23,27 @@ const getToolboxButtons = (automatonType) => {
             return [
                 { label: 'Add State', event: 'addState', description: 'Add a new state' },
                 { label: 'Add Transition', event: 'addTransition', description: 'Add PDA transition' },
-                { label: 'Edit Stack', event: 'editStack', description: 'Edit stack operations' },
+                { label: 'Delete State', event: 'deleteState', description: 'Remove a state' },
                 { label: 'Set Start State', event: 'setStartState', description: 'Set initial state' },
+                { label: 'Toggle Accept', event: 'toggleAccept', description: 'Toggle accept state' },
                 ...commonTools
             ];
         
         case 'CFG':
             return [
-                { label: 'Add Rule', event: 'addRule', description: 'Add grammar rule' },
-                { label: 'Edit Rule', event: 'editRule', description: 'Edit existing rule' },
+                { label: 'Add Production', event: 'addProduction', description: 'Add grammar production rule' },
+                { label: 'Delete Production', event: 'deleteProduction', description: 'Remove a production rule' },
+                { label: 'Add Variable', event: 'addVariable', description: 'Add non-terminal variable' },
                 { label: 'Set Start Symbol', event: 'setStartSymbol', description: 'Set start symbol' },
-                { label: 'Convert to CNF', event: 'convertCNF', description: 'Convert to Chomsky Normal Form' },
                 ...commonTools
             ];
         
         case 'TM':
             return [
-                { label: 'Add State', event: 'addState', description: 'Add a new state' },
-                { label: 'Add Transition', event: 'addTransition', description: 'Add TM transition' },
-                { label: 'Edit Tape', event: 'editTape', description: 'Edit tape input' },
-                { label: 'Set Start State', event: 'setStartState', description: 'Set initial state' },
+                { label: 'Add Rule', event: 'addRule', description: 'Add TM transition rule' },
+                { label: 'Delete Rule', event: 'deleteRule', description: 'Remove a transition rule' },
+                { label: 'Set Accept State', event: 'setAcceptState', description: 'Set accept state name' },
+                { label: 'Set Reject State', event: 'setRejectState', description: 'Set reject state name' },
                 ...commonTools
             ];
         
