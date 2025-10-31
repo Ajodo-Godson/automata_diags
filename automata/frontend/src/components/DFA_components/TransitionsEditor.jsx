@@ -76,11 +76,8 @@ export function TransitionsEditor({ dfa, onUpdate }) {
 
     return (
         <div className="transitions-editor">
-            <div className="editor-header">
-                <div>
-                    <h3 className="editor-title">Transitions</h3>
-                    <p className="editor-subtitle">State transition rules</p>
-                </div>
+            <div className="editor-header-simple">
+                <p className="editor-subtitle">State transition rules</p>
                 <button 
                     className="btn-add"
                     onClick={() => setIsAdding(true)}

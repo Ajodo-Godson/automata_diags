@@ -1,8 +1,6 @@
 .transitions-editor {
-    background: white;
-    border-radius: 12px;
-    padding: 1.25rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: transparent;
+    padding: 0;
 }
 
 .editor-header {
@@ -12,6 +10,13 @@
     margin-bottom: 1rem;
     padding-bottom: 1rem;
     border-bottom: 2px solid #f3f4f6;
+}
+
+.editor-header-simple {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
 }
 
 .editor-title {

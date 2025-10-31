@@ -5,6 +5,7 @@ import { DFAControlPanel } from './DFAControlPanel';
 import { DFATestCases } from './DFATestCases';
 import { TransitionsEditor } from './TransitionsEditor';
 import { StatesEditor } from './StatesEditor';
+import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { useDFA } from './useDFA';
 
@@ -326,25 +327,25 @@ const DFASimulatorNew = () => {
                             />
                         </div>
 
-                        {/* Input Tester */}
-                        <div className="dfa-input-card">
-                            <h3 className="dfa-card-title">Test Input String</h3>
+                        {/* Input Tester - Compact */}
+                        <div className="dfa-input-card-compact">
+                            <h3 className="dfa-card-title-compact">Test Input String</h3>
                             <div className="dfa-input-group">
                                 <input
                                     type="text"
                                     value={inputString}
                                     onChange={(e) => setInputString(e.target.value)}
-                                    placeholder="Enter input string (e.g., aab)"
+                                    placeholder="e.g., aab"
                                     className="dfa-input"
                                 />
                                 <button 
                                     onClick={simulateString}
-                                    className="dfa-btn dfa-btn-primary"
+                                    className="dfa-btn dfa-btn-primary dfa-btn-compact"
                                 >
-                                    Test
+                                    TEST
                                 </button>
                             </div>
-                            <p className="dfa-input-help">
+                            <p className="dfa-input-help-compact">
                                 Alphabet: {dfa.alphabet.join(', ')}
                             </p>
                         </div>
@@ -400,9 +401,8 @@ const DFASimulatorNew = () => {
                             </div>
                         )}
 
-                        {/* Transition Table */}
-                        <div className="dfa-table-card">
-                            <h3 className="dfa-card-title">Transition Table</h3>
+                        {/* Transition Table - Collapsible */}
+                        <CollapsibleSection title="Transition Table" defaultOpen={!currentExampleName}>
                             <div className="dfa-table-wrapper">
                                 <table className="dfa-table">
                                     <thead>
@@ -468,13 +468,17 @@ const DFASimulatorNew = () => {
                                     </tbody>
                                 </table>
                             </div>
-                        </div>
+                        </CollapsibleSection>
 
-                        {/* New Transitions Editor */}
-                        <TransitionsEditor dfa={dfa} onUpdate={handleReset} />
+                        {/* New Transitions Editor - Collapsible */}
+                        <CollapsibleSection title="Transitions" defaultOpen={!currentExampleName}>
+                            <TransitionsEditor dfa={dfa} onUpdate={handleReset} />
+                        </CollapsibleSection>
 
-                        {/* New States Editor */}
-                        <StatesEditor dfa={dfa} onUpdate={handleReset} />
+                        {/* New States Editor - Collapsible */}
+                        <CollapsibleSection title="States" defaultOpen={!currentExampleName}>
+                            <StatesEditor dfa={dfa} onUpdate={handleReset} />
+                        </CollapsibleSection>
                     </div>
                 </div>
             </div>

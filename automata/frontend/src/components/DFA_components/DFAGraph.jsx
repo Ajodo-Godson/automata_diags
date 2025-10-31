@@ -48,6 +48,17 @@ const nodeTypes = {
 };
 
 const DFAGraph = ({ states, transitions, startState, acceptStates, currentState, currentTransition, isPlaying }) => {
+    const [reactFlowInstance, setReactFlowInstance] = React.useState(null);
+
+    // Auto zoom out to fit all nodes when DFA changes
+    React.useEffect(() => {
+        if (reactFlowInstance) {
+            setTimeout(() => {
+                reactFlowInstance.fitView({ padding: 0.2, duration: 300 });
+            }, 100);
+        }
+    }, [states, transitions, reactFlowInstance]);
+
     const getLayoutedElements = useCallback(() => {
         // Calculate radius and center
         const radius = Math.min(150, 600 / states.length);

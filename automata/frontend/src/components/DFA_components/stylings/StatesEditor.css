@@ -1,8 +1,6 @@
 .states-editor {
-    background: white;
-    border-radius: 12px;
-    padding: 1.25rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: transparent;
+    padding: 0;
 }
 
 .states-list {

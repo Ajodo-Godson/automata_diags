@@ -34,9 +34,6 @@ export function StatesEditor({ dfa, onUpdate }) {
 
     return (
         <div className="states-editor">
-            <div className="editor-header">
-                <h3 className="editor-title">States</h3>
-            </div>
 
             <div className="states-list">
                 {dfa.states.map((state) => (
