@@ -153,8 +153,40 @@ const PDASimulator = () => {
         handleReset();
     };
 
-    // Event listeners for toolbox actions
+    // Event listeners for toolbox actions (Import, Export, and Clear All)
     useEffect(() => {
+        const handleImport = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const pdaDefinition = JSON.parse(e.target.result);
+                            pda.loadPDA({
+                                states: pdaDefinition.states || [],
+                                alphabet: pdaDefinition.alphabet || [],
+                                stackAlphabet: pdaDefinition.stackAlphabet || [],
+                                transitions: pdaDefinition.transitions || [],
+                                startState: pdaDefinition.startState || 'q0',
+                                startStackSymbol: pdaDefinition.startStackSymbol || 'Z',
+                                acceptStates: new Set(pdaDefinition.acceptStates || [])
+                            });
+                            setCurrentExampleName(pdaDefinition.name || 'Imported PDA');
+                            handleReset();
+                        } catch (error) {
+                            alert('Invalid JSON file or PDA definition format');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        };
+
         const handleExport = () => {
             const pdaDefinition = {
                 name: currentExampleName || 'Custom PDA',
@@ -179,74 +211,6 @@ const PDASimulator = () => {
             linkElement.click();
         };
 
-        const handleAddState = () => {
-            const stateName = prompt('Enter new state name (e.g., q1, q2):');
-            if (stateName && stateName.trim()) {
-                pda.addState(stateName.trim());
-                handleReset();
-            }
-        };
-
-        const handleAddTransition = () => {
-            const from = prompt(`Enter source state:\nAvailable states: ${pda.states.join(', ')}`);
-            if (!from || !pda.states.includes(from.trim())) {
-                if (from) alert(`State "${from}" does not exist`);
-                return;
-            }
-            
-            const input = prompt(`Enter input symbol (or ε for epsilon):\nAlphabet: ${pda.alphabet.join(', ')}, ε`);
-            if (!input) return;
-            
-            const pop = prompt(`Enter symbol to pop from stack:\nStack alphabet: ${pda.stackAlphabet.join(', ')}`);
-            if (!pop) return;
-            
-            const to = prompt(`Enter destination state:\nAvailable states: ${pda.states.join(', ')}`);
-            if (!to || !pda.states.includes(to.trim())) {
-                if (to) alert(`State "${to}" does not exist`);
-                return;
-            }
-            
-            const push = prompt(`Enter symbol(s) to push onto stack (or ε for nothing):\nStack alphabet: ${pda.stackAlphabet.join(', ')}, ε`);
-            if (!push) return;
-            
-            pda.addTransition(from.trim(), to.trim(), input.trim(), pop.trim(), push.trim());
-            handleReset();
-        };
-
-        const handleDeleteState = () => {
-            const stateName = prompt(`Enter state to delete:\nAvailable states: ${pda.states.join(', ')}`);
-            if (stateName && pda.states.includes(stateName.trim())) {
-                if (pda.states.length <= 1) {
-                    alert('Cannot delete the only state');
-                    return;
-                }
-                pda.removeState(stateName.trim());
-                handleReset();
-            } else if (stateName) {
-                alert(`State "${stateName}" does not exist`);
-            }
-        };
-
-        const handleSetStartState = () => {
-            const newStartState = prompt(`Enter the state to set as start state:\nAvailable states: ${pda.states.join(', ')}`);
-            if (newStartState && pda.states.includes(newStartState.trim())) {
-                pda.setStart(newStartState.trim());
-                handleReset();
-            } else if (newStartState) {
-                alert(`State "${newStartState}" does not exist`);
-            }
-        };
-
-        const handleToggleAccept = () => {
-            const stateName = prompt(`Enter state to toggle accept status:\nAvailable states: ${pda.states.join(', ')}\nCurrent accept states: ${Array.from(pda.acceptStates).join(', ') || 'none'}`);
-            if (stateName && pda.states.includes(stateName.trim())) {
-                pda.toggleAcceptState(stateName.trim());
-                handleReset();
-            } else if (stateName) {
-                alert(`State "${stateName}" does not exist`);
-            }
-        };
-
         const handleClearAll = () => {
             // Create a blank PDA
             if (window.confirm('Are you sure you want to clear all and start fresh?')) {
@@ -264,21 +228,13 @@ const PDASimulator = () => {
             }
         };
 
+        window.addEventListener('import', handleImport);
         window.addEventListener('export', handleExport);
-        window.addEventListener('addState', handleAddState);
-        window.addEventListener('addTransition', handleAddTransition);
-        window.addEventListener('deleteState', handleDeleteState);
-        window.addEventListener('setStartState', handleSetStartState);
-        window.addEventListener('toggleAccept', handleToggleAccept);
         window.addEventListener('clearAll', handleClearAll);
 
         return () => {
+            window.removeEventListener('import', handleImport);
             window.removeEventListener('export', handleExport);
-            window.removeEventListener('addState', handleAddState);
-            window.removeEventListener('addTransition', handleAddTransition);
-            window.removeEventListener('deleteState', handleDeleteState);
-            window.removeEventListener('setStartState', handleSetStartState);
-            window.removeEventListener('toggleAccept', handleToggleAccept);
             window.removeEventListener('clearAll', handleClearAll);
         };
     }, [pda, currentExampleName, handleReset]);

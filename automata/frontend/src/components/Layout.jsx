@@ -4,6 +4,7 @@ import './Layout.css';
 const getToolboxButtons = (automatonType) => {
     // Keep only essential buttons - editors handle state/transition management
     const commonTools = [
+        { label: 'Import', event: 'import', description: 'Import machine definition from JSON' },
         { label: 'Export', event: 'export', description: 'Export machine definition as JSON' },
         { label: 'Clear All', event: 'clearAll', description: 'Clear and create new machine' }
     ];

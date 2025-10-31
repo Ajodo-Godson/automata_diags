@@ -140,8 +140,38 @@ const DFASimulatorNew = () => {
         handleReset();
     };
 
-    // Event listeners for toolbox actions (Export and Clear All)
+    // Event listeners for toolbox actions (Import, Export, and Clear All)
     useEffect(() => {
+        const handleImport = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const dfaDefinition = JSON.parse(e.target.result);
+                            dfa.loadDFA({
+                                states: dfaDefinition.states || [],
+                                alphabet: dfaDefinition.alphabet || [],
+                                transitions: dfaDefinition.transitions || {},
+                                startState: dfaDefinition.startState || 'q0',
+                                acceptStates: new Set(dfaDefinition.acceptStates || [])
+                            });
+                            setCurrentExampleName(dfaDefinition.name || 'Imported DFA');
+                            handleReset();
+                        } catch (error) {
+                            alert('Invalid JSON file or DFA definition format');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        };
+
         const handleExport = () => {
             const dfaDefinition = {
                 name: currentExampleName || 'Custom DFA',
@@ -178,10 +208,12 @@ const DFASimulatorNew = () => {
             }
         };
 
+        window.addEventListener('import', handleImport);
         window.addEventListener('export', handleExport);
         window.addEventListener('clearAll', handleClearAll);
 
         return () => {
+            window.removeEventListener('import', handleImport);
             window.removeEventListener('export', handleExport);
             window.removeEventListener('clearAll', handleClearAll);
         };

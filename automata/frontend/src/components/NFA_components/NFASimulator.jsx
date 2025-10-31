@@ -142,8 +142,36 @@ const NFASimulator = () => {
         setIsPlaying(false);
     }, []);
 
-    // Event listeners for toolbox actions
+    // Event listeners for toolbox actions (Import, Export, and Clear All)
     useEffect(() => {
+        const handleImport = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const nfaDefinition = JSON.parse(e.target.result);
+                            nfa.setStates(nfaDefinition.states || []);
+                            nfa.setAlphabet(nfaDefinition.alphabet || []);
+                            nfa.setTransitions(nfaDefinition.transitions || []);
+                            nfa.setStartState(nfaDefinition.startState || 'q0');
+                            nfa.setAcceptStates(nfaDefinition.acceptStates || []);
+                            setCurrentExampleName(nfaDefinition.name || 'Imported NFA');
+                            resetSimulation();
+                        } catch (error) {
+                            alert('Invalid JSON file or NFA definition format');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        };
+
         const handleExport = () => {
             const nfaDefinition = {
                 name: currentExampleName || 'Custom NFA',
@@ -166,68 +194,6 @@ const NFASimulator = () => {
             linkElement.click();
         };
 
-        const handleAddState = () => {
-            const stateName = prompt('Enter new state name (e.g., q1, q2):');
-            if (stateName && stateName.trim()) {
-                nfa.addState(stateName.trim());
-                resetSimulation();
-            }
-        };
-
-        const handleAddTransition = () => {
-            const from = prompt(`Enter source state:\nAvailable states: ${nfa.states.join(', ')}`);
-            if (!from || !nfa.states.includes(from.trim())) {
-                if (from) alert(`State "${from}" does not exist`);
-                return;
-            }
-            
-            const symbol = prompt(`Enter symbol (use ε for epsilon):\nAlphabet: ${nfa.alphabet.join(', ')}, ε`);
-            if (!symbol) return;
-            
-            const to = prompt(`Enter destination state:\nAvailable states: ${nfa.states.join(', ')}`);
-            if (!to || !nfa.states.includes(to.trim())) {
-                if (to) alert(`State "${to}" does not exist`);
-                return;
-            }
-            
-            nfa.addTransition(from.trim(), to.trim(), symbol.trim());
-            resetSimulation();
-        };
-
-        const handleDeleteState = () => {
-            const stateName = prompt(`Enter state to delete:\nAvailable states: ${nfa.states.join(', ')}`);
-            if (stateName && nfa.states.includes(stateName.trim())) {
-                if (nfa.states.length <= 1) {
-                    alert('Cannot delete the only state');
-                    return;
-                }
-                nfa.removeState(stateName.trim());
-                resetSimulation();
-            } else if (stateName) {
-                alert(`State "${stateName}" does not exist`);
-            }
-        };
-
-        const handleSetStartState = () => {
-            const newStartState = prompt(`Enter the state to set as start state:\nAvailable states: ${nfa.states.join(', ')}`);
-            if (newStartState && nfa.states.includes(newStartState.trim())) {
-                nfa.setStart(newStartState.trim());
-                resetSimulation();
-            } else if (newStartState) {
-                alert(`State "${newStartState}" does not exist`);
-            }
-        };
-
-        const handleToggleAccept = () => {
-            const stateName = prompt(`Enter state to toggle accept status:\nAvailable states: ${nfa.states.join(', ')}\nCurrent accept states: ${nfa.acceptStates.join(', ') || 'none'}`);
-            if (stateName && nfa.states.includes(stateName.trim())) {
-                nfa.toggleAcceptState(stateName.trim());
-                resetSimulation();
-            } else if (stateName) {
-                alert(`State "${stateName}" does not exist`);
-            }
-        };
-
         const handleClearAll = () => {
             // Create a blank NFA
             if (window.confirm('Are you sure you want to clear all and start fresh?')) {
@@ -243,21 +209,13 @@ const NFASimulator = () => {
             }
         };
 
+        window.addEventListener('import', handleImport);
         window.addEventListener('export', handleExport);
-        window.addEventListener('addState', handleAddState);
-        window.addEventListener('addTransition', handleAddTransition);
-        window.addEventListener('deleteState', handleDeleteState);
-        window.addEventListener('setStartState', handleSetStartState);
-        window.addEventListener('toggleAccept', handleToggleAccept);
         window.addEventListener('clearAll', handleClearAll);
 
         return () => {
+            window.removeEventListener('import', handleImport);
             window.removeEventListener('export', handleExport);
-            window.removeEventListener('addState', handleAddState);
-            window.removeEventListener('addTransition', handleAddTransition);
-            window.removeEventListener('deleteState', handleDeleteState);
-            window.removeEventListener('setStartState', handleSetStartState);
-            window.removeEventListener('toggleAccept', handleToggleAccept);
             window.removeEventListener('clearAll', handleClearAll);
         };
     }, [nfa, currentExampleName, resetSimulation]);

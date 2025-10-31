@@ -31,6 +31,35 @@ const CFGSimulator = () => {
 
     // Event listeners for toolbox actions
     useEffect(() => {
+        const handleImport = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const cfgDefinition = JSON.parse(e.target.result);
+                            cfg.loadCFG({
+                                variables: cfgDefinition.variables || [],
+                                terminals: cfgDefinition.terminals || [],
+                                rules: cfgDefinition.rules || [],
+                                startVariable: cfgDefinition.startVariable || 'S'
+                            });
+                            setCurrentExampleName(cfgDefinition.name || 'Imported CFG');
+                            resetDerivation();
+                        } catch (error) {
+                            alert('Invalid JSON file or CFG definition format');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        };
+
         const handleExport = () => {
             const cfgDefinition = {
                 name: currentExampleName || 'Custom CFG',
@@ -50,63 +79,6 @@ const CFGSimulator = () => {
             linkElement.setAttribute('href', dataUri);
             linkElement.setAttribute('download', exportFileDefaultName);
             linkElement.click();
-        };
-
-        const handleAddProduction = () => {
-            const variable = prompt(`Enter variable (left-hand side of production):\nAvailable variables: ${cfg.variables.join(', ')}`);
-            if (!variable || !cfg.variables.includes(variable.trim())) {
-                if (variable) alert(`Variable "${variable}" does not exist. Add it first using "Add Variable".`);
-                return;
-            }
-            
-            const production = prompt(`Enter production (right-hand side):\nUse variables: ${cfg.variables.join(', ')}\nUse terminals: ${cfg.terminals.join(', ')}\nUse ε for epsilon\nExample: aSb or ab or ε`);
-            if (!production) return;
-            
-            cfg.addProduction(variable.trim(), production.trim());
-            resetDerivation();
-        };
-
-        const handleDeleteProduction = () => {
-            if (cfg.rules.length === 0) {
-                alert('No production rules to delete');
-                return;
-            }
-            
-            const rulesList = cfg.rules.map((r, idx) => `${idx + 1}. ${r.left} → ${r.right}`).join('\n');
-            const index = prompt(`Enter rule number to delete:\n${rulesList}`);
-            
-            if (index && !isNaN(index)) {
-                const idx = parseInt(index) - 1;
-                if (idx >= 0 && idx < cfg.rules.length) {
-                    cfg.deleteProduction(idx);
-                    resetDerivation();
-                } else {
-                    alert('Invalid rule number');
-                }
-            }
-        };
-
-        const handleAddVariable = () => {
-            const variable = prompt('Enter new variable (single uppercase letter, e.g., A, B):');
-            if (variable && variable.trim()) {
-                const v = variable.trim();
-                if (v.length === 1 && /[A-Z]/.test(v)) {
-                    cfg.addVariable(v);
-                    resetDerivation();
-                } else {
-                    alert('Variable must be a single uppercase letter');
-                }
-            }
-        };
-
-        const handleSetStartSymbol = () => {
-            const newStartSymbol = prompt(`Enter the variable to set as start symbol:\nAvailable variables: ${cfg.variables.join(', ')}`);
-            if (newStartSymbol && cfg.variables.includes(newStartSymbol.trim())) {
-                cfg.setStartVariable(newStartSymbol.trim());
-                resetDerivation();
-            } else if (newStartSymbol) {
-                alert(`Variable "${newStartSymbol}" does not exist`);
-            }
         };
 
         const handleClearAll = () => {
@@ -129,19 +101,13 @@ const CFGSimulator = () => {
             setIsAccepted(null);
         };
 
+        window.addEventListener('import', handleImport);
         window.addEventListener('export', handleExport);
-        window.addEventListener('addProduction', handleAddProduction);
-        window.addEventListener('deleteProduction', handleDeleteProduction);
-        window.addEventListener('addVariable', handleAddVariable);
-        window.addEventListener('setStartSymbol', handleSetStartSymbol);
         window.addEventListener('clearAll', handleClearAll);
 
         return () => {
+            window.removeEventListener('import', handleImport);
             window.removeEventListener('export', handleExport);
-            window.removeEventListener('addProduction', handleAddProduction);
-            window.removeEventListener('deleteProduction', handleDeleteProduction);
-            window.removeEventListener('addVariable', handleAddVariable);
-            window.removeEventListener('setStartSymbol', handleSetStartSymbol);
             window.removeEventListener('clearAll', handleClearAll);
         };
     }, [cfg, currentExampleName]);
