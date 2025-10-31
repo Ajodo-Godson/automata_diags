@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './stylings/CFGSimulator.css';
 import { CFGControlPanel } from './CFGControlPanel';
 import { CFGTestCases } from './CFGTestCases';
+import { ParseTree } from './ParseTree';
 import { useExamples } from './examples';
 import { useCFG } from './useCFG';
 
@@ -649,13 +650,13 @@ const CFGSimulator = () => {
                             </div>
                         )}
 
-                        {/* Parse Tree Placeholder */}
+                        {/* Parse Tree */}
                         <div className="cfg-tree-card">
                             <h3 className="cfg-card-title">Parse Tree</h3>
-                            <div className="cfg-tree-placeholder">
-                                <p>Parse tree visualization would be displayed here.</p>
-                                <p>This would show the hierarchical structure of the derivation.</p>
-                            </div>
+                            <ParseTree 
+                                derivationSteps={derivationSteps}
+                                currentStep={currentStep}
+                            />
                         </div>
                     </div>
                 </div>

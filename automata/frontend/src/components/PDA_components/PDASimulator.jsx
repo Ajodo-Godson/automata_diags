@@ -309,11 +309,6 @@ const PDASimulator = () => {
                             </option>
                         ))}
                     </select>
-                    {currentExampleName && (
-                        <span className="pda-current-example">
-                            Current: {examples[currentExampleName]?.name || 'Custom'}
-                        </span>
-                    )}
                 </div>
 
                 {/* Main Grid */}

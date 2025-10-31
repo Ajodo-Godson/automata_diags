@@ -8,12 +8,12 @@ import './stylings/TMSimulator.css';
 
 export default function TMSimulator() {
   const { examples } = useExamples();
-  const [currentExampleName, setCurrentExampleName] = useState('Binary Incrementer');
+  const [currentExampleName, setCurrentExampleName] = useState(null);
   
-  // Initialize with Binary Incrementer
-  const [rules, setRules] = useState(examples["Binary Incrementer"].rules);
+  // Start with a blank TM
+  const [rules, setRules] = useState([]);
   const [machineState, setMachineState] = useState({
-    tape: ['1', '0', '1', '□', '□', '□'],
+    tape: ['□', '□', '□', '□', '□', '□'],
     headPosition: 0,
     currentState: 'q0',
     stepCount: 0,
@@ -23,7 +23,7 @@ export default function TMSimulator() {
 
   const [speed, setSpeed] = useState(500);
   const [activeRuleId, setActiveRuleId] = useState(null);
-  const [initialInput, setInitialInput] = useState('101');
+  const [initialInput, setInitialInput] = useState('');
   const [acceptState, setAcceptState] = useState('qaccept');
   const [rejectState, setRejectState] = useState('qreject');
   const [blankSymbol, setBlankSymbol] = useState('□');
@@ -274,18 +274,23 @@ export default function TMSimulator() {
 
         {/* Example Selector */}
         <div className="example-selector">
-          <label className="selector-label">Load Preset Example:</label>
-          <div className="selector-buttons">
-            {Object.keys(examples).map((name) => (
-              <button
-                key={name}
-                onClick={() => loadPresetExample(name)}
-                className={`selector-btn ${currentExampleName === name ? 'active' : ''}`}
-              >
-                {name}
-              </button>
+          <label className="selector-label">Quick Load Example:</label>
+          <select
+            onChange={(e) => {
+              if (e.target.value) {
+                loadPresetExample(e.target.value);
+              }
+            }}
+            value={currentExampleName || ''}
+            className="example-dropdown"
+          >
+            <option value="">-- Select an example --</option>
+            {Object.entries(examples).map(([key, example]) => (
+              <option key={key} value={key}>
+                {key}
+              </option>
             ))}
-          </div>
+          </select>
         </div>
 
         {/* Main Layout */}
