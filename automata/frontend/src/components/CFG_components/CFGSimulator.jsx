@@ -3,6 +3,9 @@ import './stylings/CFGSimulator.css';
 import { CFGControlPanel } from './CFGControlPanel';
 import { CFGTestCases } from './CFGTestCases';
 import { ParseTree } from './ParseTree';
+import { VariablesEditor } from './VariablesEditor';
+import { TerminalsEditor } from './TerminalsEditor';
+import { ProductionRulesEditor } from './ProductionRulesEditor';
 import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { useCFG } from './useCFG';
@@ -709,6 +712,21 @@ const CFGSimulator = () => {
 
                     {/* Right Column */}
                     <div className="cfg-right-col">
+                        {/* Variables Editor */}
+                        <CollapsibleSection title="Variables Editor" defaultOpen={false}>
+                            <VariablesEditor cfg={cfg} onUpdate={handleReset} />
+                        </CollapsibleSection>
+
+                        {/* Terminals Editor */}
+                        <CollapsibleSection title="Terminals Editor" defaultOpen={false}>
+                            <TerminalsEditor cfg={cfg} onUpdate={handleReset} />
+                        </CollapsibleSection>
+
+                        {/* Production Rules Editor */}
+                        <CollapsibleSection title="Production Rules Editor" defaultOpen={false}>
+                            <ProductionRulesEditor cfg={cfg} onUpdate={handleReset} />
+                        </CollapsibleSection>
+
                         {/* Test Cases */}
                         <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
                             <CFGTestCases
