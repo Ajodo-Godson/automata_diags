@@ -2,12 +2,8 @@
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    height: min(600px, 70vh);
-    max-height: 600px;
-    min-height: 400px;
+    height: 600px !important;
     margin: 20px 0;
-    width: 100%;
-    overflow: hidden;
 }
 
 .state-node {
@@ -191,35 +187,4 @@
     background: #e3f2fd;
     border-color: #2196F3;
     box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3);
-}
-
-/* Responsive adjustments for graph container */
-@media (max-width: 768px) {
-    .dfa-graph-container {
-        height: min(400px, 50vh);
-        max-height: 400px;
-        min-height: 300px;
-        margin: 10px 0;
-    }
-    
-    .state-node {
-        width: 60px;
-        height: 60px;
-        font-size: 16px;
-    }
-}
-
-@media (max-width: 480px) {
-    .dfa-graph-container {
-        height: min(350px, 40vh);
-        max-height: 350px;
-        min-height: 250px;
-        margin: 5px 0;
-    }
-    
-    .state-node {
-        width: 50px;
-        height: 50px;
-        font-size: 14px;
-    }
 }
