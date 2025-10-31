@@ -33,10 +33,10 @@
     gap: 0.5rem;
 }
 
-.state-name {
+.state-info .state-name {
     font-family: 'Courier New', monospace;
-    font-size: 0.7rem;
-    font-weight: 500;
+    font-size: 0.7rem !important;
+    font-weight: 500 !important;
     color: #1f2937;
 }
 
