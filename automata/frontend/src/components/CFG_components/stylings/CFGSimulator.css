@@ -179,16 +179,16 @@
 
 .cfg-input-group {
   display: flex;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 8px;
+  margin-bottom: 0;
 }
 
 .cfg-input {
   flex: 1;
-  padding: 12px 16px;
+  padding: 0.5rem 0.65rem;
   border: 2px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
   font-family: 'Monaco', 'Menlo', monospace;
   transition: border-color 0.2s ease;
 }
@@ -199,11 +199,11 @@
 }
 
 .cfg-btn {
-  padding: 12px 24px;
+  padding: 0.5rem 0.85rem;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 500;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -218,16 +218,20 @@
 }
 
 .cfg-input-help {
-  font-size: 14px;
+  font-size: 0.7rem;
   color: #6b7280;
-  margin-bottom: 16px;
+  margin: 0.5rem 0 0 0;
 }
 
 .cfg-result {
-  padding: 12px;
-  border-radius: 8px;
-  font-weight: bold;
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
   text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .cfg-result.accepted {
@@ -259,7 +263,7 @@
 .cfg-status {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.5rem;
 }
 
 .cfg-status-item {
@@ -269,12 +273,16 @@
 }
 
 .cfg-status-label {
-  font-weight: 500;
-  color: #374151;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .cfg-status-value {
   font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 0.85rem;
   font-weight: bold;
   color: #667eea;
 }
@@ -289,13 +297,13 @@
 
 .cfg-controls {
   display: flex;
-  gap: 12px;
+  gap: 0.4rem;
   flex-wrap: wrap;
 }
 
 .cfg-control-btn {
   flex: 1;
-  min-width: 100px;
+  min-width: auto;
 }
 
 .cfg-btn-outline {
@@ -318,23 +326,51 @@
   grid-column: span 2;
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 6px;
+  margin-top: 0.5rem;
 }
 
 .cfg-speed-label {
-  font-weight: 500;
-  color: #374151;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .cfg-speed-slider {
   flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: #e5e7eb;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.cfg-speed-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+}
+
+.cfg-speed-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  border: none;
 }
 
 .cfg-speed-value {
-  font-size: 14px;
+  font-size: 0.7rem;
   color: #6b7280;
-  min-width: 60px;
+  font-weight: 600;
+  min-width: 50px;
   text-align: right;
 }
 
