@@ -1,0 +1,14 @@
+{
+    "name": "10s and 101s concatenation",
+    "description": "NFA with states a, b, c",
+    "states": ["a", "b", "c"],
+    "alphabet": ["0", "1"],
+    "transitions": [
+      {"from": "b", "symbol": "0", "to": "a"},
+      {"from": "a", "symbol": "1", "to": "b"},
+      {"from": "b", "symbol": "0", "to": "c"},
+      {"from": "c", "symbol": "1", "to": "a"}
+    ],
+    "startState": "a",
+    "acceptStates": ["a"]
+  }

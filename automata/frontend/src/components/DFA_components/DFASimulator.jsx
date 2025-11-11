@@ -255,24 +255,6 @@ const DFASimulatorNew = () => {
                 <div className="dfa-grid">
                     {/* Left Column */}
                     <div className="dfa-left-col">
-                        {/* Graph Visualization */}
-                        <div className="dfa-graph-card">
-                            <h3 className="dfa-card-title">State Diagram</h3>
-                            <DFAGraph
-                                states={dfa.states}
-                                transitions={dfa.transitions}
-                                startState={dfa.startState}
-                                acceptStates={dfa.acceptStates}
-                                currentState={simulationSteps.length > 0 && currentStep >= 0 
-                                    ? simulationSteps[currentStep].state 
-                                    : null}
-                                currentTransition={simulationSteps.length > 0 && currentStep >= 0 
-                                    ? simulationSteps[currentStep].transition 
-                                    : null}
-                                isPlaying={isPlaying}
-                            />
-                        </div>
-
                         {/* Input Tester - Compact */}
                         <div className="dfa-input-card-compact">
                             <h3 className="dfa-card-title-compact">Test Input String</h3>
@@ -317,6 +299,24 @@ const DFASimulatorNew = () => {
                             onReset={handleReset}
                             onSpeedChange={setPlaybackSpeed}
                         />
+
+                        {/* Graph Visualization */}
+                        <div className="dfa-graph-card">
+                            <h3 className="dfa-card-title">State Diagram</h3>
+                            <DFAGraph
+                                states={dfa.states}
+                                transitions={dfa.transitions}
+                                startState={dfa.startState}
+                                acceptStates={dfa.acceptStates}
+                                currentState={simulationSteps.length > 0 && currentStep >= 0 
+                                    ? simulationSteps[currentStep].state 
+                                    : null}
+                                currentTransition={simulationSteps.length > 0 && currentStep >= 0 
+                                    ? simulationSteps[currentStep].transition 
+                                    : null}
+                                isPlaying={isPlaying}
+                            />
+                        </div>
                     </div>
 
                     {/* Right Column */}

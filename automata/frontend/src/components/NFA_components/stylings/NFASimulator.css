@@ -140,7 +140,7 @@
 .nfa-right-col {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 12px;
 }
 
 .nfa-graph-card,
@@ -149,8 +149,8 @@
 .nfa-table-card {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 10px;
+  padding: 0.65rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -188,14 +188,16 @@
 }
 
 .nfa-card-title {
-  font-size: 1rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.5rem 0;
   color: #1f2937;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   position: relative;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .nfa-card-title::after {

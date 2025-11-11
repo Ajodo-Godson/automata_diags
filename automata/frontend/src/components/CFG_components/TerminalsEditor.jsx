@@ -99,3 +99,5 @@ export function TerminalsEditor({ cfg, onUpdate }) {
     );
 }
 
+
+

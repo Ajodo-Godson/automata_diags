@@ -613,25 +613,6 @@ const CFGSimulator = () => {
                 <div className="cfg-grid">
                     {/* Left Column */}
                     <div className="cfg-left-col">
-                        {/* Grammar Rules */}
-                        <div className="cfg-grammar-card">
-                            <h3 className="cfg-card-title">Grammar Rules</h3>
-                            <div className="cfg-rules-list">
-                                {cfg.rules.map((rule, index) => (
-                                    <div key={index} className="cfg-rule">
-                                        <span className="cfg-rule-left">{rule.left}</span>
-                                        <span className="cfg-rule-arrow">→</span>
-                                        <span className="cfg-rule-right">{rule.right}</span>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="cfg-grammar-info">
-                                <p><strong>Variables:</strong> {cfg.variables.join(', ')}</p>
-                                <p><strong>Terminals:</strong> {cfg.terminals.join(', ')}</p>
-                                <p><strong>Start:</strong> {cfg.startVariable}</p>
-                            </div>
-                        </div>
-
                         {/* Input String */}
                         <div className="cfg-input-card">
                             <h3 className="cfg-card-title">Test Input String</h3>
@@ -674,6 +655,25 @@ const CFGSimulator = () => {
                             onReset={handleReset}
                             onSpeedChange={setPlaybackSpeed}
                         />
+
+                        {/* Grammar Rules */}
+                        <div className="cfg-grammar-card">
+                            <h3 className="cfg-card-title">Grammar Rules</h3>
+                            <div className="cfg-rules-list">
+                                {cfg.rules.map((rule, index) => (
+                                    <div key={index} className="cfg-rule">
+                                        <span className="cfg-rule-left">{rule.left}</span>
+                                        <span className="cfg-rule-arrow">→</span>
+                                        <span className="cfg-rule-right">{rule.right}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="cfg-grammar-info">
+                                <p><strong>Variables:</strong> {cfg.variables.join(', ')}</p>
+                                <p><strong>Terminals:</strong> {cfg.terminals.join(', ')}</p>
+                                <p><strong>Start:</strong> {cfg.startVariable}</p>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Right Column */}

@@ -275,38 +275,6 @@ const PDASimulator = () => {
                 <div className="pda-grid">
                     {/* Left Column */}
                     <div className="pda-left-col">
-                        {/* Stack Visualization */}
-                        <div className="pda-stack-card">
-                            <h3 className="pda-card-title">Stack Visualization</h3>
-                            <div className="pda-stack-container">
-                                {simulationSteps.length > 0 && currentStep >= 0 ? (
-                                    <div className="pda-stack">
-                                        {simulationSteps[currentStep].stack.length === 0 ? (
-                                            <div className="pda-stack-empty">Stack is empty</div>
-                                        ) : (
-                                            simulationSteps[currentStep].stack.map((symbol, index) => (
-                                                <div
-                                                    key={index}
-                                                    className={`pda-stack-item ${
-                                                        index === simulationSteps[currentStep].stack.length - 1
-                                                            ? 'pda-stack-top'
-                                                            : ''
-                                                    }`}
-                                                >
-                                                    {symbol}
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="pda-stack-initial">
-                                        <div className="pda-stack-item pda-stack-top">{pda.startStackSymbol}</div>
-                                    </div>
-                                )}
-                                <div className="pda-stack-label">Top of Stack</div>
-                            </div>
-                        </div>
-
                         {/* Input String Visualization */}
                         <div className="pda-input-card">
                             <h3 className="pda-card-title">Input String</h3>
@@ -369,6 +337,38 @@ const PDASimulator = () => {
                             onReset={handleReset}
                             onSpeedChange={setPlaybackSpeed}
                         />
+
+                        {/* Stack Visualization */}
+                        <div className="pda-stack-card">
+                            <h3 className="pda-card-title">Stack Visualization</h3>
+                            <div className="pda-stack-container">
+                                {simulationSteps.length > 0 && currentStep >= 0 ? (
+                                    <div className="pda-stack">
+                                        {simulationSteps[currentStep].stack.length === 0 ? (
+                                            <div className="pda-stack-empty">Stack is empty</div>
+                                        ) : (
+                                            simulationSteps[currentStep].stack.map((symbol, index) => (
+                                                <div
+                                                    key={index}
+                                                    className={`pda-stack-item ${
+                                                        index === simulationSteps[currentStep].stack.length - 1
+                                                            ? 'pda-stack-top'
+                                                            : ''
+                                                    }`}
+                                                >
+                                                    {symbol}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="pda-stack-initial">
+                                        <div className="pda-stack-item pda-stack-top">{pda.startStackSymbol}</div>
+                                    </div>
+                                )}
+                                <div className="pda-stack-label">Top of Stack</div>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Right Column */}

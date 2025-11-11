@@ -8,7 +8,7 @@
 .dfa-control-panel-card-compact {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 8px;
-  padding: 0.75rem;
+  padding: 0.5rem 0.75rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
@@ -21,7 +21,7 @@
 .dfa-control-grid-compact {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: center;
 }
 
@@ -34,18 +34,18 @@
 .dfa-controls-section {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .dfa-control-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
 .dfa-control-label {
   display: block;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   font-weight: 500;
   color: #374151;
 }
@@ -67,7 +67,7 @@
 
 .dfa-button-group-compact {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   flex-wrap: wrap;
 }
 
@@ -131,16 +131,16 @@
 }
 
 .dfa-btn-small {
-  padding: 0.4rem 0.75rem;
-  font-size: 0.7rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  gap: 0.35rem;
+  gap: 0.3rem;
 }
 
 .dfa-speed-control-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
 .dfa-speed-label-row {
@@ -150,14 +150,14 @@
 }
 
 .dfa-speed-value {
-  font-size: 13px;
+  font-size: 0.7rem;
   color: #6b7280;
 }
 
 .dfa-speed-slider {
   width: 100%;
-  height: 6px;
-  border-radius: 3px;
+  height: 4px;
+  border-radius: 2px;
   background: #e5e7eb;
   outline: none;
   -webkit-appearance: none;
@@ -166,8 +166,8 @@
 .dfa-speed-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: #3b82f6;
   cursor: pointer;
@@ -176,12 +176,12 @@
 
 .dfa-speed-slider::-webkit-slider-thumb:hover {
   transform: scale(1.1);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .dfa-speed-slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: #3b82f6;
   cursor: pointer;
@@ -191,13 +191,13 @@
 
 .dfa-speed-slider::-moz-range-thumb:hover {
   transform: scale(1.1);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .dfa-state-display-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 .dfa-state-display-section-compact {
@@ -255,14 +255,14 @@
 .dfa-steps-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
 .dfa-state-display {
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: 6px;
+  padding: 10px;
   text-align: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .state-running {
@@ -282,26 +282,26 @@
 
 .dfa-state-name {
   font-family: 'Courier New', monospace;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
 .dfa-state-status {
-  font-size: 13px;
-  margin-top: 8px;
+  font-size: 0.65rem;
+  margin-top: 4px;
   opacity: 0.9;
 }
 
 .dfa-steps-display {
   background: #f3f4f6;
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: 6px;
+  padding: 10px;
   text-align: center;
 }
 
 .dfa-step-count {
   font-family: 'Courier New', monospace;
-  font-size: 24px;
+  font-size: 1.1rem;
   font-weight: bold;
 }
 

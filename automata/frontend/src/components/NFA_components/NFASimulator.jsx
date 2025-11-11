@@ -278,16 +278,6 @@ const NFASimulator = () => {
                 <div className="nfa-grid">
                     {/* Left Column */}
                     <div className="nfa-left-col">
-                        {/* Graph Visualization */}
-                        <div className="nfa-graph-card">
-                            <h3 className="nfa-card-title">State Diagram</h3>
-                            <NFAGraph 
-                                nfa={nfa} 
-                                currentStates={currentStep >= 0 ? simulationSteps[currentStep]?.states || [] : []}
-                                highlightTransition={currentStep >= 0 ? simulationSteps[currentStep]?.transition : null}
-                            />
-                        </div>
-
                         {/* Input Tester */}
                         <div className="nfa-input-card">
                             <h3 className="nfa-card-title">Test Input String</h3>
@@ -328,6 +318,16 @@ const NFASimulator = () => {
                             speed={playbackSpeed}
                             onSpeedChange={setPlaybackSpeed}
                         />
+
+                        {/* Graph Visualization */}
+                        <div className="nfa-graph-card">
+                            <h3 className="nfa-card-title">State Diagram</h3>
+                            <NFAGraph 
+                                nfa={nfa} 
+                                currentStates={currentStep >= 0 ? simulationSteps[currentStep]?.states || [] : []}
+                                highlightTransition={currentStep >= 0 ? simulationSteps[currentStep]?.transition : null}
+                            />
+                        </div>
                     </div>
 
                     {/* Right Column */}
