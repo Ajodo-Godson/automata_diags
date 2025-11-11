@@ -50,54 +50,120 @@ const NFASimulator = () => {
         setCurrentStep(-1);
 
         let steps = [];
-        let currentStates = new Set([nfa.startState]);
+        
+        // Track individual computation paths with unique IDs and colors
+        const pathColors = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6'];
+        let activePaths = [{
+            id: 0,
+            state: nfa.startState,
+            color: pathColors[0],
+            history: [nfa.startState]
+        }];
 
         // Add epsilon closure for start state
-        currentStates = getEpsilonClosure(currentStates, nfa.transitions);
+        const startClosure = getEpsilonClosure(new Set([nfa.startState]), nfa.transitions);
+        
+        // Expand paths for epsilon closure
+        const newPaths = [];
+        startClosure.forEach(state => {
+            if (state !== nfa.startState) {
+                newPaths.push({
+                    id: activePaths.length + newPaths.length,
+                    state: state,
+                    color: pathColors[(activePaths.length + newPaths.length) % pathColors.length],
+                    history: [nfa.startState, state]
+                });
+            }
+        });
+        activePaths[0].state = Array.from(startClosure)[0];
+        activePaths = [...activePaths, ...newPaths];
 
         // Initial step
         steps.push({
-            states: Array.from(currentStates),
+            paths: activePaths.map(p => ({ ...p })),
+            states: Array.from(new Set(activePaths.map(p => p.state))),
             remainingInput: inputString,
-            description: `Starting in states ${Array.from(currentStates).join(', ')}`,
-            transition: null,
+            description: `Starting in state(s): ${Array.from(new Set(activePaths.map(p => p.state))).join(', ')}`,
+            activeTransitions: [],
             accepted: false
         });
 
         // Process each symbol
         for (let i = 0; i < inputString.length; i++) {
             const symbol = inputString[i];
-            const nextStates = new Set();
+            const newPaths = [];
+            const activeTransitions = [];
 
-            // Find all transitions for current symbol from current states
-            currentStates.forEach(state => {
+            // For each active path, find all possible transitions
+            activePaths.forEach(path => {
                 const validTransitions = nfa.transitions.filter(t => 
-                    t.from === state && t.symbol === symbol
+                    t.from === path.state && t.symbol === symbol
                 );
-                validTransitions.forEach(t => nextStates.add(t.to));
+                
+                if (validTransitions.length === 0) {
+                    // Dead path - don't continue it
+                    return;
+                }
+                
+                validTransitions.forEach((trans, idx) => {
+                    // Get epsilon closure for the target state
+                    const closure = getEpsilonClosure(new Set([trans.to]), nfa.transitions);
+                    
+                    closure.forEach((closureState, closureIdx) => {
+                        const pathId = newPaths.length;
+                        const newPath = {
+                            id: pathId,
+                            state: closureState,
+                            color: path.color, // Inherit color from parent path
+                            history: [...path.history, closureState],
+                            parentId: path.id
+                        };
+                        newPaths.push(newPath);
+                        
+                        // Record the transition for highlighting
+                        activeTransitions.push({
+                            from: trans.from,
+                            to: trans.to,
+                            symbol: symbol,
+                            color: path.color,
+                            pathId: pathId
+                        });
+                        
+                        // Add epsilon transitions to highlighting if closure was used
+                        if (closureState !== trans.to) {
+                            activeTransitions.push({
+                                from: trans.to,
+                                to: closureState,
+                                symbol: 'ε',
+                                color: path.color,
+                                pathId: pathId
+                            });
+                        }
+                    });
+                });
             });
 
-            // Add epsilon closure for next states
-            const closureStates = getEpsilonClosure(nextStates, nfa.transitions);
-            currentStates = closureStates;
+            activePaths = newPaths;
+            const currentStates = Array.from(new Set(activePaths.map(p => p.state)));
 
             steps.push({
-                states: Array.from(currentStates),
+                paths: activePaths.map(p => ({ ...p })),
+                states: currentStates,
                 remainingInput: inputString.slice(i + 1),
-                description: `Read '${symbol}', now in states ${Array.from(currentStates).join(', ')}`,
-                transition: { symbol, from: steps[i].states, to: Array.from(currentStates) },
+                description: `Read '${symbol}' → ${currentStates.length} active path(s) in state(s): ${currentStates.join(', ')}`,
+                activeTransitions: activeTransitions,
                 accepted: false
             });
         }
 
         // Final acceptance check
-        const finalAccepted = Array.from(currentStates).some(state => 
-            nfa.acceptStates.includes(state)
+        const finalAccepted = activePaths.some(path => 
+            nfa.acceptStates.includes(path.state)
         );
         
         if (steps.length > 0) {
             steps[steps.length - 1].accepted = finalAccepted;
-            steps[steps.length - 1].description += finalAccepted ? ' - ACCEPTED' : ' - REJECTED';
+            steps[steps.length - 1].description += finalAccepted ? ' ✓ ACCEPTED' : ' ✗ REJECTED';
         }
 
         setSimulationSteps(steps);
@@ -325,7 +391,7 @@ const NFASimulator = () => {
                             <NFAGraph 
                                 nfa={nfa} 
                                 currentStates={currentStep >= 0 ? simulationSteps[currentStep]?.states || [] : []}
-                                highlightTransition={currentStep >= 0 ? simulationSteps[currentStep]?.transition : null}
+                                activeTransitions={currentStep >= 0 ? simulationSteps[currentStep]?.activeTransitions || [] : []}
                             />
                         </div>
                     </div>
@@ -373,6 +439,9 @@ const NFASimulator = () => {
                                                 <strong>Step {currentStep + 1} of {simulationSteps.length}</strong>
                                             </div>
                                             <div className="nfa-step-state">
+                                                Active Paths: <span className="nfa-highlight">{simulationSteps[currentStep].paths?.length || 0}</span>
+                                            </div>
+                                            <div className="nfa-step-state">
                                                 Current States: <span className="nfa-highlight">{simulationSteps[currentStep].states.join(', ')}</span>
                                             </div>
                                             <div className="nfa-step-remaining">
@@ -381,6 +450,39 @@ const NFASimulator = () => {
                                             <div className="nfa-step-desc">
                                                 {simulationSteps[currentStep].description}
                                             </div>
+                                            
+                                            {/* Show individual paths */}
+                                            {simulationSteps[currentStep].paths && simulationSteps[currentStep].paths.length > 0 && (
+                                                <div className="nfa-paths-list">
+                                                    <div style={{fontSize: '0.75rem', fontWeight: '600', marginTop: '0.75rem', marginBottom: '0.5rem'}}>
+                                                        Computation Paths:
+                                                    </div>
+                                                    {simulationSteps[currentStep].paths.map((path, idx) => (
+                                                        <div key={idx} className="nfa-path-item" style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '0.5rem',
+                                                            padding: '0.35rem 0.5rem',
+                                                            margin: '0.25rem 0',
+                                                            background: `${path.color}15`,
+                                                            borderLeft: `3px solid ${path.color}`,
+                                                            borderRadius: '4px',
+                                                            fontSize: '0.7rem'
+                                                        }}>
+                                                            <div style={{
+                                                                width: '12px',
+                                                                height: '12px',
+                                                                borderRadius: '50%',
+                                                                background: path.color,
+                                                                flexShrink: 0
+                                                            }}></div>
+                                                            <div style={{flex: 1}}>
+                                                                Path {idx + 1}: {path.history.join(' → ')}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </>
                                     )}
                                 </div>

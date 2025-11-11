@@ -2,7 +2,8 @@
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    height: 400px !important;
+    height: 500px !important;
+    width: 100%;
     margin: 10px 0;
 }
 
@@ -10,8 +11,8 @@
     width: 70px;
     height: 70px;
     border-radius: 50%;
-    background: white;
-    border: 3px solid #667eea;
+    background: #faf5ff;
+    border: 3px solid #8b5cf6;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -49,24 +50,26 @@
 }
 
 .nfa-state-label {
-    color: #667eea;
+    color: #1f2937;
     user-select: none;
 }
 
 .nfa-accept-state {
-    border: 2px solid #667eea;
+    border: 3px solid #8b5cf6;
+    background: #faf5ff;
 }
 
 .nfa-accept-state::after {
     content: '';
     position: absolute;
-    top: -6px;
-    left: -6px;
-    right: -6px;
-    bottom: -6px;
-    border: 3px solid #667eea;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    bottom: -8px;
+    border: 3px solid #8b5cf6;
     border-radius: 50%;
     transition: all 0.3s ease;
+    background: transparent;
 }
 
 .nfa-start-state::before {
@@ -74,38 +77,65 @@
     position: absolute;
     left: -35px;
     font-size: 30px;
-    color: #667eea;
+    color: #000000;
     transition: all 0.3s ease;
 }
 
 .nfa-current-state {
-    background: linear-gradient(135deg, #e0e7ff, #ddd6fe);
-    border-color: #3b82f6;
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+    background: #fae8ff;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
 }
 
 .nfa-current-state .nfa-state-label {
-    color: #3b82f6;
+    color: #8b5cf6;
 }
 
 .nfa-current-state::after {
-    border-color: #3b82f6;
+    border-color: #8b5cf6;
 }
 
 .nfa-current-state::before {
-    color: #3b82f6;
+    color: #8b5cf6;
 }
 
-/* Edge styling */
+/* Edge styling - cleaner transitions with path highlighting */
 .nfa-graph-container .react-flow__edge-path {
     stroke-width: 2;
-    transition: stroke 0.3s ease, stroke-width 0.3s ease;
+    transition: stroke 0.3s ease, stroke-width 0.3s ease, opacity 0.3s ease;
 }
 
+.nfa-graph-container .react-flow__edge.react-flow__edge-smoothstep .react-flow__edge-path {
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Make transition labels MUCH more visible */
 .nfa-graph-container .react-flow__edge-text {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 700;
     transition: all 0.3s ease;
+}
+
+.nfa-graph-container .react-flow__edge-textbg {
+    fill-opacity: 0.98 !important;
+    transition: fill 0.3s ease;
+}
+
+/* Highlight active paths with smooth animations */
+.nfa-graph-container .react-flow__edge[data-highlighted="true"] .react-flow__edge-path {
+    stroke-width: 4 !important;
+    opacity: 1 !important;
+    animation: pathPulse 1s ease-in-out infinite;
+}
+
+@keyframes pathPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.85;
+    }
 }
 
 /* Controls styling */
@@ -117,7 +147,7 @@
 .nfa-graph-container .react-flow__controls-button {
     border: none !important;
     background: white !important;
-    color: #667eea !important;
+    color: #8b5cf6 !important;
 }
 
 /* Background styling */
@@ -192,6 +222,58 @@
 
 .nfa-graph-container .react-flow__edge.active path {
     stroke: #3b82f6;
+    stroke-width: 2;
+}
+
+/* Hide handles completely - they're for connections only, not display */
+.nfa-state-node .react-flow__handle {
+    width: 1px;
+    height: 1px;
+    border: none;
+    background: transparent;
+    opacity: 0;
+}
+
+.nfa-state-node .react-flow__handle-top {
+    top: 0;
+}
+
+.nfa-state-node .react-flow__handle-bottom {
+    bottom: 0;
+}
+
+.nfa-state-node .react-flow__handle-left {
+    left: 0;
+}
+
+.nfa-state-node .react-flow__handle-right {
+    right: 0;
+}
+
+/* Self-loop styling - make them smaller and more subtle */
+.nfa-graph-container .react-flow__edge.react-flow__edge-default path {
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Ensure self-loops are positioned nicely and don't overlap nodes */
+.nfa-graph-container .react-flow__edge.react-flow__edge-default {
+    z-index: 0;
+}
+
+/* Smaller, cleaner self-loop rendering */
+.nfa-graph-container .react-flow__edge-default .react-flow__edge-path {
+    stroke-linecap: round;
+}
+
+/* Make self-loop arrowheads smaller */
+.nfa-graph-container .react-flow__edge-default .react-flow__arrowhead {
+    transform: scale(0.8);
+}
+
+/* All transitions have consistent styling */
+.nfa-graph-container .react-flow__edge path {
     stroke-width: 2;
 }
 
