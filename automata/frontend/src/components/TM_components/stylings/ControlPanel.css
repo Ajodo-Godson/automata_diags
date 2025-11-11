@@ -1,9 +1,9 @@
 .control-panel-card {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 28px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  padding: 0.65rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -36,7 +36,7 @@
 .control-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 0.75rem;
 }
 
 @media (max-width: 768px) {
@@ -48,36 +48,36 @@
 .controls-section {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 0.5rem;
 }
 
 .control-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.35rem;
 }
 
 .control-label {
   display: block;
-  font-size: 14px;
+  font-size: 0.7rem;
   font-weight: 500;
   color: #374151;
 }
 
 .button-group {
   display: flex;
-  gap: 8px;
+  gap: 0.4rem;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 20px;
-  font-size: 14px;
+  gap: 0.3rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  border-radius: 12px;
+  border-radius: 6px;
   border: 2px solid transparent;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -156,7 +156,7 @@
 .speed-control-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
 .speed-label-row {
@@ -166,14 +166,14 @@
 }
 
 .speed-value {
-  font-size: 13px;
+  font-size: 0.7rem;
   color: #6b7280;
 }
 
 .speed-slider {
   width: 100%;
-  height: 6px;
-  border-radius: 3px;
+  height: 4px;
+  border-radius: 2px;
   background: #e5e7eb;
   outline: none;
   -webkit-appearance: none;
@@ -183,8 +183,8 @@
 .speed-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: #3b82f6;
   cursor: pointer;
@@ -193,12 +193,12 @@
 
 .speed-slider::-webkit-slider-thumb:hover {
   transform: scale(1.1);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .speed-slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: #3b82f6;
   cursor: pointer;
@@ -208,27 +208,27 @@
 
 .speed-slider::-moz-range-thumb:hover {
   transform: scale(1.1);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .state-display-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 .state-group,
 .steps-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
 .state-display {
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: 6px;
+  padding: 10px;
   text-align: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .state-running {
@@ -248,26 +248,26 @@
 
 .state-name {
   font-family: 'Courier New', monospace;
-  font-size: 24px;
+  font-size: 0.85rem;
   font-weight: bold;
 }
 
 .state-status {
-  font-size: 13px;
-  margin-top: 8px;
+  font-size: 0.65rem;
+  margin-top: 4px;
   opacity: 0.9;
 }
 
 .steps-display {
   background: #f3f4f6;
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: 6px;
+  padding: 10px;
   text-align: center;
 }
 
 .step-count {
   font-family: 'Courier New', monospace;
-  font-size: 24px;
+  font-size: 1.1rem;
   font-weight: bold;
 }
 

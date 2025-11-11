@@ -308,8 +308,8 @@
 .pda-control-panel {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 10px;
+  padding: 0.65rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
@@ -317,7 +317,7 @@
 .pda-control-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 0.75rem;
 }
 
 .pda-status {
