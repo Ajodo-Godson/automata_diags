@@ -55,9 +55,9 @@ export const useExamples = () => {
             startState: 'q0',
             acceptStates: ['q1', 'q3']
         },
-        'nondeterministic': {
-            name: 'Non-deterministic on "a"',
-            description: 'From q0, "a" goes to both q1 and q2',
+        'starts_with_a': {
+            name: 'Starts with "a"',
+            description: 'Non-deterministic choice on first "a": accepts strings starting with "a" followed by any characters',
             states: ['q0', 'q1', 'q2'],
             alphabet: ['a', 'b'],
             transitions: [

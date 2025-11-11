@@ -332,14 +332,15 @@ const NFASimulator = () => {
 
                     {/* Right Column */}
                     <div className="nfa-right-col">
-                        {/* States Editor */}
-                        <CollapsibleSection title="States Editor" defaultOpen={false}>
-                            <NFAStatesEditor nfa={nfa} onUpdate={resetSimulation} />
-                        </CollapsibleSection>
 
                         {/* Alphabet Editor */}
                         <CollapsibleSection title="Alphabet" defaultOpen={false}>
                             <NFAAlphabetEditor nfa={nfa} onUpdate={resetSimulation} />
+                        </CollapsibleSection>
+                        
+                        {/* States Editor */}
+                        <CollapsibleSection title="States Editor" defaultOpen={false}>
+                            <NFAStatesEditor nfa={nfa} onUpdate={resetSimulation} />
                         </CollapsibleSection>
 
                         {/* Transitions Editor */}

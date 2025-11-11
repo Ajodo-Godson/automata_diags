@@ -438,15 +438,7 @@ const DFASimulatorNew = () => {
                             </div>
                         </CollapsibleSection>
 
-                        {/* New Transitions Editor - Collapsible */}
-                        <CollapsibleSection title="Transitions" defaultOpen={!currentExampleName}>
-                            <TransitionsEditor dfa={dfa} onUpdate={handleReset} />
-                        </CollapsibleSection>
 
-                        {/* New States Editor - Collapsible */}
-                        <CollapsibleSection title="States" defaultOpen={!currentExampleName}>
-                            <StatesEditor dfa={dfa} onUpdate={handleReset} />
-                        </CollapsibleSection>
                     </div>
                 </div>
             </div>
