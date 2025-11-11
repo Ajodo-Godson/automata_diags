@@ -94,6 +94,16 @@ const NFAGraph = ({ nfa, currentStates = [], highlightTransition = null }) => {
                 highlightTransition.from?.includes(transition.from) &&
                 highlightTransition.to?.includes(transition.to) &&
                 highlightTransition.symbol === transition.symbol;
+            
+            // Check if this is an epsilon transition
+            const isEpsilon = transition.symbol === 'ε' || transition.symbol === 'epsilon';
+            
+            // Color coding:
+            // - Highlighted: Blue (#3b82f6)
+            // - Epsilon: Purple (#8b5cf6)
+            // - Regular: Gray (#6b7280)
+            const edgeColor = isHighlighted ? '#3b82f6' : (isEpsilon ? '#8b5cf6' : '#6b7280');
+            const labelColor = isHighlighted ? '#3b82f6' : (isEpsilon ? '#8b5cf6' : '#374151');
 
             return {
                 id: edgeId,
@@ -103,21 +113,25 @@ const NFAGraph = ({ nfa, currentStates = [], highlightTransition = null }) => {
                 type: transition.from === transition.to ? 'default' : 'smoothstep',
                 animated: isHighlighted,
                 style: {
-                    stroke: isHighlighted ? '#3b82f6' : '#6b7280',
-                    strokeWidth: isHighlighted ? 3 : 2,
+                    stroke: edgeColor,
+                    strokeWidth: isHighlighted ? 3 : (isEpsilon ? 2.5 : 2),
+                    strokeDasharray: isEpsilon ? '5,5' : 'none',
                 },
                 labelStyle: {
-                    fill: isHighlighted ? '#3b82f6' : '#374151',
-                    fontWeight: isHighlighted ? 700 : 600,
-                    fontSize: 14,
+                    fill: labelColor,
+                    fontWeight: isHighlighted ? 700 : (isEpsilon ? 700 : 600),
+                    fontSize: isEpsilon ? 16 : 14,
+                    fontStyle: isEpsilon ? 'italic' : 'normal',
                 },
                 labelBgStyle: {
-                    fill: '#ffffff',
-                    fillOpacity: 0.9,
+                    fill: isEpsilon ? '#f3e8ff' : '#ffffff',
+                    fillOpacity: 0.95,
+                    rx: 4,
+                    ry: 4,
                 },
                 markerEnd: {
                     type: MarkerType.ArrowClosed,
-                    color: isHighlighted ? '#3b82f6' : '#6b7280',
+                    color: edgeColor,
                     width: 20,
                     height: 20,
                 },

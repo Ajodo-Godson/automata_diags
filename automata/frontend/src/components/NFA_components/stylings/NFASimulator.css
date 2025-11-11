@@ -210,20 +210,21 @@
 
 .nfa-input-group {
   display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 0;
 }
 
 .nfa-input {
   flex: 1;
-  padding: 14px 16px;
-  font-size: 16px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.85rem;
   font-family: 'JetBrains Mono', 'Courier New', monospace;
-  font-weight: 500;
+  font-weight: 600;
   border: 2px solid #e5e7eb;
-  border-radius: 12px;
+  border-radius: 6px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  background: white;
+  color: #000000;
   position: relative;
 }
 
@@ -260,21 +261,16 @@
 }
 
 .nfa-input-help {
-  font-size: 14px;
+  font-size: 0.7rem;
   color: #6b7280;
-  margin: 0;
-  padding: 8px 16px;
-  background: #f9fafb;
-  border-radius: 8px;
-  border-left: 4px solid #3b82f6;
-  font-weight: 500;
+  margin: 0.3rem 0 0 0;
 }
 
 .nfa-result-indicator {
-  margin-top: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  margin-top: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
   font-weight: 700;
   text-align: center;
   text-transform: uppercase;
@@ -565,11 +561,11 @@
 }
 
 .nfa-btn {
-  padding: 12px 24px;
-  font-size: 14px;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.75rem;
   font-weight: 600;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
