@@ -87,7 +87,28 @@ const NFAGraph = ({ nfa, currentStates = [], highlightTransition = null }) => {
             };
         });
 
-        // Create edges from transitions
+        // Group transitions to identify TRUE non-determinism (same state + same symbol → multiple targets)
+        const transitionGroups = {};
+        nfa.transitions.forEach((transition, index) => {
+            // Key is "from-symbol" to identify non-deterministic transitions
+            const key = `${transition.from}-${transition.symbol}`;
+            if (!transitionGroups[key]) {
+                transitionGroups[key] = [];
+            }
+            transitionGroups[key].push({ ...transition, originalIndex: index });
+        });
+
+        // Define route colors for non-deterministic paths (same state, same symbol, different targets)
+        const routeColors = [
+            '#10b981', // Green
+            '#f59e0b', // Orange
+            '#ef4444', // Red
+            '#06b6d4', // Cyan
+            '#ec4899', // Pink
+            '#a855f7', // Purple-ish
+        ];
+
+        // Create edges from transitions with intelligent color coding
         const edges = nfa.transitions.map((transition, index) => {
             const edgeId = `${transition.from}-${transition.to}-${transition.symbol}-${index}`;
             const isHighlighted = highlightTransition &&
@@ -98,37 +119,68 @@ const NFAGraph = ({ nfa, currentStates = [], highlightTransition = null }) => {
             // Check if this is an epsilon transition
             const isEpsilon = transition.symbol === 'ε' || transition.symbol === 'epsilon';
             
-            // Color coding:
-            // - Highlighted: Blue (#3b82f6)
-            // - Epsilon: Purple (#8b5cf6)
-            // - Regular: Gray (#6b7280)
-            const edgeColor = isHighlighted ? '#3b82f6' : (isEpsilon ? '#8b5cf6' : '#6b7280');
-            const labelColor = isHighlighted ? '#3b82f6' : (isEpsilon ? '#8b5cf6' : '#374151');
+            // Check if this is a self-loop
+            const isSelfLoop = transition.from === transition.to;
+            
+            // Check for TRUE non-determinism (same state + same symbol → multiple targets)
+            const groupKey = `${transition.from}-${transition.symbol}`;
+            const group = transitionGroups[groupKey];
+            const isNonDeterministic = group.length > 1 && !isEpsilon;
+            const routeIndex = group.findIndex(t => t.originalIndex === index);
+            
+            // Color coding strategy:
+            // - Highlighted (active): Bright Blue (#3b82f6) with animation
+            // - Epsilon transitions: Purple (#8b5cf6) with dashed line
+            // - Non-deterministic (same symbol, multiple targets): Different colors per route
+            // - Self-loops: Slightly thicker, more visible
+            // - Regular transitions: Gray (#6b7280)
+            let edgeColor, labelColor, labelBgColor;
+            
+            if (isHighlighted) {
+                edgeColor = '#3b82f6';
+                labelColor = '#3b82f6';
+                labelBgColor = '#eff6ff';
+            } else if (isEpsilon) {
+                edgeColor = '#8b5cf6'; // Purple for epsilon
+                labelColor = '#8b5cf6';
+                labelBgColor = '#f3e8ff';
+            } else if (isNonDeterministic) {
+                // TRUE non-determinism: assign different colors to different target states
+                edgeColor = routeColors[routeIndex % routeColors.length];
+                labelColor = routeColors[routeIndex % routeColors.length];
+                labelBgColor = '#fffbeb';
+            } else {
+                edgeColor = '#6b7280'; // Gray for deterministic transitions
+                labelColor = '#374151';
+                labelBgColor = '#ffffff';
+            }
 
             return {
                 id: edgeId,
                 source: transition.from,
                 target: transition.to,
                 label: transition.symbol,
-                type: transition.from === transition.to ? 'default' : 'smoothstep',
+                type: isSelfLoop ? 'default' : 'smoothstep',
                 animated: isHighlighted,
                 style: {
                     stroke: edgeColor,
-                    strokeWidth: isHighlighted ? 3 : (isEpsilon ? 2.5 : 2),
+                    strokeWidth: isHighlighted ? 3 : (isEpsilon ? 2.5 : (isNonDeterministic ? 3 : 2)),
                     strokeDasharray: isEpsilon ? '5,5' : 'none',
                 },
                 labelStyle: {
                     fill: labelColor,
-                    fontWeight: isHighlighted ? 700 : (isEpsilon ? 700 : 600),
-                    fontSize: isEpsilon ? 16 : 14,
+                    fontWeight: isHighlighted ? 700 : (isEpsilon || isNonDeterministic ? 700 : 600),
+                    fontSize: isEpsilon ? 16 : (isNonDeterministic ? 15 : 14),
                     fontStyle: isEpsilon ? 'italic' : 'normal',
                 },
                 labelBgStyle: {
-                    fill: isEpsilon ? '#f3e8ff' : '#ffffff',
+                    fill: labelBgColor,
                     fillOpacity: 0.95,
                     rx: 4,
                     ry: 4,
+                    padding: isNonDeterministic ? 6 : 4,
                 },
+                labelBgPadding: isNonDeterministic ? [8, 6] : [6, 4],
                 markerEnd: {
                     type: MarkerType.ArrowClosed,
                     color: edgeColor,
