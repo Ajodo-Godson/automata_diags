@@ -124,6 +124,13 @@
     transition: stroke 0.3s ease, stroke-width 0.3s ease, opacity 0.3s ease;
 }
 
+/* Ensure active path colors are vibrant and visible */
+.nfa-graph-container .react-flow__edge.animated .react-flow__edge-path {
+    stroke-width: 4 !important;
+    opacity: 1 !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
 /* Smoothstep edge styling for curved, flexible arrows */
 .nfa-graph-container .react-flow__edge.react-flow__edge-smoothstep .react-flow__edge-path {
     stroke-linecap: round;

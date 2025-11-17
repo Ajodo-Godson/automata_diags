@@ -28,6 +28,7 @@ const NFASimulator = () => {
     const [currentStep, setCurrentStep] = useState(-1);
     const [isPlaying, setIsPlaying] = useState(false);
     const [playbackSpeed, setPlaybackSpeed] = useState(500);
+    const [maxVisiblePaths, setMaxVisiblePaths] = useState(5); // Control number of paths to display
 
     const isComplete = currentStep >= 0 && currentStep === simulationSteps.length - 1;
     const isAccepted = isComplete && simulationSteps[currentStep]?.accepted;
@@ -391,7 +392,18 @@ const NFASimulator = () => {
                             <NFAGraph 
                                 nfa={nfa} 
                                 currentStates={currentStep >= 0 ? simulationSteps[currentStep]?.states || [] : []}
-                                activeTransitions={currentStep >= 0 ? simulationSteps[currentStep]?.activeTransitions || [] : []}
+                                activeTransitions={
+                                    currentStep >= 0 
+                                        ? (simulationSteps[currentStep]?.activeTransitions || [])
+                                            .filter((trans, idx, arr) => {
+                                                // Get unique pathIds from transitions
+                                                const pathIds = [...new Set(arr.map(t => t.pathId))];
+                                                // Only show transitions from first N paths
+                                                const visiblePathIds = pathIds.slice(0, maxVisiblePaths);
+                                                return visiblePathIds.includes(trans.pathId);
+                                            })
+                                        : []
+                                }
                             />
                         </div>
                     </div>
@@ -451,14 +463,56 @@ const NFASimulator = () => {
                                                 {simulationSteps[currentStep].description}
                                             </div>
                                             
+                                            {/* Path Visibility Control */}
+                                            {simulationSteps[currentStep].paths && simulationSteps[currentStep].paths.length > 0 && (
+                                                <div style={{
+                                                    marginTop: '0.75rem',
+                                                    padding: '0.5rem',
+                                                    background: '#f9fafb',
+                                                    borderRadius: '6px',
+                                                    border: '1px solid #e5e7eb'
+                                                }}>
+                                                    <div style={{
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center',
+                                                        marginBottom: '0.5rem'
+                                                    }}>
+                                                        <label style={{
+                                                            fontSize: '0.75rem',
+                                                            fontWeight: '600',
+                                                            color: '#374151'
+                                                        }}>
+                                                            Show Paths: <span style={{color: '#8b5cf6'}}>{Math.min(maxVisiblePaths, simulationSteps[currentStep].paths.length)}</span> / {simulationSteps[currentStep].paths.length}
+                                                        </label>
+                                                        <span style={{
+                                                            fontSize: '0.7rem',
+                                                            color: '#6b7280'
+                                                        }}>
+                                                            {simulationSteps[currentStep].paths.length > maxVisiblePaths && `+${simulationSteps[currentStep].paths.length - maxVisiblePaths} hidden`}
+                                                        </span>
+                                                    </div>
+                                                    <input
+                                                        type="range"
+                                                        min="1"
+                                                        max={Math.max(10, simulationSteps[currentStep].paths.length)}
+                                                        value={maxVisiblePaths}
+                                                        onChange={(e) => setMaxVisiblePaths(Number(e.target.value))}
+                                                        className="nfa-path-slider"
+                                                    />
+                                                </div>
+                                            )}
+                                            
                                             {/* Show individual paths */}
                                             {simulationSteps[currentStep].paths && simulationSteps[currentStep].paths.length > 0 && (
                                                 <div className="nfa-paths-list">
                                                     <div style={{fontSize: '0.75rem', fontWeight: '600', marginTop: '0.75rem', marginBottom: '0.5rem'}}>
                                                         Computation Paths:
                                                     </div>
-                                                    {simulationSteps[currentStep].paths.map((path, idx) => (
-                                                        <div key={idx} className="nfa-path-item" style={{
+                                                    {simulationSteps[currentStep].paths
+                                                        .slice(0, maxVisiblePaths)
+                                                        .map((path, idx) => (
+                                                        <div key={path.id || idx} className="nfa-path-item" style={{
                                                             display: 'flex',
                                                             alignItems: 'center',
                                                             gap: '0.5rem',
@@ -481,6 +535,17 @@ const NFASimulator = () => {
                                                             </div>
                                                         </div>
                                                     ))}
+                                                    {simulationSteps[currentStep].paths.length > maxVisiblePaths && (
+                                                        <div style={{
+                                                            padding: '0.5rem',
+                                                            textAlign: 'center',
+                                                            color: '#6b7280',
+                                                            fontSize: '0.7rem',
+                                                            fontStyle: 'italic'
+                                                        }}>
+                                                            ... and {simulationSteps[currentStep].paths.length - maxVisiblePaths} more path(s)
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </>

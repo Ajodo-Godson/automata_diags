@@ -258,7 +258,9 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
             let arrowColor = '#8b5cf6'; // Purple arrowheads
             
             if (isHighlighted) {
-                // Use the color from the active path
+                // Use the color from the active path(s)
+                // If multiple paths use this transition, use the first one's color
+                // The state diagram will show colors for active paths
                 const pathColor = matchingTransitions[0].color;
                 edgeColor = pathColor;
                 arrowColor = pathColor;
@@ -277,9 +279,9 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
             let edgeType = 'default'; // Straight lines for regular transitions
             let edgeStyle = {
                 stroke: edgeColor,
-                strokeWidth: isHighlighted ? 4 : 2,
+                strokeWidth: isHighlighted ? 4 : 2, // Thicker for active paths
                 strokeDasharray: 'none',
-                opacity: isHighlighted ? 1 : 1, // Full opacity for all transitions
+                opacity: isHighlighted ? 1 : 0.5, // Dim inactive transitions, full opacity for active paths
             };
 
             // Calculate source and target handles
