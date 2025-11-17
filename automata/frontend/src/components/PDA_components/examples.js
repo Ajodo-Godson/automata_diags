@@ -133,27 +133,28 @@ export const useExamples = () => {
         },
         an_bm_cn_plus_m: {
             name: 'a^n b^m c^(n+m)',
-            description: 'Accepts strings with n a\'s, m b\'s, and (n+m) c\'s',
+            description: 'Accepts strings with n a\'s, m b\'s, and exactly (n+m) c\'s',
             states: ['q0', 'q1', 'q2', 'q3'],
             alphabet: ['a', 'b', 'c'],
             stackAlphabet: ['Z', 'A', 'B'],
             transitions: [
-                // Push A for each 'a'
+                // Push A for each 'a' in q0
                 { from: 'q0', input: 'a', pop: 'Z', to: 'q0', push: 'AZ' },
                 { from: 'q0', input: 'a', pop: 'A', to: 'q0', push: 'AA' },
-                { from: 'q0', input: 'a', pop: 'B', to: 'q0', push: 'BA' },
-                // Push B for each 'b'
-                { from: 'q0', input: 'b', pop: 'A', to: 'q1', push: 'A' },
-                { from: 'q0', input: 'b', pop: 'Z', to: 'q1', push: 'Z' },
-                { from: 'q1', input: 'b', pop: 'A', to: 'q1', push: 'A' },
-                { from: 'q1', input: 'b', pop: 'B', to: 'q1', push: 'BB' },
-                { from: 'q1', input: 'b', pop: 'Z', to: 'q1', push: 'BZ' },
-                // Pop A or B for each 'c'
-                { from: 'q1', input: 'c', pop: 'A', to: 'q2', push: 'ε' },
-                { from: 'q1', input: 'c', pop: 'B', to: 'q2', push: 'ε' },
+                // Transition to q1 when we see first 'b'
+                { from: 'q0', input: 'b', pop: 'A', to: 'q1', push: 'AB' }, // b after a's: push B, keep A
+                { from: 'q0', input: 'b', pop: 'Z', to: 'q1', push: 'BZ' }, // b with no a's
+                // Push B for each 'b' in q1
+                { from: 'q1', input: 'b', pop: 'A', to: 'q1', push: 'AB' }, // b after a's: push B, keep A
+                { from: 'q1', input: 'b', pop: 'B', to: 'q1', push: 'BB' }, // b after b's
+                { from: 'q1', input: 'b', pop: 'Z', to: 'q1', push: 'BZ' }, // b with empty stack
+                // Transition to q2 when we see first 'c' - start popping
+                { from: 'q1', input: 'c', pop: 'A', to: 'q2', push: 'ε' }, // c: pop A (from a's)
+                { from: 'q1', input: 'c', pop: 'B', to: 'q2', push: 'ε' }, // c: pop B (from b's)
+                // Pop A or B for each 'c' in q2
                 { from: 'q2', input: 'c', pop: 'A', to: 'q2', push: 'ε' },
                 { from: 'q2', input: 'c', pop: 'B', to: 'q2', push: 'ε' },
-                // Accept when stack only has Z
+                // Accept only when stack has Z and no more input (handled by simulation)
                 { from: 'q2', input: 'ε', pop: 'Z', to: 'q3', push: 'Z' }
             ],
             startState: 'q0',

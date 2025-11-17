@@ -12,6 +12,7 @@ import { usePDA } from './usePDA';
 const PDASimulator = () => {
     const { examples } = useExamples();
     const [currentExampleName, setCurrentExampleName] = useState(null);
+    const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
 
     // Start with a blank PDA
     const pda = usePDA({
@@ -212,7 +213,7 @@ const PDASimulator = () => {
         while (inputPosition <= inputString.length && deterministicIterations < 1000) {
             deterministicIterations++;
             const topOfStack = stack[stack.length - 1];
-            
+
             // Find first applicable transition
             let applicableTransition = null;
             
@@ -227,10 +228,10 @@ const PDASimulator = () => {
             } else {
                 // Try regular input symbol first
                 const inputSymbol = inputString[inputPosition];
-                for (const t of pda.transitions) {
-                    if (t.from === currentState && t.input === inputSymbol && t.pop === topOfStack) {
-                        applicableTransition = t;
-                        break;
+            for (const t of pda.transitions) {
+                if (t.from === currentState && t.input === inputSymbol && t.pop === topOfStack) {
+                    applicableTransition = t;
+                    break;
                     }
                 }
                 
@@ -335,6 +336,7 @@ const PDASimulator = () => {
     const loadExample = useCallback((exampleName) => {
         const example = examples[exampleName];
         setCurrentExampleName(exampleName);
+        setCurrentExampleDescription(example?.description || null);
         pda.loadPDA(example);
         setInputString('');
         handleReset();
@@ -368,6 +370,7 @@ const PDASimulator = () => {
                                 acceptStates: new Set(pdaDefinition.acceptStates || [])
                             });
                             setCurrentExampleName(pdaDefinition.name || 'Imported PDA');
+                            setCurrentExampleDescription(pdaDefinition.description || null);
                             handleReset();
                         } catch (error) {
                             alert('Invalid JSON file or PDA definition format');
@@ -416,6 +419,7 @@ const PDASimulator = () => {
                     acceptStates: []
                 });
                 setCurrentExampleName(null);
+                setCurrentExampleDescription(null);
                 handleReset();
             }
         };
@@ -451,11 +455,17 @@ const PDASimulator = () => {
                                 key={key}
                                 onClick={() => loadExample(key)}
                                 className={`pda-selector-btn ${currentExampleName === key ? 'active' : ''}`}
+                                title={example.description || example.name}
                             >
                                 {example.name}
                             </button>
                         ))}
                     </div>
+                    {currentExampleDescription && (
+                        <div className="pda-example-description">
+                            <strong>Description:</strong> {currentExampleDescription}
+                        </div>
+                    )}
                 </div>
 
                 {/* Main Grid */}

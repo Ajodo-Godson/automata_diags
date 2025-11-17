@@ -13,6 +13,7 @@ import { useDFA } from './useDFA';
 const DFASimulatorNew = () => {
     const { examples } = useExamples();
     const [currentExampleName, setCurrentExampleName] = useState(null);
+    const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
     
     // Start with a blank DFA
     const dfa = useDFA({
@@ -130,6 +131,7 @@ const DFASimulatorNew = () => {
     const loadExample = useCallback((exampleName) => {
         const example = examples[exampleName];
         setCurrentExampleName(exampleName);
+        setCurrentExampleDescription(example?.description || null);
         dfa.loadDFA(example);
         setInputString('');
         handleReset();
@@ -161,6 +163,7 @@ const DFASimulatorNew = () => {
                                 acceptStates: new Set(dfaDefinition.acceptStates || [])
                             });
                             setCurrentExampleName(dfaDefinition.name || 'Imported DFA');
+                            setCurrentExampleDescription(dfaDefinition.description || null);
                             handleReset();
                         } catch (error) {
                             alert('Invalid JSON file or DFA definition format');
@@ -204,6 +207,7 @@ const DFASimulatorNew = () => {
                     acceptStates: new Set()
                 });
                 setCurrentExampleName(null);
+                setCurrentExampleDescription(null);
                 handleReset();
             }
         };
@@ -239,11 +243,17 @@ const DFASimulatorNew = () => {
                                 key={key}
                                 onClick={() => loadExample(key)}
                                 className={`dfa-selector-btn ${currentExampleName === key ? 'active' : ''}`}
+                                title={example.description || example.name}
                             >
                                 {example.name}
                             </button>
                         ))}
                     </div>
+                    {currentExampleDescription && (
+                        <div className="dfa-example-description">
+                            <strong>Description:</strong> {currentExampleDescription}
+                        </div>
+                    )}
                 </div>
 
                 {/* Main Grid */}

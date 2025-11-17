@@ -82,15 +82,20 @@ export const CFGTestCases = ({ onLoadTest, currentExample }) => {
             { input: 'b', expected: 'Reject' },
             { input: 'ab', expected: 'Reject' }
         ],
-        ww: [
-            { input: 'aa', expected: 'Accept' },
-            { input: 'bb', expected: 'Accept' },
-            { input: 'abab', expected: 'Accept' },
-            { input: 'baba', expected: 'Accept' },
+        nested_structures: [
+            { input: '', expected: 'Accept' },
+            { input: 'ab', expected: 'Accept' },
+            { input: 'cd', expected: 'Accept' },
+            { input: 'aabb', expected: 'Accept' },
+            { input: 'ccdd', expected: 'Accept' },
+            { input: 'abcd', expected: 'Accept' },
+            { input: 'aabbccdd', expected: 'Accept' },
+            { input: 'aabccddb', expected: 'Accept' },
             { input: 'a', expected: 'Reject' },
             { input: 'b', expected: 'Reject' },
-            { input: 'ab', expected: 'Reject' },
-            { input: 'ba', expected: 'Reject' }
+            { input: 'ac', expected: 'Reject' },
+            { input: 'ba', expected: 'Reject' },
+            { input: 'abab', expected: 'Reject' }
         ]
     };
 

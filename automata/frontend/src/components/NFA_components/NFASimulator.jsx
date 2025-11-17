@@ -13,6 +13,7 @@ import { useNFA } from './useNFA';
 const NFASimulator = () => {
     const { examples } = useExamples();
     const [currentExampleName, setCurrentExampleName] = useState(null);
+    const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
     
     // Start with a blank NFA
     const nfa = useNFA({
@@ -195,6 +196,7 @@ const NFASimulator = () => {
         const example = examples[exampleName];
         if (example) {
             setCurrentExampleName(exampleName);
+            setCurrentExampleDescription(example?.description || null);
             nfa.loadDefinition(example);
             setInputString('');
             setSimulationSteps([]);
@@ -228,6 +230,7 @@ const NFASimulator = () => {
                             nfa.setStartState(nfaDefinition.startState || 'q0');
                             nfa.setAcceptStates(nfaDefinition.acceptStates || []);
                             setCurrentExampleName(nfaDefinition.name || 'Imported NFA');
+                            setCurrentExampleDescription(nfaDefinition.description || null);
                             resetSimulation();
                         } catch (error) {
                             alert('Invalid JSON file or NFA definition format');
@@ -272,6 +275,7 @@ const NFASimulator = () => {
                     acceptStates: []
                 });
                 setCurrentExampleName(null);
+                setCurrentExampleDescription(null);
                 resetSimulation();
             }
         };
@@ -325,11 +329,17 @@ const NFASimulator = () => {
                                 key={key}
                                 onClick={() => loadExample(key)}
                                 className={`nfa-selector-btn ${currentExampleName === key ? 'active' : ''}`}
+                                title={example.description || example.name}
                             >
                                 {example.name}
                             </button>
                         ))}
                     </div>
+                    {currentExampleDescription && (
+                        <div className="nfa-example-description">
+                            <strong>Description:</strong> {currentExampleDescription}
+                        </div>
+                    )}
                 </div>
 
                 {/* Main Grid - Same layout as DFA */}

@@ -57,6 +57,22 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.tm-example-description {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(59, 130, 246, 0.1);
+  border-left: 3px solid #3b82f6;
+  border-radius: 4px;
+  color: #374151;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.tm-example-description strong {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
 .selector-label {
   font-size: 16px;
   font-weight: 600;

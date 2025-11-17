@@ -13,6 +13,7 @@ import { useCFG } from './useCFG';
 const CFGSimulator = () => {
     const { examples } = useExamples();
     const [currentExampleName, setCurrentExampleName] = useState(null);
+    const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
 
     // Start with a blank CFG
     const cfg = useCFG({
@@ -90,6 +91,7 @@ const CFGSimulator = () => {
                     startVariable: 'S'
                 });
                 setCurrentExampleName(null);
+                setCurrentExampleDescription(null);
                 resetDerivation();
             }
         };
@@ -533,6 +535,7 @@ const CFGSimulator = () => {
     const loadExample = useCallback((exampleName) => {
         const example = examples[exampleName];
         setCurrentExampleName(exampleName);
+        setCurrentExampleDescription(example?.description || null);
         cfg.loadCFG(example);
         setInputString('');
         handleReset();
@@ -602,11 +605,17 @@ const CFGSimulator = () => {
                                 key={key}
                                 onClick={() => loadExample(key)}
                                 className={`cfg-selector-btn ${currentExampleName === key ? 'active' : ''}`}
+                                title={example.description || example.name}
                             >
                                 {example.name}
                             </button>
                         ))}
                     </div>
+                    {currentExampleDescription && (
+                        <div className="cfg-example-description">
+                            <strong>Description:</strong> {currentExampleDescription}
+                        </div>
+                    )}
                 </div>
 
                 {/* Main Grid */}

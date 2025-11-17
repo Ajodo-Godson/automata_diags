@@ -57,15 +57,13 @@ export const useExamples = () => {
         },
         'starts_with_a': {
             name: 'Starts with "a"',
-            description: 'Non-deterministic choice on first "a": accepts strings starting with "a" followed by any characters',
-            states: ['q0', 'q1', 'q2'],
+            description: 'Accepts strings starting with "a" followed by any characters',
+            states: ['q0', 'q1'],
             alphabet: ['a', 'b'],
             transitions: [
                 { from: 'q0', to: 'q1', symbol: 'a' },
-                { from: 'q0', to: 'q2', symbol: 'a' },
                 { from: 'q1', to: 'q1', symbol: 'a' },
                 { from: 'q1', to: 'q1', symbol: 'b' },
-                { from: 'q2', to: 'q2', symbol: 'b' },
             ],
             startState: 'q0',
             acceptStates: ['q1']

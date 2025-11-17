@@ -57,6 +57,22 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.nfa-example-description {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(139, 92, 246, 0.1);
+  border-left: 3px solid #8b5cf6;
+  border-radius: 4px;
+  color: #374151;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.nfa-example-description strong {
+  color: #8b5cf6;
+  font-weight: 600;
+}
+
 .nfa-selector-label {
   font-size: 16px;
   font-weight: 600;

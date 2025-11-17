@@ -55,14 +55,18 @@ export const PDATestCases = ({ onLoadTest, currentExample }) => {
             { input: '([)]', expected: 'Reject' }
         ],
         an_bm_cn_plus_m: [
-            { input: 'abc', expected: 'Accept' },
-            { input: 'aabbcc', expected: 'Accept' },
-            { input: 'abcc', expected: 'Accept' },
-            { input: 'aabccc', expected: 'Accept' },
+            { input: 'abcc', expected: 'Accept' }, // 1a, 1b, 2c (1+1=2) ✓
+            { input: 'aabbcccc', expected: 'Accept' }, // 2a, 2b, 4c (2+2=4) ✓
+            { input: 'aabccc', expected: 'Accept' }, // 2a, 1b, 3c (2+1=3) ✓
+            { input: 'bbcc', expected: 'Accept' }, // 0a, 2b, 2c (0+2=2) ✓
+            { input: 'aacc', expected: 'Accept' }, // 2a, 0b, 2c (2+0=2) ✓
+            { input: 'abc', expected: 'Reject' }, // 1a, 1b, 1c (need 2c)
+            { input: 'aabbcc', expected: 'Reject' }, // 2a, 2b, 2c (need 4c)
             { input: 'a', expected: 'Reject' },
             { input: 'ab', expected: 'Reject' },
             { input: 'ac', expected: 'Reject' },
-            { input: 'abcabc', expected: 'Reject' }
+            { input: 'abccc', expected: 'Reject' }, // 1a, 1b, 3c (need 2c)
+            { input: 'abbcc', expected: 'Reject' } // 1a, 2b, 2c (need 3c)
         ]
     };
 

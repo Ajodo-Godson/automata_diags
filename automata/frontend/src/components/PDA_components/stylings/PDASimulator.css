@@ -57,6 +57,22 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.pda-example-description {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(236, 72, 153, 0.1);
+  border-left: 3px solid #ec4899;
+  border-radius: 4px;
+  color: #374151;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.pda-example-description strong {
+  color: #ec4899;
+  font-weight: 600;
+}
+
 .pda-selector-label {
   font-size: 16px;
   font-weight: 600;

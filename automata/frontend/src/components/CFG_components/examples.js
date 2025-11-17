@@ -121,18 +121,21 @@ export const useExamples = () => {
             ],
             startVariable: 'S'
         },
-        ww: {
-            name: 'ww (Copy)',
-            description: 'Generates strings of the form ww (string followed by itself)',
+        nested_structures: {
+            name: 'Nested Structures',
+            description: 'Generates properly nested structures with matching opening and closing symbols',
             variables: ['S', 'A', 'B'],
-            terminals: ['a', 'b'],
+            terminals: ['a', 'b', 'c', 'd'],
             rules: [
-                { left: 'S', right: 'AA' },
-                { left: 'S', right: 'BB' },
-                { left: 'S', right: 'aSa' },
-                { left: 'S', right: 'bSb' },
-                { left: 'A', right: 'a' },
-                { left: 'B', right: 'b' }
+                { left: 'S', right: 'ε' },
+                { left: 'S', right: 'aSb' },
+                { left: 'S', right: 'cSd' },
+                { left: 'S', right: 'SS' },
+                { left: 'S', right: 'AB' },
+                { left: 'A', right: 'aAb' },
+                { left: 'A', right: 'ε' },
+                { left: 'B', right: 'cBd' },
+                { left: 'B', right: 'ε' }
             ],
             startVariable: 'S'
         }

@@ -10,6 +10,7 @@ import './stylings/TMSimulator.css';
 export default function TMSimulator() {
   const { examples } = useExamples();
   const [currentExampleName, setCurrentExampleName] = useState(null);
+  const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
   
   // Start with a blank TM
   const [rules, setRules] = useState([]);
@@ -28,6 +29,7 @@ export default function TMSimulator() {
   const [acceptState, setAcceptState] = useState('qaccept');
   const [rejectState, setRejectState] = useState('qreject');
   const [blankSymbol, setBlankSymbol] = useState('□');
+  const [startState, setStartState] = useState('q0');
 
   // Event listeners for toolbox actions
   useEffect(() => {
@@ -39,6 +41,7 @@ export default function TMSimulator() {
         acceptState: acceptState,
         rejectState: rejectState,
         blankSymbol: blankSymbol,
+        startState: startState,
         initialInput: initialInput
       };
       
@@ -68,8 +71,10 @@ export default function TMSimulator() {
               if (tmDefinition.acceptState) setAcceptState(tmDefinition.acceptState);
               if (tmDefinition.rejectState) setRejectState(tmDefinition.rejectState);
               if (tmDefinition.blankSymbol) setBlankSymbol(tmDefinition.blankSymbol);
+              if (tmDefinition.startState) setStartState(tmDefinition.startState);
               if (tmDefinition.initialInput) setInitialInput(tmDefinition.initialInput);
               setCurrentExampleName(tmDefinition.name || 'Imported TM');
+              setCurrentExampleDescription(tmDefinition.description || null);
             } catch (error) {
               alert('Invalid JSON file or TM definition format');
             }
@@ -91,6 +96,17 @@ export default function TMSimulator() {
 
   const executeStep = useCallback(() => {
     setMachineState(prev => {
+      // Infinite loop detection: halt after 10000 steps
+      if (prev.stepCount >= 10000) {
+        setActiveRuleId(null);
+        return {
+          ...prev,
+          isRunning: false,
+          isHalted: true,
+          haltReason: 'reject'
+        };
+      }
+
       const currentSymbol = prev.tape[prev.headPosition] || blankSymbol;
       const matchingRule = rules.find(
         rule =>
@@ -195,7 +211,7 @@ export default function TMSimulator() {
     setMachineState({
       tape: newTape,
       headPosition: 0,
-      currentState: 'q0',
+      currentState: startState,
       stepCount: 0,
       isRunning: false,
       isHalted: false,
@@ -218,7 +234,7 @@ export default function TMSimulator() {
     setMachineState({
       tape: newTape,
       headPosition: 0,
-      currentState: 'q0',
+      currentState: startState,
       stepCount: 0,
       isRunning: false,
       isHalted: false,
@@ -232,15 +248,22 @@ export default function TMSimulator() {
     if (!example) return;
 
     setCurrentExampleName(exampleName);
+    setCurrentExampleDescription(example?.description || null);
     setRules(example.rules);
     setAcceptState(example.acceptState);
     setRejectState(example.rejectState);
     setBlankSymbol(example.blankSymbol);
+    setStartState(example.startState);
     
     // Set default input based on example
     const defaultInput = exampleName === 'Binary Incrementer' ? '101' :
                         exampleName === 'Palindrome Checker' ? '101' :
                         exampleName === '0^n 1^n' ? '0011' :
+                        exampleName === 'Unary Addition' ? '111+111' :
+                        exampleName === 'Unary Multiplication' ? '11*11' :
+                        exampleName === 'Binary Subtraction' ? '101-10' :
+                        exampleName === 'String Reversal' ? '101' :
+                        exampleName === 'Copy Machine' ? '101' :
                         '';
     
     setInitialInput(defaultInput);
@@ -283,11 +306,17 @@ export default function TMSimulator() {
                 key={key}
                 onClick={() => loadPresetExample(key)}
                 className={`selector-btn ${currentExampleName === key ? 'active' : ''}`}
+                title={example.description || example.name || key}
               >
-                {key}
+                {example.name || key}
               </button>
             ))}
           </div>
+          {currentExampleDescription && (
+            <div className="tm-example-description">
+              <strong>Description:</strong> {currentExampleDescription}
+            </div>
+          )}
         </div>
 
         {/* Main Layout */}
