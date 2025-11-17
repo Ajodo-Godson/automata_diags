@@ -124,6 +124,7 @@
   padding: 24px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-top: 0;
 }
 
 .cfg-rules-list {
@@ -437,22 +438,40 @@
   color: #991b1b;
 }
 
+/* Visualization Container - Side by Side Layout */
+.cfg-visualization-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  width: 100%;
+}
+
 /* Derivation Steps */
 .cfg-derivation-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.cfg-derivation-empty {
+  text-align: center;
+  color: #9ca3af;
+  padding: 40px;
+}
+
+.cfg-derivation-empty p {
+  margin: 0;
+  font-size: 14px;
 }
 
 .cfg-derivation-steps {
-  max-height: 400px;
+  max-height: 500px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 8px 0;
 }
 
 .cfg-derivation-step {
@@ -531,12 +550,10 @@
 
 /* Parse Tree */
 .cfg-tree-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .cfg-tree-placeholder {
@@ -556,6 +573,10 @@
   }
 
   .cfg-control-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cfg-visualization-container {
     grid-template-columns: 1fr;
   }
 }

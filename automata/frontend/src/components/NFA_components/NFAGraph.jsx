@@ -163,8 +163,10 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
             nonDeterministicGroups[key].push(transition.to);
         });
 
+        // Note: Bezier edges will automatically create smooth curves
+
         // Create edges with combined labels
-        const edges = Object.values(edgeGroups).map((group) => {
+        const edges = Object.values(edgeGroups).map((group, index) => {
             const isSelfLoop = group.from === group.to;
             const isEpsilon = group.isEpsilon;
             
@@ -214,8 +216,8 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
                 labelBgColor = '#fae8ff';
             }
 
-            // Use smoothstep edges for smooth curves that connect at node edges
-            let edgeType = 'smoothstep';
+            // Use bezier edges for smooth, flexible curves
+            let edgeType = 'bezier';
             let edgeStyle = {
                 stroke: edgeColor,
                 strokeWidth: isHighlighted ? 4 : 2, // Thicker and more vivid for active paths
@@ -228,12 +230,18 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
             const targetPos = nodePositions[group.to];
             let sourceHandle = 'right';
             let targetHandle = 'left';
+            let pathOptions = {};
             
             if (isSelfLoop) {
-                // Self-loops: use top handle to curl above the node, smaller and cleaner
-                edgeType = 'default';
+                // Self-loops: use bezier with custom curvature
+                edgeType = 'bezier';
                 sourceHandle = 'top';
                 targetHandle = 'top';
+                // Create a nice curved self-loop
+                pathOptions = {
+                    curvature: 0.8,
+                    offset: 50, // Offset the loop outward
+                };
                 edgeStyle = {
                     ...edgeStyle,
                     strokeWidth: isHighlighted ? 2.5 : 2,
@@ -241,8 +249,10 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
             } else if (sourcePos && targetPos) {
                 const dx = targetPos.x - sourcePos.x;
                 const dy = targetPos.y - sourcePos.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
                 
                 // Determine handle positions based on relative positions
+                // Bezier edges will automatically create smooth, flexible curves
                 if (Math.abs(dx) > Math.abs(dy)) {
                     // Horizontal connection
                     sourceHandle = dx > 0 ? 'right' : 'left';
@@ -252,10 +262,18 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
                     sourceHandle = dy > 0 ? 'bottom' : 'top';
                     targetHandle = dy > 0 ? 'top' : 'bottom';
                 }
+                
+                // Calculate curvature based on distance - bezier edges create smooth curves
+                // More curvature for longer edges, less for shorter ones
+                const curvature = Math.min(0.5, Math.max(0.25, distance / 500));
+                
+                pathOptions = {
+                    curvature: curvature,
+                };
             }
 
             return {
-                id: `${group.from}-${group.to}-${label}`,
+                id: `${group.from}-${group.to}-${label}-${index}`,
                 source: group.from,
                 target: group.to,
                 sourceHandle: sourceHandle,
@@ -264,6 +282,7 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
                 type: edgeType,
                 animated: isHighlighted,
                 style: edgeStyle,
+                ...pathOptions, // Spread path options (curvature, offset)
                 labelStyle: {
                     fill: labelColor,
                     fontWeight: isHighlighted ? 700 : (isEpsilon ? 700 : 600),
@@ -308,7 +327,7 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
                 nodesConnectable={false}
                 elementsSelectable={false}
                 defaultEdgeOptions={{
-                    type: 'smoothstep',
+                    type: 'bezier',
                     style: { strokeWidth: 2 },
                     markerEnd: {
                         type: MarkerType.ArrowClosed,
@@ -317,7 +336,7 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
                         height: 20,
                     },
                 }}
-                connectionLineType="smoothstep"
+                connectionLineType="bezier"
             >
                 <Background color="#e5e7eb" gap={16} />
                 <Controls />

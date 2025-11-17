@@ -105,9 +105,16 @@
     transition: stroke 0.3s ease, stroke-width 0.3s ease, opacity 0.3s ease;
 }
 
-.nfa-graph-container .react-flow__edge.react-flow__edge-smoothstep .react-flow__edge-path {
+.nfa-graph-container .react-flow__edge.react-flow__edge-smoothstep .react-flow__edge-path,
+.nfa-graph-container .react-flow__edge.react-flow__edge-bezier .react-flow__edge-path {
     stroke-linecap: round;
     stroke-linejoin: round;
+}
+
+/* Bezier edge styling for smooth curves */
+.nfa-graph-container .react-flow__edge.react-flow__edge-bezier .react-flow__edge-path {
+    fill: none;
+    transition: stroke 0.3s ease, stroke-width 0.3s ease, opacity 0.3s ease;
 }
 
 /* Make transition labels MUCH more visible */
@@ -250,26 +257,20 @@
     right: 0;
 }
 
-/* Self-loop styling - make them smaller and more subtle */
-.nfa-graph-container .react-flow__edge.react-flow__edge-default path {
-    stroke-width: 2;
+/* Self-loop styling - now using bezier for curved loops */
+.nfa-graph-container .react-flow__edge.react-flow__edge-bezier path {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
 
 /* Ensure self-loops are positioned nicely and don't overlap nodes */
-.nfa-graph-container .react-flow__edge.react-flow__edge-default {
+.nfa-graph-container .react-flow__edge.react-flow__edge-bezier {
     z-index: 0;
 }
 
-/* Smaller, cleaner self-loop rendering */
-.nfa-graph-container .react-flow__edge-default .react-flow__edge-path {
-    stroke-linecap: round;
-}
-
-/* Make self-loop arrowheads smaller */
-.nfa-graph-container .react-flow__edge-default .react-flow__arrowhead {
-    transform: scale(0.8);
+/* Make self-loop arrowheads appropriately sized */
+.nfa-graph-container .react-flow__edge-bezier .react-flow__arrowhead {
+    transition: transform 0.2s ease;
 }
 
 /* All transitions have consistent styling */

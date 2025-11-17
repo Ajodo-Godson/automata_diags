@@ -657,23 +657,24 @@ const CFGSimulator = () => {
                         />
 
                         {/* Grammar Rules */}
-                        <div className="cfg-grammar-card">
-                            <h3 className="cfg-card-title">Grammar Rules</h3>
-                            <div className="cfg-rules-list">
-                                {cfg.rules.map((rule, index) => (
-                                    <div key={index} className="cfg-rule">
-                                        <span className="cfg-rule-left">{rule.left}</span>
-                                        <span className="cfg-rule-arrow">→</span>
-                                        <span className="cfg-rule-right">{rule.right}</span>
-                                    </div>
-                                ))}
+                        <CollapsibleSection title="Grammar Rules" defaultOpen={true}>
+                            <div className="cfg-grammar-card">
+                                <div className="cfg-rules-list">
+                                    {cfg.rules.map((rule, index) => (
+                                        <div key={index} className="cfg-rule">
+                                            <span className="cfg-rule-left">{rule.left}</span>
+                                            <span className="cfg-rule-arrow">→</span>
+                                            <span className="cfg-rule-right">{rule.right}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="cfg-grammar-info">
+                                    <p><strong>Variables:</strong> {cfg.variables.join(', ')}</p>
+                                    <p><strong>Terminals:</strong> {cfg.terminals.join(', ')}</p>
+                                    <p><strong>Start:</strong> {cfg.startVariable}</p>
+                                </div>
                             </div>
-                            <div className="cfg-grammar-info">
-                                <p><strong>Variables:</strong> {cfg.variables.join(', ')}</p>
-                                <p><strong>Terminals:</strong> {cfg.terminals.join(', ')}</p>
-                                <p><strong>Start:</strong> {cfg.startVariable}</p>
-                            </div>
-                        </div>
+                        </CollapsibleSection>
                     </div>
 
                     {/* Right Column */}
@@ -701,53 +702,60 @@ const CFGSimulator = () => {
                             />
                         </CollapsibleSection>
 
-                        {/* Derivation Steps */}
-                        {derivationSteps.length > 0 && (
-                            <div className="cfg-derivation-card">
-                                <h3 className="cfg-card-title">Derivation Steps</h3>
-                                <div className="cfg-derivation-steps">
-                                    {derivationSteps.map((step, index) => (
-                                        <div
-                                            key={index}
-                                            className={`cfg-derivation-step ${
-                                                index === currentStep ? 'current' :
-                                                index < currentStep ? 'completed' : 'pending'
-                                            }`}
-                                        >
-                                            <div className="cfg-step-header">
-                                                <span className="cfg-step-number">Step {step.step}:</span>
-                                                {step.rule && (
-                                                    <span className="cfg-step-rule">
-                                                        Applied: {step.rule.left} → {step.rule.right}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="cfg-step-string">
-                                                {step.string.split('').map((char, charIndex) => (
-                                                    <span
-                                                        key={charIndex}
-                                                        className={`cfg-char ${
-                                                            cfg.variables.includes(char) ? 'variable' : 'terminal'
-                                                        }`}
-                                                    >
-                                                        {char}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                            <div className="cfg-step-desc">{step.description}</div>
+                        {/* Derivation Steps and Parse Tree Side by Side */}
+                        <div className="cfg-visualization-container">
+                            <CollapsibleSection title="Derivation Steps" defaultOpen={true}>
+                                <div className="cfg-derivation-card">
+                                    {derivationSteps.length > 0 ? (
+                                        <div className="cfg-derivation-steps">
+                                            {derivationSteps.map((step, index) => (
+                                                <div
+                                                    key={index}
+                                                    className={`cfg-derivation-step ${
+                                                        index === currentStep ? 'current' :
+                                                        index < currentStep ? 'completed' : 'pending'
+                                                    }`}
+                                                >
+                                                    <div className="cfg-step-header">
+                                                        <span className="cfg-step-number">Step {step.step}:</span>
+                                                        {step.production && (
+                                                            <span className="cfg-step-rule">
+                                                                Applied: {step.production.left} → {step.production.right}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="cfg-step-string">
+                                                        {step.string.split('').map((char, charIndex) => (
+                                                            <span
+                                                                key={charIndex}
+                                                                className={`cfg-char ${
+                                                                    cfg.variables.includes(char) ? 'variable' : 'terminal'
+                                                                }`}
+                                                            >
+                                                                {char}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                    <div className="cfg-step-desc">{step.description}</div>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
+                                    ) : (
+                                        <div className="cfg-derivation-empty">
+                                            <p>Run a derivation to see the steps</p>
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                        )}
+                            </CollapsibleSection>
 
-                        {/* Parse Tree */}
-                        <div className="cfg-tree-card">
-                            <h3 className="cfg-card-title">Parse Tree</h3>
-                            <ParseTree 
-                                derivationSteps={derivationSteps}
-                                currentStep={currentStep}
-                            />
+                            <CollapsibleSection title="Parse Tree" defaultOpen={true}>
+                                <div className="cfg-tree-card">
+                                    <ParseTree 
+                                        derivationSteps={derivationSteps}
+                                        currentStep={currentStep}
+                                    />
+                                </div>
+                            </CollapsibleSection>
                         </div>
                     </div>
                 </div>
