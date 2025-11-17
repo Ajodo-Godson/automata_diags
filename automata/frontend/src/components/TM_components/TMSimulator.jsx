@@ -88,14 +88,38 @@ export default function TMSimulator() {
       input.click();
     };
 
+    const handleClearAll = () => {
+      // Reset to blank TM
+      setRules([]);
+      setAcceptState('qaccept');
+      setRejectState('qreject');
+      setBlankSymbol('□');
+      setStartState('q0');
+      setInitialInput('');
+      setCurrentExampleName(null);
+      setCurrentExampleDescription(null);
+      setMachineState({
+        tape: ['□', '□', '□', '□', '□', '□'],
+        headPosition: 0,
+        currentState: 'q0',
+        stepCount: 0,
+        isRunning: false,
+        isHalted: false,
+        haltReason: undefined
+      });
+      setActiveRuleId(null);
+    };
+
     window.addEventListener('export', handleExport);
     window.addEventListener('import', handleImport);
+    window.addEventListener('clearAll', handleClearAll);
 
     return () => {
       window.removeEventListener('export', handleExport);
       window.removeEventListener('import', handleImport);
+      window.removeEventListener('clearAll', handleClearAll);
     };
-  }, [rules, acceptState, rejectState, blankSymbol, initialInput]);
+  }, [rules, acceptState, rejectState, blankSymbol, initialInput, startState]);
 
   const executeStep = useCallback(() => {
     setMachineState(prev => {
