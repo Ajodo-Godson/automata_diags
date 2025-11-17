@@ -50,31 +50,182 @@ const PDASimulator = () => {
         setSimulationSteps([]);
         setCurrentStep(-1);
 
-        let steps = [];
+        // Non-deterministic simulation: explore all possible paths
+        // Use BFS to find an accepting path
+        const configurations = [{
+            state: pda.startState,
+            stack: [pda.startStackSymbol],
+            inputPosition: 0,
+            path: [{
+                state: pda.startState,
+                stack: [pda.startStackSymbol],
+                remainingInput: inputString,
+                inputPosition: 0,
+                description: `Start: state ${pda.startState}, stack [${pda.startStackSymbol}]`,
+                transition: null,
+                accepted: false
+            }]
+        }];
+
+        const visited = new Set();
+        const maxIterations = 10000;
+        let iterationCount = 0;
+
+        while (configurations.length > 0 && iterationCount < maxIterations) {
+            iterationCount++;
+            const config = configurations.shift();
+            const { state, stack, inputPosition, path } = config;
+            const topOfStack = stack[stack.length - 1];
+
+            // Create a unique key for this configuration
+            const configKey = `${state}|${stack.join(',')}|${inputPosition}`;
+            if (visited.has(configKey)) {
+                continue; // Skip if we've seen this configuration before
+            }
+            visited.add(configKey);
+
+            // Check if we can accept: at end of input, in accept state, stack only has start symbol
+            const stackIsEmpty = stack.length === 1 && stack[0] === pda.startStackSymbol;
+            if (inputPosition >= inputString.length && 
+                pda.acceptStates.has(state) && 
+                stackIsEmpty) {
+                // Found an accepting path!
+                path[path.length - 1].accepted = true;
+                path[path.length - 1].description += ' → ACCEPTED';
+                setSimulationSteps(path);
+                setCurrentStep(0);
+                return;
+            }
+
+            // Find all applicable transitions (both regular and epsilon)
+            const applicableTransitions = [];
+            
+            // Try regular input symbol (if not at end)
+            if (inputPosition < inputString.length) {
+                const inputSymbol = inputString[inputPosition];
+                for (const t of pda.transitions) {
+                    if (t.from === state && t.input === inputSymbol && t.pop === topOfStack) {
+                        applicableTransitions.push(t);
+                    }
+                }
+            }
+
+            // Try epsilon transitions (always available, especially important at end of input)
+            for (const t of pda.transitions) {
+                if (t.from === state && t.input === 'ε' && t.pop === topOfStack) {
+                    applicableTransitions.push(t);
+                }
+            }
+            
+            // If we're at end of input and no epsilon transition available, 
+            // check if we can accept in current state
+            if (inputPosition >= inputString.length && applicableTransitions.length === 0) {
+                const stackIsEmpty = stack.length === 1 && stack[0] === pda.startStackSymbol;
+                if (pda.acceptStates.has(state) && stackIsEmpty) {
+                    path[path.length - 1].accepted = true;
+                    path[path.length - 1].description += ' → ACCEPTED';
+                    setSimulationSteps(path);
+                    setCurrentStep(0);
+                    return;
+                }
+            }
+
+            // If no transitions available, this path rejects
+            if (applicableTransitions.length === 0) {
+                // This path cannot continue - mark as rejected if we haven't already
+                const lastStep = path[path.length - 1];
+                if (!lastStep.description.includes('REJECTED') && !lastStep.description.includes('ACCEPTED')) {
+                    lastStep.accepted = false;
+                    lastStep.description += ' → REJECTED (no transition available)';
+                }
+                continue;
+            }
+
+            // Explore all possible transitions (non-determinism)
+            for (const transition of applicableTransitions) {
+                const inputSymbol = transition.input;
+                const newState = transition.to;
+                const newStack = [...stack];
+                newStack.pop(); // Pop symbol
+
+                // Push symbols (in reverse order since stack is LIFO)
+                if (transition.push !== 'ε') {
+                    const pushSymbols = transition.push.split('').reverse();
+                    newStack.push(...pushSymbols);
+                }
+
+                const newInputPosition = inputSymbol !== 'ε' ? inputPosition + 1 : inputPosition;
+                const newRemainingInput = inputString.slice(newInputPosition);
+
+                const newPath = [...path, {
+                    state: newState,
+                    stack: [...newStack],
+                    remainingInput: newRemainingInput,
+                    inputPosition: newInputPosition,
+                    description: `Read '${inputSymbol}', popped '${topOfStack}', pushed '${transition.push}', moved to ${newState}`,
+                    transition: transition,
+                    accepted: false
+                }];
+
+                configurations.push({
+                    state: newState,
+                    stack: newStack,
+                    inputPosition: newInputPosition,
+                    path: newPath
+                });
+            }
+        }
+
+        // If we exhausted all paths without finding acceptance, mark as rejected
+        // Track all explored paths to find the longest one (most complete simulation)
+        const exploredPaths = [];
+        
+        // Collect paths from configurations that couldn't continue
+        for (const config of configurations) {
+            if (config.path.length > 0) {
+                exploredPaths.push(config.path);
+            }
+        }
+
+        // Also need to track paths that were marked as rejected
+        // We'll use a simple approach: track the path as we explore
+        // For now, let's use the deterministic path (first transition at each step)
+        // This gives us a complete simulation trace even if it rejects
+        
+        // Fallback: simulate deterministically to get a complete path
+        let finalPath = [{
+            state: pda.startState,
+            stack: [pda.startStackSymbol],
+            remainingInput: inputString,
+            inputPosition: 0,
+            description: `Start: state ${pda.startState}, stack [${pda.startStackSymbol}]`,
+            transition: null,
+            accepted: false
+        }];
+
         let currentState = pda.startState;
         let stack = [pda.startStackSymbol];
         let inputPosition = 0;
-        let maxIterations = 1000; // Prevent infinite loops
-        let iterationCount = 0;
+        let deterministicIterations = 0;
 
-        // Add initial step
-        steps.push({
-            state: currentState,
-            stack: [...stack],
-            remainingInput: inputString,
-            inputPosition: 0,
-            description: `Start: state ${currentState}, stack [${stack.join(', ')}]`,
-            transition: null,
-            accepted: false
-        });
-
-        while (inputPosition <= inputString.length && iterationCount < maxIterations) {
-            iterationCount++;
+        // Simulate deterministically (take first available transition)
+        while (inputPosition <= inputString.length && deterministicIterations < 1000) {
+            deterministicIterations++;
             const topOfStack = stack[stack.length - 1];
             
-            // Try regular input symbol first (if not at end)
+            // Find first applicable transition
             let applicableTransition = null;
-            if (inputPosition < inputString.length) {
+            
+            // If at end of input, only try epsilon transitions
+            if (inputPosition >= inputString.length) {
+                for (const t of pda.transitions) {
+                    if (t.from === currentState && t.input === 'ε' && t.pop === topOfStack) {
+                        applicableTransition = t;
+                        break;
+                    }
+                }
+            } else {
+                // Try regular input symbol first
                 const inputSymbol = inputString[inputPosition];
                 for (const t of pda.transitions) {
                     if (t.from === currentState && t.input === inputSymbol && t.pop === topOfStack) {
@@ -82,39 +233,26 @@ const PDASimulator = () => {
                         break;
                     }
                 }
-            }
-
-            // If no regular transition found, try epsilon transition
-            if (!applicableTransition) {
-                for (const t of pda.transitions) {
-                    if (t.from === currentState && t.input === 'ε' && t.pop === topOfStack) {
-                        applicableTransition = t;
-                        break;
+                
+                // Try epsilon transition if no regular transition
+                if (!applicableTransition) {
+                    for (const t of pda.transitions) {
+                        if (t.from === currentState && t.input === 'ε' && t.pop === topOfStack) {
+                            applicableTransition = t;
+                            break;
+                        }
                     }
                 }
             }
 
             if (!applicableTransition) {
-                // No transition found - check if we can accept
+                // No transition available - check if we can accept
                 const stackIsEmpty = stack.length === 1 && stack[0] === pda.startStackSymbol;
                 const accepted = inputPosition >= inputString.length && 
                                 pda.acceptStates.has(currentState) && 
                                 stackIsEmpty;
-                
-                if (steps.length > 0) {
-                    steps[steps.length - 1].accepted = accepted;
-                    steps[steps.length - 1].description += ` → ${accepted ? 'ACCEPTED' : 'REJECTED'}`;
-                } else {
-                    steps.push({
-                        state: currentState,
-                        stack: [...stack],
-                        remainingInput: inputString.slice(inputPosition),
-                        inputPosition: inputPosition,
-                        description: `No transition available → ${accepted ? 'ACCEPTED' : 'REJECTED'}`,
-                        transition: null,
-                        accepted: accepted
-                    });
-                }
+                finalPath[finalPath.length - 1].accepted = accepted;
+                finalPath[finalPath.length - 1].description += ` → ${accepted ? 'ACCEPTED' : 'REJECTED'}`;
                 break;
             }
 
@@ -122,9 +260,8 @@ const PDASimulator = () => {
             const inputSymbol = applicableTransition.input;
             const newState = applicableTransition.to;
             const newStack = [...stack];
-            newStack.pop(); // Pop symbol
+            newStack.pop();
 
-            // Push symbols (in reverse order since stack is LIFO)
             if (applicableTransition.push !== 'ε') {
                 const pushSymbols = applicableTransition.push.split('').reverse();
                 newStack.push(...pushSymbols);
@@ -133,7 +270,7 @@ const PDASimulator = () => {
             const newInputPosition = inputSymbol !== 'ε' ? inputPosition + 1 : inputPosition;
             const stackIsEmpty = newStack.length === 1 && newStack[0] === pda.startStackSymbol;
 
-            steps.push({
+            finalPath.push({
                 state: newState,
                 stack: [...newStack],
                 remainingInput: inputString.slice(newInputPosition),
@@ -147,32 +284,26 @@ const PDASimulator = () => {
             stack = newStack;
             inputPosition = newInputPosition;
 
-            // Check for acceptance: must be at end of input, in accept state, and stack only has start symbol
+            // Check acceptance
             if (inputPosition >= inputString.length && 
                 pda.acceptStates.has(currentState) && 
                 stackIsEmpty) {
-                steps[steps.length - 1].accepted = true;
-                steps[steps.length - 1].description += ' → ACCEPTED';
+                finalPath[finalPath.length - 1].accepted = true;
+                finalPath[finalPath.length - 1].description += ' → ACCEPTED';
                 break;
             }
         }
 
-        // If we exhausted iterations without accepting, mark as rejected
-        if (iterationCount >= maxIterations && steps.length > 0) {
-            steps[steps.length - 1].accepted = false;
-            steps[steps.length - 1].description += ' → REJECTED (max iterations reached)';
-        }
-
         // If we finished input but didn't accept, mark as rejected
-        if (inputPosition >= inputString.length && steps.length > 0 && !steps[steps.length - 1].accepted) {
-            const lastStep = steps[steps.length - 1];
+        if (inputPosition >= inputString.length && finalPath.length > 0 && !finalPath[finalPath.length - 1].accepted) {
+            const lastStep = finalPath[finalPath.length - 1];
             if (!lastStep.description.includes('REJECTED') && !lastStep.description.includes('ACCEPTED')) {
                 lastStep.accepted = false;
                 lastStep.description += ' → REJECTED';
             }
         }
 
-        setSimulationSteps(steps);
+        setSimulationSteps(finalPath);
         setCurrentStep(0);
     };
 

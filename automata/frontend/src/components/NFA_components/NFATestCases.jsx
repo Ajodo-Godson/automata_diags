@@ -18,6 +18,19 @@ export const NFATestCases = ({ nfa, onTestString, currentExample }) => {
       ];
     }
 
+    if (currentExample === 'contains_aa') {
+      return [
+        { input: 'aa', expected: 'Accept', shouldAccept: true },
+        { input: 'aab', expected: 'Accept', shouldAccept: true },
+        { input: 'baa', expected: 'Accept', shouldAccept: true },
+        { input: 'baab', expected: 'Accept', shouldAccept: true },
+        { input: 'a', expected: 'Reject', shouldAccept: false },
+        { input: 'b', expected: 'Reject', shouldAccept: false },
+        { input: 'ab', expected: 'Reject', shouldAccept: false },
+        { input: 'aba', expected: 'Reject', shouldAccept: false },
+      ];
+    }
+
     if (currentExample === 'epsilon_nfa') {
       return [
         { input: '', expected: 'Accept (via ε)', shouldAccept: true },
@@ -27,12 +40,80 @@ export const NFATestCases = ({ nfa, onTestString, currentExample }) => {
       ];
     }
 
-    if (currentExample === 'or_nfa') {
+    if (currentExample === 'starts_with_a') {
+      return [
+        { input: 'a', expected: 'Accept', shouldAccept: true },
+        { input: 'ab', expected: 'Accept', shouldAccept: true },
+        { input: 'aa', expected: 'Accept', shouldAccept: true },
+        { input: 'abb', expected: 'Accept', shouldAccept: true },
+        { input: 'b', expected: 'Reject', shouldAccept: false },
+        { input: 'ba', expected: 'Reject', shouldAccept: false },
+        { input: '', expected: 'Reject', shouldAccept: false },
+      ];
+    }
+
+    if (currentExample === 'contains_ab_or_ba') {
+      return [
+        { input: 'ab', expected: 'Accept', shouldAccept: true },
+        { input: 'ba', expected: 'Accept', shouldAccept: true },
+        { input: 'aab', expected: 'Accept', shouldAccept: true },
+        { input: 'bba', expected: 'Accept', shouldAccept: true },
+        { input: 'aa', expected: 'Reject', shouldAccept: false },
+        { input: 'bb', expected: 'Reject', shouldAccept: false },
+        { input: 'a', expected: 'Reject', shouldAccept: false },
+        { input: 'b', expected: 'Reject', shouldAccept: false },
+      ];
+    }
+
+    if (currentExample === 'a_then_b') {
+      return [
+        { input: 'ab', expected: 'Accept', shouldAccept: true },
+        { input: 'aab', expected: 'Accept', shouldAccept: true },
+        { input: 'abb', expected: 'Accept', shouldAccept: true },
+        { input: 'aabb', expected: 'Accept', shouldAccept: true },
+        { input: 'a', expected: 'Reject', shouldAccept: false },
+        { input: 'b', expected: 'Reject', shouldAccept: false },
+        { input: 'ba', expected: 'Reject', shouldAccept: false },
+        { input: 'aa', expected: 'Reject', shouldAccept: false },
+      ];
+    }
+
+    if (currentExample === 'third_symbol_a') {
+      return [
+        { input: 'aba', expected: 'Accept', shouldAccept: true },
+        { input: 'bba', expected: 'Accept', shouldAccept: true },
+        { input: 'aab', expected: 'Accept', shouldAccept: true },
+        { input: 'baa', expected: 'Accept', shouldAccept: true },
+        { input: 'ab', expected: 'Reject', shouldAccept: false },
+        { input: 'bb', expected: 'Reject', shouldAccept: false },
+        { input: 'a', expected: 'Reject', shouldAccept: false },
+        { input: 'b', expected: 'Reject', shouldAccept: false },
+      ];
+    }
+
+    if (currentExample === 'ends_with_aa_or_bb') {
       return [
         { input: 'aa', expected: 'Accept', shouldAccept: true },
         { input: 'bb', expected: 'Accept', shouldAccept: true },
-        { input: 'aab', expected: 'Reject', shouldAccept: false },
-        { input: 'bba', expected: 'Reject', shouldAccept: false },
+        { input: 'baa', expected: 'Accept', shouldAccept: true },
+        { input: 'abb', expected: 'Accept', shouldAccept: true },
+        { input: 'ab', expected: 'Reject', shouldAccept: false },
+        { input: 'ba', expected: 'Reject', shouldAccept: false },
+        { input: 'a', expected: 'Reject', shouldAccept: false },
+        { input: 'b', expected: 'Reject', shouldAccept: false },
+      ];
+    }
+
+    if (currentExample === 'odd_length') {
+      return [
+        { input: 'a', expected: 'Accept', shouldAccept: true },
+        { input: 'b', expected: 'Accept', shouldAccept: true },
+        { input: 'aba', expected: 'Accept', shouldAccept: true },
+        { input: 'bbb', expected: 'Accept', shouldAccept: true },
+        { input: '', expected: 'Reject', shouldAccept: false },
+        { input: 'ab', expected: 'Reject', shouldAccept: false },
+        { input: 'aa', expected: 'Reject', shouldAccept: false },
+        { input: 'abab', expected: 'Reject', shouldAccept: false },
       ];
     }
 

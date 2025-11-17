@@ -50,6 +50,72 @@ export function DFATestCases({ onLoadTest, currentExample }) {
         { input: '100', expected: 'Reject (4)', shouldAccept: false },
         { input: '101', expected: 'Reject (5)', shouldAccept: false },
       ];
+    } else if (currentExample === "starts_with_ab") {
+      return [
+        { input: 'ab', expected: 'Accept', shouldAccept: true },
+        { input: 'aba', expected: 'Accept', shouldAccept: true },
+        { input: 'abb', expected: 'Accept', shouldAccept: true },
+        { input: 'abab', expected: 'Accept', shouldAccept: true },
+        { input: 'a', expected: 'Reject', shouldAccept: false },
+        { input: 'b', expected: 'Reject', shouldAccept: false },
+        { input: 'ba', expected: 'Reject', shouldAccept: false },
+        { input: 'aa', expected: 'Reject', shouldAccept: false },
+      ];
+    } else if (currentExample === "contains_aba") {
+      return [
+        { input: 'aba', expected: 'Accept', shouldAccept: true },
+        { input: 'abab', expected: 'Accept', shouldAccept: true },
+        { input: 'babab', expected: 'Accept', shouldAccept: true },
+        { input: 'aaba', expected: 'Accept', shouldAccept: true },
+        { input: 'ab', expected: 'Reject', shouldAccept: false },
+        { input: 'ba', expected: 'Reject', shouldAccept: false },
+        { input: 'aa', expected: 'Reject', shouldAccept: false },
+        { input: 'bb', expected: 'Reject', shouldAccept: false },
+      ];
+    } else if (currentExample === "at_least_two_as") {
+      return [
+        { input: 'aa', expected: 'Accept', shouldAccept: true },
+        { input: 'aaa', expected: 'Accept', shouldAccept: true },
+        { input: 'aab', expected: 'Accept', shouldAccept: true },
+        { input: 'baab', expected: 'Accept', shouldAccept: true },
+        { input: 'a', expected: 'Reject', shouldAccept: false },
+        { input: 'b', expected: 'Reject', shouldAccept: false },
+        { input: 'ab', expected: 'Reject', shouldAccept: false },
+        { input: 'ba', expected: 'Reject', shouldAccept: false },
+      ];
+    } else if (currentExample === "even_parity") {
+      return [
+        { input: '', expected: 'Accept', shouldAccept: true },
+        { input: '00', expected: 'Accept', shouldAccept: true },
+        { input: '11', expected: 'Accept', shouldAccept: true },
+        { input: '1010', expected: 'Accept', shouldAccept: true },
+        { input: '1', expected: 'Reject', shouldAccept: false },
+        { input: '10', expected: 'Reject', shouldAccept: false },
+        { input: '101', expected: 'Reject', shouldAccept: false },
+        { input: '111', expected: 'Reject', shouldAccept: false },
+      ];
+    } else if (currentExample === "no_consecutive_as") {
+      return [
+        { input: '', expected: 'Accept', shouldAccept: true },
+        { input: 'a', expected: 'Accept', shouldAccept: true },
+        { input: 'b', expected: 'Accept', shouldAccept: true },
+        { input: 'abab', expected: 'Accept', shouldAccept: true },
+        { input: 'aa', expected: 'Reject', shouldAccept: false },
+        { input: 'baa', expected: 'Reject', shouldAccept: false },
+        { input: 'aab', expected: 'Reject', shouldAccept: false },
+        { input: 'baab', expected: 'Reject', shouldAccept: false },
+      ];
+    } else if (currentExample === "exactly_two_as") {
+      return [
+        { input: 'aa', expected: 'Accept', shouldAccept: true },
+        { input: 'aab', expected: 'Accept', shouldAccept: true },
+        { input: 'baab', expected: 'Accept', shouldAccept: true },
+        { input: 'abab', expected: 'Accept', shouldAccept: true },
+        { input: 'a', expected: 'Reject', shouldAccept: false },
+        { input: 'aaa', expected: 'Reject', shouldAccept: false },
+        { input: 'b', expected: 'Reject', shouldAccept: false },
+        { input: 'ab', expected: 'Reject', shouldAccept: false },
+      ];
     }
     return [];
   };

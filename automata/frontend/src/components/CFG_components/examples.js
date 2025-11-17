@@ -49,6 +49,92 @@ export const useExamples = () => {
                 { left: 'B', right: 'b' }
             ],
             startVariable: 'S'
+        },
+        an_bn: {
+            name: 'a^n b^n',
+            description: 'Generates strings with equal number of a\'s followed by equal number of b\'s',
+            variables: ['S'],
+            terminals: ['a', 'b'],
+            rules: [
+                { left: 'S', right: 'ε' },
+                { left: 'S', right: 'aSb' }
+            ],
+            startVariable: 'S'
+        },
+        palindrome: {
+            name: 'Palindrome',
+            description: 'Generates palindromes over {a,b}',
+            variables: ['S'],
+            terminals: ['a', 'b'],
+            rules: [
+                { left: 'S', right: 'ε' },
+                { left: 'S', right: 'a' },
+                { left: 'S', right: 'b' },
+                { left: 'S', right: 'aSa' },
+                { left: 'S', right: 'bSb' }
+            ],
+            startVariable: 'S'
+        },
+        arithmetic_with_subtraction: {
+            name: 'Arithmetic with Subtraction',
+            description: 'Generates arithmetic expressions with +, -, and *',
+            variables: ['E', 'R', 'T', 'S', 'F'],
+            terminals: ['+', '-', '*', '(', ')', 'a'],
+            rules: [
+                { left: 'E', right: 'TR' },
+                { left: 'R', right: '+TR' },
+                { left: 'R', right: '-TR' },
+                { left: 'R', right: 'ε' },
+                { left: 'T', right: 'FS' },
+                { left: 'S', right: '*FS' },
+                { left: 'S', right: 'ε' },
+                { left: 'F', right: '(E)' },
+                { left: 'F', right: 'a' }
+            ],
+            startVariable: 'E'
+        },
+        if_then_else: {
+            name: 'Simple If-Then-Else',
+            description: 'Generates simple if-then-else statements',
+            variables: ['S', 'C', 'E'],
+            terminals: ['if', 'then', 'else', 'a', 'b'],
+            rules: [
+                { left: 'S', right: 'ifCthenSelseS' },
+                { left: 'S', right: 'a' },
+                { left: 'S', right: 'b' },
+                { left: 'C', right: 'a' },
+                { left: 'C', right: 'b' }
+            ],
+            startVariable: 'S'
+        },
+        double_letters: {
+            name: 'Double Letters',
+            description: 'Generates strings where each letter appears twice consecutively',
+            variables: ['S'],
+            terminals: ['a', 'b'],
+            rules: [
+                { left: 'S', right: 'ε' },
+                { left: 'S', right: 'aaS' },
+                { left: 'S', right: 'bbS' },
+                { left: 'S', right: 'aa' },
+                { left: 'S', right: 'bb' }
+            ],
+            startVariable: 'S'
+        },
+        ww: {
+            name: 'ww (Copy)',
+            description: 'Generates strings of the form ww (string followed by itself)',
+            variables: ['S', 'A', 'B'],
+            terminals: ['a', 'b'],
+            rules: [
+                { left: 'S', right: 'AA' },
+                { left: 'S', right: 'BB' },
+                { left: 'S', right: 'aSa' },
+                { left: 'S', right: 'bSb' },
+                { left: 'A', right: 'a' },
+                { left: 'B', right: 'b' }
+            ],
+            startVariable: 'S'
         }
     });
 

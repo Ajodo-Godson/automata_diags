@@ -85,6 +85,150 @@ export function ExampleTestCases({ onLoadExample, currentExample }) {
           shouldAccept: false,
         },
       ];
+    } else if (currentExample === 'Busy Beaver (3-state)') {
+      return [
+        {
+          input: '',
+          description: 'Empty tape',
+          expected: 'Runs indefinitely',
+          shouldAccept: true,
+        },
+      ];
+    } else if (currentExample === 'Copy Machine') {
+      return [
+        {
+          input: '0',
+          description: 'Copy single 0',
+          expected: 'Accept → 00',
+          shouldAccept: true,
+        },
+        {
+          input: '1',
+          description: 'Copy single 1',
+          expected: 'Accept → 11',
+          shouldAccept: true,
+        },
+        {
+          input: '101',
+          description: 'Copy 101',
+          expected: 'Accept → 101101',
+          shouldAccept: true,
+        },
+        {
+          input: '10',
+          description: 'Copy 10',
+          expected: 'Accept → 1010',
+          shouldAccept: true,
+        },
+      ];
+    } else if (currentExample === 'Unary Addition') {
+      return [
+        {
+          input: '1+1',
+          description: '1 + 1',
+          expected: 'Accept → 11',
+          shouldAccept: true,
+        },
+        {
+          input: '111+11',
+          description: '3 + 2',
+          expected: 'Accept → 11111',
+          shouldAccept: true,
+        },
+        {
+          input: '11+111',
+          description: '2 + 3',
+          expected: 'Accept → 11111',
+          shouldAccept: true,
+        },
+        {
+          input: '1+',
+          description: 'Incomplete',
+          expected: 'May reject',
+          shouldAccept: false,
+        },
+      ];
+    } else if (currentExample === 'Binary Subtraction') {
+      return [
+        {
+          input: '10-1',
+          description: '2 - 1',
+          expected: 'Accept',
+          shouldAccept: true,
+        },
+        {
+          input: '11-1',
+          description: '3 - 1',
+          expected: 'Accept',
+          shouldAccept: true,
+        },
+        {
+          input: '101-10',
+          description: '5 - 2',
+          expected: 'Accept',
+          shouldAccept: true,
+        },
+        {
+          input: '1-1',
+          description: '1 - 1',
+          expected: 'Accept',
+          shouldAccept: true,
+        },
+      ];
+    } else if (currentExample === 'String Reversal') {
+      return [
+        {
+          input: 'a',
+          description: 'Single a',
+          expected: 'Accept → a',
+          shouldAccept: true,
+        },
+        {
+          input: 'ab',
+          description: 'Reverse ab',
+          expected: 'Accept → ba',
+          shouldAccept: true,
+        },
+        {
+          input: 'abc',
+          description: 'Reverse abc',
+          expected: 'Accept → cba',
+          shouldAccept: true,
+        },
+        {
+          input: 'ba',
+          description: 'Reverse ba',
+          expected: 'Accept → ab',
+          shouldAccept: true,
+        },
+      ];
+    } else if (currentExample === 'Unary Multiplication') {
+      return [
+        {
+          input: '1*1',
+          description: '1 × 1',
+          expected: 'Accept → 1',
+          shouldAccept: true,
+        },
+        {
+          input: '11*1',
+          description: '2 × 1',
+          expected: 'Accept → 11',
+          shouldAccept: true,
+        },
+        {
+          input: '1*11',
+          description: '1 × 2',
+          expected: 'Accept → 11',
+          shouldAccept: true,
+        },
+        {
+          input: '11*11',
+          description: '2 × 2',
+          expected: 'Accept → 1111',
+          shouldAccept: true,
+        },
+      ];
     }
     return [];
   };
