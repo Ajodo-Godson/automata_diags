@@ -54,29 +54,72 @@ const PDASimulator = () => {
         let currentState = pda.startState;
         let stack = [pda.startStackSymbol];
         let inputPosition = 0;
+        let maxIterations = 1000; // Prevent infinite loops
+        let iterationCount = 0;
 
-        while (inputPosition <= inputString.length) {
-            const inputSymbol = inputPosition < inputString.length ? inputString[inputPosition] : 'ε';
+        // Add initial step
+        steps.push({
+            state: currentState,
+            stack: [...stack],
+            remainingInput: inputString,
+            inputPosition: 0,
+            description: `Start: state ${currentState}, stack [${stack.join(', ')}]`,
+            transition: null,
+            accepted: false
+        });
+
+        while (inputPosition <= inputString.length && iterationCount < maxIterations) {
+            iterationCount++;
             const topOfStack = stack[stack.length - 1];
-
-            // Find applicable transition
+            
+            // Try regular input symbol first (if not at end)
             let applicableTransition = null;
-            for (const t of pda.transitions) {
-                if (t.from === currentState && t.input === inputSymbol && t.pop === topOfStack) {
-                    applicableTransition = t;
-                    break;
+            if (inputPosition < inputString.length) {
+                const inputSymbol = inputString[inputPosition];
+                for (const t of pda.transitions) {
+                    if (t.from === currentState && t.input === inputSymbol && t.pop === topOfStack) {
+                        applicableTransition = t;
+                        break;
+                    }
+                }
+            }
+
+            // If no regular transition found, try epsilon transition
+            if (!applicableTransition) {
+                for (const t of pda.transitions) {
+                    if (t.from === currentState && t.input === 'ε' && t.pop === topOfStack) {
+                        applicableTransition = t;
+                        break;
+                    }
                 }
             }
 
             if (!applicableTransition) {
-                // No transition found
-                const accepted = pda.acceptStates.has(currentState) && stack.length === 1 && stack[0] === pda.startStackSymbol;
-                steps[steps.length - 1].accepted = accepted;
-                steps[steps.length - 1].description += ` → ${accepted ? 'ACCEPTED' : 'REJECTED'}`;
+                // No transition found - check if we can accept
+                const stackIsEmpty = stack.length === 1 && stack[0] === pda.startStackSymbol;
+                const accepted = inputPosition >= inputString.length && 
+                                pda.acceptStates.has(currentState) && 
+                                stackIsEmpty;
+                
+                if (steps.length > 0) {
+                    steps[steps.length - 1].accepted = accepted;
+                    steps[steps.length - 1].description += ` → ${accepted ? 'ACCEPTED' : 'REJECTED'}`;
+                } else {
+                    steps.push({
+                        state: currentState,
+                        stack: [...stack],
+                        remainingInput: inputString.slice(inputPosition),
+                        inputPosition: inputPosition,
+                        description: `No transition available → ${accepted ? 'ACCEPTED' : 'REJECTED'}`,
+                        transition: null,
+                        accepted: accepted
+                    });
+                }
                 break;
             }
 
             // Apply transition
+            const inputSymbol = applicableTransition.input;
             const newState = applicableTransition.to;
             const newStack = [...stack];
             newStack.pop(); // Pop symbol
@@ -88,6 +131,7 @@ const PDASimulator = () => {
             }
 
             const newInputPosition = inputSymbol !== 'ε' ? inputPosition + 1 : inputPosition;
+            const stackIsEmpty = newStack.length === 1 && newStack[0] === pda.startStackSymbol;
 
             steps.push({
                 state: newState,
@@ -103,11 +147,28 @@ const PDASimulator = () => {
             stack = newStack;
             inputPosition = newInputPosition;
 
-            // Check for acceptance by empty stack and final state
-            if (inputPosition >= inputString.length && pda.acceptStates.has(currentState)) {
+            // Check for acceptance: must be at end of input, in accept state, and stack only has start symbol
+            if (inputPosition >= inputString.length && 
+                pda.acceptStates.has(currentState) && 
+                stackIsEmpty) {
                 steps[steps.length - 1].accepted = true;
                 steps[steps.length - 1].description += ' → ACCEPTED';
                 break;
+            }
+        }
+
+        // If we exhausted iterations without accepting, mark as rejected
+        if (iterationCount >= maxIterations && steps.length > 0) {
+            steps[steps.length - 1].accepted = false;
+            steps[steps.length - 1].description += ' → REJECTED (max iterations reached)';
+        }
+
+        // If we finished input but didn't accept, mark as rejected
+        if (inputPosition >= inputString.length && steps.length > 0 && !steps[steps.length - 1].accepted) {
+            const lastStep = steps[steps.length - 1];
+            if (!lastStep.description.includes('REJECTED') && !lastStep.description.includes('ACCEPTED')) {
+                lastStep.accepted = false;
+                lastStep.description += ' → REJECTED';
             }
         }
 
@@ -250,25 +311,20 @@ const PDASimulator = () => {
                     </p>
                 </div>
 
-                {/* Example Selector - Dropdown */}
+                {/* Example Selector */}
                 <div className="pda-example-selector">
-                    <label className="pda-selector-label">Quick Load Example:</label>
-                    <select 
-                        onChange={(e) => {
-                            if (e.target.value) {
-                                loadExample(e.target.value);
-                            }
-                        }}
-                        value={currentExampleName || ''}
-                        className="pda-example-dropdown"
-                    >
-                        <option value="">-- Select an example --</option>
+                    <label className="pda-selector-label">Load Example:</label>
+                    <div className="pda-selector-buttons">
                         {Object.entries(examples).map(([key, example]) => (
-                            <option key={key} value={key}>
+                            <button
+                                key={key}
+                                onClick={() => loadExample(key)}
+                                className={`pda-selector-btn ${currentExampleName === key ? 'active' : ''}`}
+                            >
                                 {example.name}
-                            </option>
+                            </button>
                         ))}
-                    </select>
+                    </div>
                 </div>
 
                 {/* Main Grid */}

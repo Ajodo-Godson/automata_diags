@@ -316,29 +316,20 @@ const NFASimulator = () => {
                     </p>
                 </div>
 
+                {/* Example Selector */}
                 <div className="nfa-example-selector">
-                    <label className="nfa-selector-label">Quick Load Example:</label>
-                    <select 
-                        onChange={(e) => {
-                            if (e.target.value) {
-                                loadExample(e.target.value);
-                            }
-                        }}
-                        value={currentExampleName || ''}
-                        className="nfa-example-dropdown"
-                    >
-                        <option value="">-- Select an example --</option>
-                        {Object.keys(examples).map(name => (
-                            <option key={name} value={name}>
-                                {examples[name].name}
-                            </option>
+                    <label className="nfa-selector-label">Load Example:</label>
+                    <div className="nfa-selector-buttons">
+                        {Object.entries(examples).map(([key, example]) => (
+                            <button
+                                key={key}
+                                onClick={() => loadExample(key)}
+                                className={`nfa-selector-btn ${currentExampleName === key ? 'active' : ''}`}
+                            >
+                                {example.name}
+                            </button>
                         ))}
-                    </select>
-                    {currentExampleName && (
-                        <span className="nfa-current-example">
-                            Current: {examples[currentExampleName]?.name || currentExampleName || 'Custom'}
-                        </span>
-                    )}
+                    </div>
                 </div>
 
                 {/* Main Grid - Same layout as DFA */}

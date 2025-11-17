@@ -230,25 +230,20 @@ const DFASimulatorNew = () => {
                     </p>
                 </div>
 
-                {/* Example Selector - Dropdown */}
+                {/* Example Selector */}
                 <div className="dfa-example-selector">
-                    <label className="dfa-selector-label">Quick Load Example:</label>
-                    <select 
-                        onChange={(e) => {
-                            if (e.target.value) {
-                                loadExample(e.target.value);
-                            }
-                        }}
-                        value={currentExampleName || ''}
-                        className="dfa-example-dropdown"
-                    >
-                        <option value="">-- Select an example --</option>
+                    <label className="dfa-selector-label">Load Example:</label>
+                    <div className="dfa-selector-buttons">
                         {Object.entries(examples).map(([key, example]) => (
-                            <option key={key} value={key}>
+                            <button
+                                key={key}
+                                onClick={() => loadExample(key)}
+                                className={`dfa-selector-btn ${currentExampleName === key ? 'active' : ''}`}
+                            >
                                 {example.name}
-                            </option>
+                            </button>
                         ))}
-                    </select>
+                    </div>
                 </div>
 
                 {/* Main Grid */}

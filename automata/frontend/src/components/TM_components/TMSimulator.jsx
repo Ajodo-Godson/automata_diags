@@ -276,23 +276,18 @@ export default function TMSimulator() {
 
         {/* Example Selector */}
         <div className="example-selector">
-          <label className="selector-label">Quick Load Example:</label>
-          <select
-            onChange={(e) => {
-              if (e.target.value) {
-                loadPresetExample(e.target.value);
-              }
-            }}
-            value={currentExampleName || ''}
-            className="example-dropdown"
-          >
-            <option value="">-- Select an example --</option>
+          <label className="selector-label">Load Example:</label>
+          <div className="selector-buttons">
             {Object.entries(examples).map(([key, example]) => (
-              <option key={key} value={key}>
+              <button
+                key={key}
+                onClick={() => loadPresetExample(key)}
+                className={`selector-btn ${currentExampleName === key ? 'active' : ''}`}
+              >
                 {key}
-              </option>
+              </button>
             ))}
-          </select>
+          </div>
         </div>
 
         {/* Main Layout */}

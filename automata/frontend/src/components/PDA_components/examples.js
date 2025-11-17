@@ -19,19 +19,26 @@ export const useExamples = () => {
         },
         equal_as_bs: {
             name: 'Equal a\'s and b\'s',
-            states: ['q0', 'q1', 'q2'],
+            states: ['q0', 'q1'],
             alphabet: ['a', 'b'],
-            stackAlphabet: ['Z', 'A'],
+            stackAlphabet: ['Z', 'A', 'B'],
             transitions: [
+                // Push A when we see 'a' (tracking excess a's)
                 { from: 'q0', input: 'a', pop: 'Z', to: 'q0', push: 'AZ' },
                 { from: 'q0', input: 'a', pop: 'A', to: 'q0', push: 'AA' },
-                { from: 'q0', input: 'b', pop: 'A', to: 'q1', push: 'ε' },
-                { from: 'q1', input: 'b', pop: 'A', to: 'q1', push: 'ε' },
-                { from: 'q1', input: 'ε', pop: 'Z', to: 'q2', push: 'Z' }
+                { from: 'q0', input: 'a', pop: 'B', to: 'q0', push: 'ε' }, // Cancel out excess b's
+                
+                // Push B when we see 'b' (tracking excess b's)
+                { from: 'q0', input: 'b', pop: 'Z', to: 'q0', push: 'BZ' },
+                { from: 'q0', input: 'b', pop: 'B', to: 'q0', push: 'BB' },
+                { from: 'q0', input: 'b', pop: 'A', to: 'q0', push: 'ε' }, // Cancel out excess a's
+                
+                // Epsilon transition to accept state when stack only has Z
+                { from: 'q0', input: 'ε', pop: 'Z', to: 'q1', push: 'Z' }
             ],
             startState: 'q0',
             startStackSymbol: 'Z',
-            acceptStates: ['q2']
+            acceptStates: ['q1']
         }
     });
 
