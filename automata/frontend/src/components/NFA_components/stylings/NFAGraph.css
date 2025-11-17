@@ -11,8 +11,8 @@
     width: 70px;
     height: 70px;
     border-radius: 50%;
-    background: #faf5ff;
-    border: 3px solid #8b5cf6;
+    background: #f3f4f6; /* Gray background for non-start states */
+    border: 3px solid #9ca3af; /* Gray border for non-start states */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -21,6 +21,12 @@
     font-size: 18px;
     transition: all 0.3s ease;
     z-index: 1;
+}
+
+/* Start state: Purple (matching reference image) */
+.nfa-start-state {
+    background: #faf5ff;
+    border: 3px solid #8b5cf6;
 }
 
 .state-delete-btn {
@@ -54,32 +60,45 @@
     user-select: none;
 }
 
+/* Accepting States: MUST be double concentric circles */
 .nfa-accept-state {
+    border: 3px solid #9ca3af; /* Gray border (unless it's also start state) */
+    background: #f3f4f6; /* Gray background (unless it's also start state) */
+    position: relative;
+}
+
+/* Accepting state that is also start state keeps purple */
+.nfa-accept-state.nfa-start-state {
     border: 3px solid #8b5cf6;
     background: #faf5ff;
 }
 
+/* Outer circle for accepting states - gray (matching reference) */
 .nfa-accept-state::after {
     content: '';
     position: absolute;
-    top: -8px;
-    left: -8px;
-    right: -8px;
-    bottom: -8px;
-    border: 3px solid #8b5cf6;
+    top: -6px;
+    left: -6px;
+    right: -6px;
+    bottom: -6px;
+    border: 3px solid #9ca3af; /* Gray outer circle */
     border-radius: 50%;
-    transition: all 0.3s ease;
     background: transparent;
+    z-index: -1;
 }
 
-.nfa-start-state::before {
-    content: '→';
-    position: absolute;
-    left: -35px;
-    font-size: 30px;
-    color: #000000;
-    transition: all 0.3s ease;
+/* Accepting state that is also start state - purple outer circle */
+.nfa-accept-state.nfa-start-state::after {
+    border: 3px solid #8b5cf6;
 }
+
+/* Hide start state hidden node completely */
+.nfa-state-node[style*="opacity: 0"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Start state indicator removed - will use edge from nowhere instead */
 
 .nfa-current-state {
     background: #fae8ff;
@@ -105,14 +124,10 @@
     transition: stroke 0.3s ease, stroke-width 0.3s ease, opacity 0.3s ease;
 }
 
-.nfa-graph-container .react-flow__edge.react-flow__edge-smoothstep .react-flow__edge-path,
-.nfa-graph-container .react-flow__edge.react-flow__edge-bezier .react-flow__edge-path {
+/* Smoothstep edge styling for curved, flexible arrows */
+.nfa-graph-container .react-flow__edge.react-flow__edge-smoothstep .react-flow__edge-path {
     stroke-linecap: round;
     stroke-linejoin: round;
-}
-
-/* Bezier edge styling for smooth curves */
-.nfa-graph-container .react-flow__edge.react-flow__edge-bezier .react-flow__edge-path {
     fill: none;
     transition: stroke 0.3s ease, stroke-width 0.3s ease, opacity 0.3s ease;
 }
@@ -257,24 +272,70 @@
     right: 0;
 }
 
-/* Self-loop styling - now using bezier for curved loops */
-.nfa-graph-container .react-flow__edge.react-flow__edge-bezier path {
+/* Self-loop styling - ensure curved loops are visible */
+.nfa-graph-container .react-flow__edge.react-flow__edge-smoothstep path,
+.nfa-graph-container .react-flow__edge.react-flow__edge-default path {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
 
-/* Ensure self-loops are positioned nicely and don't overlap nodes */
-.nfa-graph-container .react-flow__edge.react-flow__edge-bezier {
-    z-index: 0;
+/* Ensure self-loops are visible and positioned above nodes */
+.nfa-graph-container .react-flow__edge.react-flow__edge-smoothstep {
+    z-index: 1;
 }
 
-/* Make self-loop arrowheads appropriately sized */
-.nfa-graph-container .react-flow__edge-bezier .react-flow__arrowhead {
+.nfa-graph-container .react-flow__edge.react-flow__edge-default {
+    z-index: 1;
+}
+
+/* Make self-loop arrowheads visible and appropriately sized */
+.nfa-graph-container .react-flow__edge-smoothstep .react-flow__arrowhead,
+.nfa-graph-container .react-flow__edge-default .react-flow__arrowhead {
     transition: transform 0.2s ease;
+    opacity: 1 !important;
+}
+
+/* Ensure self-loop paths are visible */
+.nfa-graph-container .react-flow__edge-smoothstep .react-flow__edge-path,
+.nfa-graph-container .react-flow__edge-default .react-flow__edge-path {
+    stroke-width: 2.5 !important;
+    opacity: 1 !important;
+    fill: none;
+}
+
+/* Ensure self-loops are visible - force stroke color and ensure visibility */
+.nfa-graph-container .react-flow__edge.react-flow__edge-smoothstep .react-flow__edge-path {
+    stroke: #8b5cf6 !important;
+    stroke-width: 2.5 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
 }
 
 /* All transitions have consistent styling */
 .nfa-graph-container .react-flow__edge path {
     stroke-width: 2;
+}
+
+/* Remove white backgrounds from edge labels */
+.nfa-graph-container .react-flow__edge-textbg {
+    fill: transparent !important;
+    fill-opacity: 0 !important;
+    display: none !important;
+}
+
+.nfa-graph-container .react-flow__edge-text {
+    fill: #1f2937 !important;
+    font-weight: 600;
+}
+
+/* Position labels above the arrow lines */
+.nfa-graph-container .react-flow__edge-text {
+    transform: translateY(-15px) !important; /* Move labels above the line */
+}
+
+/* For self-loops, position label even higher */
+.nfa-graph-container .react-flow__edge.react-flow__edge-smoothstep .react-flow__edge-text {
+    transform: translateY(-20px) !important; /* Higher for self-loops */
 }
 
