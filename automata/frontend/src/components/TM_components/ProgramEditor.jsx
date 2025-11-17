@@ -84,7 +84,7 @@ export function ProgramEditor({ rules, activeRuleId, onRulesChange }) {
     <div className="program-editor-card">
       <div className="editor-header">
         <div>
-          <h3 className="tm-card-title">⚙️ Transition Rules</h3>
+          <h3 className="tm-card-title"> Transition Rules</h3>
           <p className="editor-subtitle">Define the machine's behavior</p>
         </div>
         <button

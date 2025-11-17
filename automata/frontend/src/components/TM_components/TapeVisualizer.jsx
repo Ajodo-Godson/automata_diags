@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import './stylings/TapeVisualizer.css';
 
-export function TapeVisualizer({ tape, headPosition, currentState, initialInput, onInitialInputChange }) {
+export function TapeVisualizer({ tape, headPosition, currentState, initialInput, onInitialInputChange, isHalted, haltReason }) {
   const scrollContainerRef = useRef(null);
 
   // Auto-scroll to keep the head in view
@@ -18,6 +18,13 @@ export function TapeVisualizer({ tape, headPosition, currentState, initialInput,
       });
     }
   }, [headPosition]);
+
+  // Extract output from tape (non-blank symbols)
+  const getTapeOutput = () => {
+    return tape.filter(s => s !== '□' && s !== '').join('');
+  };
+
+  const tapeOutput = getTapeOutput();
 
   return (
     <div className="tape-visualizer-card">
@@ -68,6 +75,32 @@ export function TapeVisualizer({ tape, headPosition, currentState, initialInput,
           Scroll to view more of the tape • Head Position: {headPosition}
         </div>
       </div>
+
+      {/* Output Display */}
+      {isHalted && (
+        <div className={`output-section ${haltReason === 'accept' ? 'output-accepted' : 'output-rejected'}`}>
+          <h4 className="output-title">
+            {haltReason === 'accept' ? '✓ Computation Complete' : '✗ Computation Failed'}
+          </h4>
+          <div className="output-content">
+            <div className="output-row">
+              <span className="output-label">Input:</span>
+              <span className="output-value">{initialInput || '(empty)'}</span>
+            </div>
+            {haltReason === 'accept' && (
+              <div className="output-row">
+                <span className="output-label">Output on Tape:</span>
+                <span className="output-value tape-output">{tapeOutput}</span>
+              </div>
+            )}
+            <div className="output-help">
+              {haltReason === 'accept' 
+                ? 'The result is written on the tape above. Look at the tape cells to see the output.'
+                : 'The computation halted without completing. Check the tape and program rules.'}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

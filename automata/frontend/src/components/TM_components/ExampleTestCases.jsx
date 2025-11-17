@@ -4,7 +4,16 @@ import './stylings/ExampleTestCases.css';
 
 export function ExampleTestCases({ onLoadExample, currentExample }) {
   const getExamples = () => {
-    if (currentExample === 'Binary Incrementer') {
+    if (currentExample === 'Test: Write 3 ones') {
+      return [
+        {
+          input: '',
+          description: 'Empty tape',
+          expected: 'Accept → 111',
+          shouldAccept: true,
+        },
+      ];
+    } else if (currentExample === 'Binary Incrementer') {
       return [
         {
           input: '0',
@@ -89,9 +98,9 @@ export function ExampleTestCases({ onLoadExample, currentExample }) {
       return [
         {
           input: '',
-          description: 'Empty tape',
-          expected: 'Runs indefinitely',
-          shouldAccept: true,
+          description: 'Empty tape (non-halting)',
+          expected: 'Runs indefinitely (may timeout)',
+          shouldAccept: false, // Non-halting machine - will timeout, not accept
         },
       ];
     } else if (currentExample === 'Copy Machine') {
@@ -141,37 +150,25 @@ export function ExampleTestCases({ onLoadExample, currentExample }) {
           expected: 'Accept → 11111',
           shouldAccept: true,
         },
-        {
-          input: '1+',
-          description: 'Incomplete',
-          expected: 'May reject',
-          shouldAccept: false,
-        },
       ];
-    } else if (currentExample === 'Binary Subtraction') {
+    } else if (currentExample === 'Unary Doubling') {
       return [
         {
-          input: '10-1',
-          description: '2 - 1',
-          expected: 'Accept',
+          input: '1',
+          description: '1 → 2',
+          expected: 'Accept → 11',
           shouldAccept: true,
         },
         {
-          input: '11-1',
-          description: '3 - 1',
-          expected: 'Accept',
+          input: '11',
+          description: '2 → 4',
+          expected: 'Accept → 1111',
           shouldAccept: true,
         },
         {
-          input: '101-10',
-          description: '5 - 2',
-          expected: 'Accept',
-          shouldAccept: true,
-        },
-        {
-          input: '1-1',
-          description: '1 - 1',
-          expected: 'Accept',
+          input: '111',
+          description: '3 → 6',
+          expected: 'Accept → 111111',
           shouldAccept: true,
         },
       ];
@@ -179,26 +176,32 @@ export function ExampleTestCases({ onLoadExample, currentExample }) {
       return [
         {
           input: 'a',
-          description: 'Single a',
+          description: 'Single char',
           expected: 'Accept → a',
           shouldAccept: true,
         },
         {
           input: 'ab',
-          description: 'Reverse ab',
+          description: 'Two chars',
           expected: 'Accept → ba',
           shouldAccept: true,
         },
         {
           input: 'abc',
-          description: 'Reverse abc',
+          description: 'Three chars',
           expected: 'Accept → cba',
           shouldAccept: true,
         },
         {
-          input: 'ba',
-          description: 'Reverse ba',
-          expected: 'Accept → ab',
+          input: 'abca',
+          description: 'Four chars',
+          expected: 'Accept → acba',
+          shouldAccept: true,
+        },
+        {
+          input: 'abcba',
+          description: 'Palindrome',
+          expected: 'Accept → abcba',
           shouldAccept: true,
         },
       ];
@@ -226,6 +229,18 @@ export function ExampleTestCases({ onLoadExample, currentExample }) {
           input: '11*11',
           description: '2 × 2',
           expected: 'Accept → 1111',
+          shouldAccept: true,
+        },
+        {
+          input: '11*111',
+          description: '2 × 3',
+          expected: 'Accept → 111111',
+          shouldAccept: true,
+        },
+        {
+          input: '111*11',
+          description: '3 × 2',
+          expected: 'Accept → 111111',
           shouldAccept: true,
         },
       ];
