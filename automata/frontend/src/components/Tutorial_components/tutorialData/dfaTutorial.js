@@ -52,16 +52,7 @@ States: Q = {q₀, q₁}`,
                     example: {
                         description: 'Visual structure and execution trace',
                         visual: require('./Images/dfa_ending_with_1.png'),
-                        code: `Visual Diagram:
-
-      (q₀) --0--> (q₀)
-       |           
-       +-----1------> ((q₁))  ← Accept state (double circle)
-                      |
-                      +--1--> ((q₁))
-                      |
-                      +--0--> (q₀)
-
+                        code: `
 Tracing execution on input "001":
 Input: "001"
 
@@ -98,11 +89,10 @@ Format:
 • Rows: States
 • Columns: Input symbols
 • Cell (q, a): The state δ(q, a) you transition to
-• Notation: → marks start state, * marks accept states
-
-Example: Same DFA (strings ending in '1')
-
-╔═══════╦═════════╦═════════╗
+• Notation: → marks start state, * marks accept states`,
+                    example: {
+                        description: 'Same DFA (strings ending in \'1\') as a transition table',
+                        code: `╔═══════╦═════════╦═════════╗
 ║ State ║ Input 0 ║ Input 1 ║
 ╠═══════╬═════════╬═════════╣
 ║ → q₀  ║   q₀    ║   q₁    ║
@@ -113,7 +103,8 @@ Reading the table:
 • From q₀ on input '0': stay at q₀
 • From q₀ on input '1': go to q₁
 • From q₁ on input '0': go to q₀
-• From q₁ on input '1': stay at q₁`,
+• From q₁ on input '1': stay at q₁`
+                    },
                     keyPoints: [
                         'Transition tables are compact and unambiguous',
                         'Easy to implement in code (2D array or map)',
@@ -133,42 +124,31 @@ Reading the table:
 
 This means:
 • Accept: "", "1", "111", "00", "1010", "0011"
-• Reject: "0", "10", "010", "000"
+• Reject: "0", "10", "011", "000"
 
 Key insight: We need to track whether we've seen an even or odd number of 0s. This suggests TWO states.
 
 States:
-• qₑᵥₑₙ: Seen an even number of 0s (start state, since 0 is even)
-• qₒdd: Seen an odd number of 0s
+• q_{even}: Seen an even number of 0s (start state, since 0 is even)
+• q_{odd}: Seen an odd number of 0s
 
-Which is accept state? Since we want even 0s: F = {qₑᵥₑₙ}
+Which is accept state? Since we want even 0s: F = {q_{even}}
 
 Transitions:
-• δ(qₑᵥₑₙ, 0) = qₒdd  (0 flips even → odd)
-• δ(qₑᵥₑₙ, 1) = qₑᵥₑₙ (1 doesn't change parity)
-• δ(qₒdd, 0) = qₑᵥₑₙ  (0 flips odd → even)
-• δ(qₒdd, 1) = qₒdd   (1 doesn't change parity)`,
+• δ(q_{even}, 0) = q_{odd}  (0 flips even → odd)
+• δ(q_{even}, 1) = q_{even} (1 doesn't change parity)
+• δ(q_{odd}, 0) = q_{even}  (0 flips odd → even)
+• δ(q_{odd}, 1) = q_{odd}   (1 doesn't change parity)`,
                     example: {
                         description: 'State diagram',
                         visual: require('./Images/dfa_even_zeros.png'),
-                        code: `        ┌────────┐
-        │        │ 1 (loop)
-        ▼        │
-  ─→ ((qₑᵥₑₙ))  │     (double circle = accept)
-        │        │
-        │ 0      │
-        ▼        │
-      (qₒdd) ────┘
-        │  1 (loop)
-        │
-        └──0──→ back to qₑᵥₑₙ
-
+                        code: `
 Transition Table:
 ╔═══════════╦═════════╦═════════╗
 ║   State   ║ Input 0 ║ Input 1 ║
 ╠═══════════╬═════════╬═════════╣
-║ →*qₑᵥₑₙ   ║  qₒdd   ║  qₑᵥₑₙ  ║
-║  qₒdd     ║  qₑᵥₑₙ  ║  qₒdd   ║
+║ →*q_{even}║ q_{odd} ║ q_{even}║
+║  q_{odd}  ║ q_{even}║ q_{odd} ║
 ╚═══════════╩═════════╩═════════╝`
                     },
                     keyPoints: [
@@ -360,35 +340,181 @@ Furthermore, if L is regular, the minimum number of states in any DFA for L equa
                     ]
                 },
                 {
-                    title: 'Proving Languages Non-Regular',
+                    title: 'Proving Languages Non-Regular (Myhill-Nerode)',
                     content: `The Myhill-Nerode theorem gives us a powerful technique to prove languages are NOT regular.
 
-Strategy: Show that L has infinitely many distinguishable strings.
+Strategy: Show that L has infinitely many pairwise distinguishable strings.
 
-Example: Prove L = {0ⁿ1ⁿ | n ≥ 0} is not regular.
+Definition: Strings x, y ∈ Σ* are distinguishable with respect to L if there exists z ∈ Σ* such that exactly one of xz, yz is in L.
+
+Theorem Application: If L has infinitely many pairwise distinguishable strings, then L requires infinitely many states, so L is not regular.`,
+                    example: {
+                        description: 'Rigorous proof that L = {0ⁿ1ⁿ | n ≥ 0} is not regular',
+                        code: `Theorem: L = {0ⁿ1ⁿ | n ≥ 0} is not regular.
 
 Proof:
-Consider the strings 0⁰, 0¹, 0², 0³, ...
-Claim: These are all pairwise distinguishable.
+Let S = {0ⁿ | n ∈ ℕ} = {ε, 0, 0², 0³, 0⁴, ...}
 
-Take any i ≠ j. Let z = 1ⁱ.
-Then 0ⁱz = 0ⁱ1ⁱ ∈ L
-But 0ʲz = 0ʲ1ⁱ ∉ L (since i ≠ j)
+Claim: All strings in S are pairwise distinguishable with respect to L.
 
-So 0ⁱ and 0ʲ are distinguishable.
-Since there are infinitely many such strings, L has infinitely many equivalence classes.
-By Myhill-Nerode, L is not regular. ∎`,
+Proof of Claim:
+Let i, j ∈ ℕ with i ≠ j. We show that 0ⁱ and 0ʲ are distinguishable.
+
+Consider the distinguishing suffix z = 1ⁱ.
+
+Case 1: 0ⁱ · z = 0ⁱ1ⁱ
+   By definition of L, 0ⁱ1ⁱ ∈ L (equal number of 0s and 1s)
+
+Case 2: 0ʲ · z = 0ʲ1ⁱ  
+   Since i ≠ j, we have j ≠ i
+   Therefore 0ʲ1ⁱ has j zeros and i ones (j ≠ i)
+   By definition of L, 0ʲ1ⁱ ∉ L
+
+Since 0ⁱ1ⁱ ∈ L but 0ʲ1ⁱ ∉ L, the strings 0ⁱ and 0ʲ are distinguishable.
+
+Since i and j were arbitrary distinct natural numbers, all pairs in S are distinguishable.
+
+Conclusion:
+S is an infinite set of pairwise distinguishable strings.
+By Myhill-Nerode theorem, L has infinitely many equivalence classes.
+Therefore, no DFA with finitely many states can recognize L.
+Hence, L is not regular. ∎`
+                    },
                     keyPoints: [
-                        'This is MORE POWERFUL than the pumping lemma',
-                        'Find an infinite set of pairwise distinguishable strings',
-                        'Common pattern: use strings like 0ⁿ or aⁿ',
-                        'The distinguishing suffix often relates to the language structure'
+                        'Must prove ALL pairs are distinguishable (not just one pair)',
+                        'The distinguishing suffix z depends on the string (here z = 1ⁱ)',
+                        'This is more elegant than the pumping lemma',
+                        'The number of equivalence classes = minimum number of states needed'
                     ],
                     tips: [
-                        'Always start with "Consider the infinite set S = ..."',
-                        'Show all pairs in S are distinguishable (usually with a formula)',
-                        'Common distinguishing suffixes: 1ⁿ for 0ⁿ, bⁿ for aⁿ, etc.',
-                        'This technique works when pumping lemma is difficult to apply'
+                        'Start by clearly defining the infinite set S',
+                        'Take arbitrary i ≠ j and show 0ⁱ ≢ₗ 0ʲ',
+                        'Common pattern: For 0ⁿ1ⁿ use S = {0ⁿ} with z = 1ⁿ',
+                        'Be explicit about why xz ∈ L but yz ∉ L (or vice versa)'
+                    ]
+                },
+                {
+                    title: 'The Pumping Lemma for Regular Languages',
+                    content: `The Pumping Lemma is a necessary condition for regularity. It's useful for proving languages are NOT regular.
+
+Statement: If L is a regular language, then there exists a constant p (the "pumping length") such that:
+
+For every string w ∈ L with |w| ≥ p, there exists a decomposition w = xyz satisfying:
+1. |xy| ≤ p  (y occurs within first p symbols)
+2. |y| ≥ 1   (y is non-empty)
+3. For all i ≥ 0: xyⁱz ∈ L  (we can "pump" y any number of times)
+
+Intuition: In a DFA with p states, any string of length ≥ p must revisit some state. The substring y corresponds to the loop.
+
+Contrapositive: To prove L is NOT regular:
+Assume L is regular with pumping length p.
+Find a string w ∈ L with |w| ≥ p.
+Show that for EVERY decomposition w = xyz satisfying (1) and (2),
+there exists i ≥ 0 such that xyⁱz ∉ L.
+This contradicts the pumping lemma, so L cannot be regular.`,
+                    keyPoints: [
+                        'The pumping lemma is a NECESSARY condition (not sufficient)',
+                        'To prove non-regularity, we must show NO valid decomposition exists',
+                        'The adversary chooses p, then the decomposition xyz',
+                        'You only choose w and the value of i that breaks the lemma'
+                    ],
+                    tips: [
+                        'Choose w carefully - usually w depends on p',
+                        'Remember: you don\'t control where y is placed',
+                        'Consider all possible positions of y (within first p symbols)',
+                        'Often i=0 or i=2 is enough to show violation'
+                    ]
+                },
+                {
+                    title: 'Pumping Lemma: Rigorous Proof Example',
+                    content: `Let's prove L = {0ⁿ1ⁿ | n ≥ 0} is not regular using the pumping lemma.`,
+                    example: {
+                        description: 'Complete formal proof using pumping lemma',
+                        code: `Theorem: L = {0ⁿ1ⁿ | n ≥ 0} is not regular.
+
+Proof by Contradiction:
+Assume, for the sake of contradiction, that L is regular.
+Then by the Pumping Lemma, there exists p ≥ 1 (the pumping length).
+
+Choose w = 0ᵖ1ᵖ.
+Note that:
+  • w ∈ L (by definition, equal 0s and 1s)
+  • |w| = 2p ≥ p (satisfies length requirement)
+
+By the Pumping Lemma, w can be decomposed as w = xyz where:
+  (1) |xy| ≤ p
+  (2) |y| ≥ 1
+  (3) ∀i ≥ 0: xyⁱz ∈ L
+
+Analysis of decomposition:
+Since |xy| ≤ p and w = 0ᵖ1ᵖ, the substring xy consists entirely of 0s.
+(The first p symbols of w are all 0s)
+
+Therefore:
+  • x = 0ᵃ for some a ≥ 0
+  • y = 0ᵇ for some b ≥ 1  (from condition 2)
+  • z = 0ᶜ1ᵖ where a + b + c = p
+
+Consider i = 2 (pumping up):
+xy²z = x · y · y · z
+     = 0ᵃ · 0ᵇ · 0ᵇ · 0ᶜ1ᵖ
+     = 0ᵃ⁺²ᵇ⁺ᶜ1ᵖ
+     = 0ᵖ⁺ᵇ1ᵖ
+
+Count the symbols:
+  • Number of 0s: p + b
+  • Number of 1s: p
+  • Since b ≥ 1, we have p + b > p
+
+Therefore xy²z has MORE 0s than 1s, so xy²z ∉ L.
+
+This contradicts condition (3) of the Pumping Lemma.
+Therefore, our assumption was wrong, and L is not regular. ∎`
+                    },
+                    keyPoints: [
+                        'We chose w = 0ᵖ1ᵖ to force y to be all 0s',
+                        'Used i=2 to pump up and create imbalance',
+                        'Could also use i=0 to pump down: xy⁰z = xz = 0ᵖ⁻ᵇ1ᵖ ∉ L',
+                        'The key is that ANY decomposition satisfying (1) and (2) fails (3)'
+                    ],
+                    tips: [
+                        'For 0ⁿ1ⁿ: choose w = 0ᵖ1ᵖ',
+                        'For aⁿbⁿ: similar strategy with w = aᵖbᵖ',
+                        'For palindromes: choose w that breaks symmetry when pumped',
+                        'For primes: choose w = 0ᵖ where p is prime, pump to composite'
+                    ]
+                },
+                {
+                    title: 'Myhill-Nerode vs Pumping Lemma',
+                    content: `Both techniques prove non-regularity, but they have different strengths.
+
+Pumping Lemma:
+• More widely known and taught
+• Works well for "counting" languages (0ⁿ1ⁿ)
+• Requires choosing specific string and pumping position
+• Sometimes difficult to handle all possible decompositions
+
+Myhill-Nerode Theorem:
+• More powerful and general
+• Gives exact characterization of regular languages
+• Often cleaner and more elegant proofs
+• Directly connects to DFA state minimization
+• Works well when distinguishing suffixes are clear
+
+When to use which:
+• Pumping Lemma: Good for sequences with counting (aⁿbⁿ, 0ⁿ1ⁿ)
+• Myhill-Nerode: Better for languages with complex structure
+• Both can prove the same results, but one may be easier
+
+Example where Myhill-Nerode is cleaner:
+L = {w ∈ {0,1}* | w has equal 0s and 1s}
+Myhill-Nerode: Use S = {0ⁿ | n ≥ 0}, distinguish with 1ⁿ
+Pumping Lemma: Must carefully handle all possible y positions`,
+                    keyPoints: [
+                        'Myhill-Nerode gives the MINIMUM state count',
+                        'Pumping Lemma only proves non-regularity',
+                        'Myhill-Nerode can be used to minimize DFAs',
+                        'Both are important tools in formal language theory'
                     ]
                 },
                 {
