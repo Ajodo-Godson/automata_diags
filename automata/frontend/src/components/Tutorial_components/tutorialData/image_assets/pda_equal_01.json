@@ -1,0 +1,19 @@
+{
+  "name": "PDA: Equal 0s and 1s (0ⁿ1ⁿ)",
+  "description": "Accepts strings with equal numbers of 0s followed by 1s like '', '01', '0011', '000111'. Demonstrates stack usage for counting.",
+  "states": ["q0", "q1", "q2"],
+  "alphabet": ["0", "1"],
+  "stackAlphabet": ["Z", "X"],
+  "transitions": [
+    {"from": "q0", "input": "ε", "pop": "ε", "to": "q1", "push": "Z"},
+    {"from": "q1", "input": "0", "pop": "ε", "to": "q1", "push": "X"},
+    {"from": "q1", "input": "0", "pop": "X", "to": "q1", "push": "XX"},
+    {"from": "q1", "input": "1", "pop": "X", "to": "q2", "push": "ε"},
+    {"from": "q2", "input": "1", "pop": "X", "to": "q2", "push": "ε"},
+    {"from": "q2", "input": "ε", "pop": "Z", "to": "q2", "push": "ε"}
+  ],
+  "startState": "q0",
+  "startStackSymbol": "Z",
+  "acceptStates": ["q2"]
+}
+

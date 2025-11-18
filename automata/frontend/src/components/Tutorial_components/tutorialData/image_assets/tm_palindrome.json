@@ -1,0 +1,31 @@
+{
+  "name": "TM: Palindrome Checker",
+  "description": "Turing Machine that accepts palindromes over {0,1}. Demonstrates tape reading/writing by marking symbols from both ends.",
+  "states": ["q0", "q1", "q2", "q3", "q4", "qaccept", "qreject"],
+  "alphabet": ["0", "1"],
+  "tapeAlphabet": ["0", "1", "X", "Y", "_"],
+  "transitions": [
+    {"from": "q0", "read": "0", "to": "q1", "write": "X", "move": "R"},
+    {"from": "q0", "read": "1", "to": "q2", "write": "Y", "move": "R"},
+    {"from": "q0", "read": "_", "to": "qaccept", "write": "_", "move": "S"},
+    {"from": "q1", "read": "0", "to": "q1", "write": "0", "move": "R"},
+    {"from": "q1", "read": "1", "to": "q1", "write": "1", "move": "R"},
+    {"from": "q1", "read": "_", "to": "q3", "write": "_", "move": "L"},
+    {"from": "q3", "read": "0", "to": "q4", "write": "X", "move": "L"},
+    {"from": "q3", "read": "X", "to": "qaccept", "write": "X", "move": "S"},
+    {"from": "q2", "read": "0", "to": "q2", "write": "0", "move": "R"},
+    {"from": "q2", "read": "1", "to": "q2", "write": "1", "move": "R"},
+    {"from": "q2", "read": "_", "to": "q3", "write": "_", "move": "L"},
+    {"from": "q3", "read": "1", "to": "q4", "write": "Y", "move": "L"},
+    {"from": "q3", "read": "Y", "to": "qaccept", "write": "Y", "move": "S"},
+    {"from": "q4", "read": "0", "to": "q4", "write": "0", "move": "L"},
+    {"from": "q4", "read": "1", "to": "q4", "write": "1", "move": "L"},
+    {"from": "q4", "read": "X", "to": "q0", "write": "X", "move": "R"},
+    {"from": "q4", "read": "Y", "to": "q0", "write": "Y", "move": "R"}
+  ],
+  "startState": "q0",
+  "acceptState": "qaccept",
+  "rejectState": "qreject",
+  "blankSymbol": "_"
+}
+

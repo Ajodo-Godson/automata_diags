@@ -1,0 +1,19 @@
+{
+  "name": "DFA: Even number of 0s",
+  "description": "Accepts strings with an even number of 0s (including zero 0s). The 1s can appear anywhere and don't affect acceptance.",
+  "states": ["qeven", "qodd"],
+  "alphabet": ["0", "1"],
+  "transitions": {
+    "qeven": {
+      "0": "qodd",
+      "1": "qeven"
+    },
+    "qodd": {
+      "0": "qeven",
+      "1": "qodd"
+    }
+  },
+  "startState": "qeven",
+  "acceptStates": ["qeven"]
+}
+

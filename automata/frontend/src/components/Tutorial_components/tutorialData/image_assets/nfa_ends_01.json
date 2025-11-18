@@ -1,0 +1,15 @@
+{
+  "name": "NFA: Strings ending in '01'",
+  "description": "A simple NFA that accepts any binary string ending with '01'. Demonstrates nondeterminism where reading '0' can either stay in q0 or guess it's the start of '01'.",
+  "states": ["q0", "q1", "q2"],
+  "alphabet": ["0", "1"],
+  "transitions": [
+    {"from": "q0", "symbol": "0", "to": "q0"},
+    {"from": "q0", "symbol": "0", "to": "q1"},
+    {"from": "q0", "symbol": "1", "to": "q0"},
+    {"from": "q1", "symbol": "1", "to": "q2"}
+  ],
+  "startState": "q0",
+  "acceptStates": ["q2"]
+}
+

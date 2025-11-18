@@ -224,16 +224,36 @@ const NFASimulator = () => {
                     reader.onload = (e) => {
                         try {
                             const nfaDefinition = JSON.parse(e.target.result);
+                            
+                            // Ensure transitions is an array
+                            let transitionsArray = nfaDefinition.transitions || [];
+                            
+                            // If transitions is an object (DFA format), convert to array
+                            if (!Array.isArray(transitionsArray)) {
+                                const tempArray = [];
+                                Object.entries(transitionsArray).forEach(([fromState, trans]) => {
+                                    Object.entries(trans).forEach(([symbol, toState]) => {
+                                        tempArray.push({
+                                            from: fromState,
+                                            symbol: symbol,
+                                            to: toState
+                                        });
+                                    });
+                                });
+                                transitionsArray = tempArray;
+                            }
+                            
                             nfa.setStates(nfaDefinition.states || []);
                             nfa.setAlphabet(nfaDefinition.alphabet || []);
-                            nfa.setTransitions(nfaDefinition.transitions || []);
+                            nfa.setTransitions(transitionsArray);
                             nfa.setStartState(nfaDefinition.startState || 'q0');
                             nfa.setAcceptStates(nfaDefinition.acceptStates || []);
                             setCurrentExampleName(nfaDefinition.name || 'Imported NFA');
                             setCurrentExampleDescription(nfaDefinition.description || null);
                             resetSimulation();
                         } catch (error) {
-                            alert('Invalid JSON file or NFA definition format');
+                            console.error('Import error:', error);
+                            alert('Invalid JSON file or NFA definition format: ' + error.message);
                         }
                     };
                     reader.readAsText(file);

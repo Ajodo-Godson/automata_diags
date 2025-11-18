@@ -63,18 +63,18 @@ const Layout = ({ children, currentAutomaton, setCurrentAutomaton }) => {
 
                 {/* Tool buttons in header */}
                 {currentAutomaton !== 'Tutorial' && (
-                    <div className="header-tools">
-                        {getToolboxButtons(currentAutomaton).map((tool, index) => (
-                            <button 
-                                key={index}
-                                onClick={() => window.dispatchEvent(new CustomEvent(tool.event, { detail: tool.data }))}
-                                className="header-tool-btn"
-                                title={tool.description}
-                            >
-                                {tool.label}
-                            </button>
-                        ))}
-                    </div>
+                <div className="header-tools">
+                    {getToolboxButtons(currentAutomaton).map((tool, index) => (
+                        <button 
+                            key={index}
+                            onClick={() => window.dispatchEvent(new CustomEvent(tool.event, { detail: tool.data }))}
+                            className="header-tool-btn"
+                            title={tool.description}
+                        >
+                            {tool.label}
+                        </button>
+                    ))}
+                </div>
                 )}
             </header>
 

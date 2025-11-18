@@ -1,0 +1,16 @@
+{
+  "name": "CFG: Equal 0s and 1s (0ⁿ1ⁿ, n≥1)",
+  "description": "Context-Free Grammar that generates strings with equal numbers of 0s followed by 1s. Demonstrates recursion in grammar rules.",
+  "variables": ["S"],
+  "terminals": ["0", "1"],
+  "startVariable": "S",
+  "rules": [
+    {"variable": "S", "production": "01"},
+    {"variable": "S", "production": "0S1"}
+  ],
+  "examples": {
+    "accept": ["01", "0011", "000111", "00001111"],
+    "reject": ["", "0", "1", "001", "011", "0110"]
+  }
+}
+

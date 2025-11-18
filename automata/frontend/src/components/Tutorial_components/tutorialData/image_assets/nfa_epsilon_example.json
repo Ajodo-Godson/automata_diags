@@ -1,0 +1,16 @@
+{
+  "name": "NFA: Epsilon transitions (a or b or ab)",
+  "description": "Demonstrates epsilon transitions. Accepts 'a', 'b', or 'ab'. The epsilon transition allows free movement to explore the 'ab' path.",
+  "states": ["q0", "q1", "q2", "q3", "q4", "q5"],
+  "alphabet": ["a", "b"],
+  "transitions": [
+    {"from": "q0", "symbol": "a", "to": "q1"},
+    {"from": "q0", "symbol": "b", "to": "q2"},
+    {"from": "q0", "symbol": "ε", "to": "q3"},
+    {"from": "q3", "symbol": "a", "to": "q4"},
+    {"from": "q4", "symbol": "b", "to": "q5"}
+  ],
+  "startState": "q0",
+  "acceptStates": ["q1", "q2", "q5"]
+}
+

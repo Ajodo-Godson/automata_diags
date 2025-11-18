@@ -165,10 +165,32 @@ const DFASimulatorNew = ({ challenge }) => {
                     reader.onload = (e) => {
                         try {
                             const dfaDefinition = JSON.parse(e.target.result);
+                            
+                            // Convert transitions array to object format if necessary
+                            let transitionsObj = dfaDefinition.transitions || {};
+                            
+                            if (Array.isArray(dfaDefinition.transitions)) {
+                                // Convert array format to object format
+                                transitionsObj = {};
+                                dfaDefinition.transitions.forEach(trans => {
+                                    if (!transitionsObj[trans.from]) {
+                                        transitionsObj[trans.from] = {};
+                                    }
+                                    transitionsObj[trans.from][trans.symbol] = trans.to;
+                                });
+                            }
+                            
+                            // Ensure all states have a transitions object
+                            (dfaDefinition.states || []).forEach(state => {
+                                if (!transitionsObj[state]) {
+                                    transitionsObj[state] = {};
+                                }
+                            });
+                            
                             dfa.loadDFA({
                                 states: dfaDefinition.states || [],
                                 alphabet: dfaDefinition.alphabet || [],
-                                transitions: dfaDefinition.transitions || {},
+                                transitions: transitionsObj,
                                 startState: dfaDefinition.startState || 'q0',
                                 acceptStates: new Set(dfaDefinition.acceptStates || [])
                             });
@@ -176,7 +198,8 @@ const DFASimulatorNew = ({ challenge }) => {
                             setCurrentExampleDescription(dfaDefinition.description || null);
                             handleReset();
                         } catch (error) {
-                            alert('Invalid JSON file or DFA definition format');
+                            console.error('Import error:', error);
+                            alert('Invalid JSON file or DFA definition format: ' + error.message);
                         }
                     };
                     reader.readAsText(file);
