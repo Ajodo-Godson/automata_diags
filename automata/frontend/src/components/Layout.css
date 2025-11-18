@@ -56,6 +56,20 @@
     box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
 }
 
+.type-btn-horizontal.tutorial-btn {
+    background: rgba(33, 150, 243, 0.1);
+}
+
+.type-btn-horizontal.tutorial-btn:hover {
+    background: rgba(33, 150, 243, 0.2);
+}
+
+.type-btn-horizontal.tutorial-btn.active {
+    background: #2196F3;
+    border-color: #1976D2;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+}
+
 .main-content {
     display: flex;
     flex: 1;

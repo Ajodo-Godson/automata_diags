@@ -46,6 +46,139 @@
   letter-spacing: 0.5px;
 }
 
+/* Challenge Mode Banner */
+.challenge-banner {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+  border: 3px solid #ffc107;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.challenge-banner-content h2 {
+  margin: 0 0 0.75rem 0;
+  color: #856404;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.challenge-banner-content p {
+  margin: 0 0 1rem 0;
+  color: #664d03;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.validate-challenge-btn {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+}
+
+.validate-challenge-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+}
+
+.validation-results {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 8px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.validation-results.all-pass {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border: 2px solid #28a745;
+}
+
+.validation-results.some-fail {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  border: 2px solid #dc3545;
+}
+
+.validation-results h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.25rem;
+}
+
+.validation-results.all-pass h3 {
+  color: #155724;
+}
+
+.validation-results.some-fail h3 {
+  color: #721c24;
+}
+
+.validation-results p {
+  margin: 0 0 1rem 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.test-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.test-result {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.test-result.pass {
+  background: rgba(40, 167, 69, 0.1);
+  border: 1px solid #28a745;
+}
+
+.test-result.fail {
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid #dc3545;
+}
+
+.test-result .test-input {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+}
+
+.test-result .test-status {
+  font-weight: 600;
+}
+
+.test-result.pass .test-status {
+  color: #28a745;
+}
+
+.test-result.fail .test-status {
+  color: #dc3545;
+}
+
 .pda-example-selector {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);

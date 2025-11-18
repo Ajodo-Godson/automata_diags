@@ -8,8 +8,9 @@ import { PDAAlphabetEditor } from './AlphabetEditor';
 import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { usePDA } from './usePDA';
+import { validatePDAChallenge } from '../Tutorial_components/ChallengeValidator';
 
-const PDASimulator = () => {
+const PDASimulator = ({ challenge }) => {
     const { examples } = useExamples();
     const [currentExampleName, setCurrentExampleName] = useState(null);
     const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
@@ -31,8 +32,19 @@ const PDASimulator = () => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [playbackSpeed, setPlaybackSpeed] = useState(500);
 
+    // Challenge mode state
+    const [validationResults, setValidationResults] = useState(null);
+    const isInChallengeMode = challenge && challenge.challenge;
+
     const isComplete = currentStep >= 0 && currentStep === simulationSteps.length - 1;
     const isAccepted = isComplete && simulationSteps[currentStep]?.accepted;
+
+    // Load challenge data from sessionStorage
+    useEffect(() => {
+        if (isInChallengeMode) {
+            setValidationResults(null);
+        }
+    }, [challenge, isInChallengeMode]);
 
     // Auto-play simulation
     useEffect(() => {
@@ -347,6 +359,34 @@ const PDASimulator = () => {
         handleReset();
     };
 
+    // Challenge validation handler
+    const handleValidateChallenge = useCallback(() => {
+        if (!isInChallengeMode || !challenge.testCases) {
+            return;
+        }
+
+        const userPDA = {
+            states: pda.states,
+            alphabet: pda.alphabet,
+            stackAlphabet: pda.stackAlphabet,
+            transitions: pda.transitions,
+            startState: pda.startState,
+            startStackSymbol: pda.startStackSymbol,
+            acceptStates: Array.from(pda.acceptStates)
+        };
+
+        const results = validatePDAChallenge(userPDA, challenge.testCases);
+        setValidationResults(results);
+
+        // Send results back to tutorial window (opener)
+        if (window.opener && !window.opener.closed) {
+            window.opener.postMessage({
+                type: 'CHALLENGE_RESULT',
+                results: results
+            }, '*');
+        }
+    }, [isInChallengeMode, challenge, pda]);
+
     // Event listeners for toolbox actions (Import, Export, and Clear All)
     useEffect(() => {
         const handleImport = () => {
@@ -445,6 +485,40 @@ const PDASimulator = () => {
                         Pushdown Automaton - Step-by-step visualization with stack operations
                     </p>
                 </div>
+
+                {/* Challenge Mode Banner */}
+                {isInChallengeMode && (
+                    <div className="challenge-banner">
+                        <div className="challenge-banner-content">
+                            <h2>🎯 Challenge Mode</h2>
+                            <p>{challenge.challenge}</p>
+                            <button 
+                                className="validate-challenge-btn"
+                                onClick={handleValidateChallenge}
+                            >
+                                Validate Challenge
+                            </button>
+                        </div>
+                        {validationResults && (
+                            <div className={`validation-results ${validationResults.passed === validationResults.total ? 'all-pass' : 'some-fail'}`}>
+                                <h3>
+                                    {validationResults.passed === validationResults.total ? '✅ All Tests Passed!' : '❌ Some Tests Failed'}
+                                </h3>
+                                <p>Score: {validationResults.passed}/{validationResults.total} ({validationResults.percentage}%)</p>
+                                <div className="test-results">
+                                    {validationResults.results.map((result, idx) => (
+                                        <div key={idx} className={`test-result ${result.passed ? 'pass' : 'fail'}`}>
+                                            <span className="test-input">"{result.input}"</span>
+                                            <span className="test-status">
+                                                {result.passed ? '✓' : '✗'} {result.expected ? 'ACCEPT' : 'REJECT'}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Example Selector */}
                 <div className="pda-example-selector">

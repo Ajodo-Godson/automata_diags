@@ -1,0 +1,688 @@
+.exercise-viewer {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.error-message {
+    padding: 2rem;
+    text-align: center;
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.exercise-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.exercise-header h1 {
+    font-size: 2rem;
+    color: #333;
+    margin: 0 0 0.5rem 0;
+}
+
+.exercise-description {
+    font-size: 1.1rem;
+    color: #666;
+    margin: 0;
+}
+
+.exercise-progress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f9f9f9;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.question-indicator {
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 600;
+}
+
+.score-indicator {
+    font-size: 0.9rem;
+    color: #4CAF50;
+    font-weight: 600;
+}
+
+.exercise-content {
+    margin-bottom: 2rem;
+}
+
+.question-box {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    border: 2px solid #e0e0e0;
+    margin-bottom: 1.5rem;
+}
+
+.question-box h2 {
+    font-size: 1.5rem;
+    color: #333;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.question-text {
+    font-size: 1.15rem;
+    line-height: 1.8;
+    color: #444;
+    margin: 0 0 1.5rem 0;
+    font-weight: 500;
+    white-space: pre-line;
+}
+
+.question-image {
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+.question-image img {
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.answer-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.option-btn {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    font-size: 1rem;
+    color: #333;
+}
+
+.option-btn:hover:not(:disabled) {
+    border-color: #4CAF50;
+    background: #f9fdf9;
+    transform: translateX(4px);
+}
+
+.option-btn:disabled {
+    cursor: default;
+}
+
+.option-btn.selected {
+    border-color: #2196F3;
+    background: #e3f2fd;
+    font-weight: 600;
+}
+
+.option-btn.correct {
+    border-color: #4CAF50;
+    background: #e8f5e9;
+    font-weight: 600;
+}
+
+.option-btn.incorrect {
+    border-color: #f44336;
+    background: #ffebee;
+    font-weight: 600;
+}
+
+.option-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #f5f5f5;
+    border-radius: 50%;
+    font-weight: 700;
+    color: #666;
+    flex-shrink: 0;
+}
+
+.option-btn.selected .option-label {
+    background: #2196F3;
+    color: white;
+}
+
+.option-btn.correct .option-label {
+    background: #4CAF50;
+    color: white;
+}
+
+.option-btn.incorrect .option-label {
+    background: #f44336;
+    color: white;
+}
+
+.option-text {
+    flex: 1;
+    line-height: 1.5;
+}
+
+.status-icon {
+    flex-shrink: 0;
+}
+
+.short-answer-box {
+    margin-top: 1.5rem;
+}
+
+.answer-input {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s ease;
+}
+
+.answer-input:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.feedback-box {
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.feedback-box.correct {
+    background: #e8f5e9;
+    border: 2px solid #4CAF50;
+}
+
+.feedback-box.incorrect {
+    background: #ffebee;
+    border: 2px solid #f44336;
+}
+
+.feedback-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.feedback-box.correct .feedback-header {
+    color: #4CAF50;
+}
+
+.feedback-box.incorrect .feedback-header {
+    color: #f44336;
+}
+
+.feedback-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.explanation {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: #444;
+}
+
+.hint-section {
+    margin-top: 1.5rem;
+}
+
+.hint-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: 2px solid #FFC107;
+    border-radius: 8px;
+    background: #fff9e6;
+    color: #F57C00;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.hint-btn:hover {
+    background: #FFC107;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.hint-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: #fff9e6;
+    border-left: 4px solid #FFC107;
+    border-radius: 8px;
+    animation: slideIn 0.3s ease;
+}
+
+.hint-box svg {
+    color: #F57C00;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.hint-box p {
+    margin: 0;
+    color: #555;
+    line-height: 1.6;
+}
+
+.exercise-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e0e0e0;
+}
+
+.action-btn {
+    padding: 0.875rem 2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.action-btn.primary {
+    background: #4CAF50;
+    color: white;
+}
+
+.action-btn.primary:hover:not(:disabled) {
+    background: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.action-btn.secondary {
+    background: white;
+    color: #666;
+    border: 2px solid #e0e0e0;
+}
+
+.action-btn.secondary:hover:not(:disabled) {
+    border-color: #999;
+    color: #333;
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.exercise-summary {
+    padding: 2rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    text-align: center;
+    margin-top: 2rem;
+    animation: slideIn 0.3s ease;
+}
+
+.exercise-summary h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.exercise-summary p {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+    color: #555;
+}
+
+.perfect-score {
+    font-size: 1.3rem !important;
+    color: #4CAF50 !important;
+    font-weight: 600 !important;
+    margin-top: 1rem !important;
+}
+
+/* Hands-On Challenge Styles */
+.hands-on-question {
+    background: linear-gradient(135deg, #f0f7ff 0%, #e3f2fd 100%);
+    border: 3px solid #2196F3;
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 4px 20px rgba(33, 150, 243, 0.2);
+}
+
+.challenge-description {
+    margin-bottom: 2rem;
+}
+
+.challenge-description h3 {
+    color: #1565C0;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.challenge-description p {
+    color: #424242;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    white-space: pre-line;
+}
+
+.challenge-test-cases {
+    margin: 2rem 0;
+}
+
+.challenge-test-cases h4 {
+    color: #1565C0;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.test-cases-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.test-cases-table th,
+.test-cases-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.test-cases-table thead {
+    background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+    color: white;
+}
+
+.test-cases-table thead th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+}
+
+.test-cases-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+.test-cases-table tbody tr:hover {
+    background: #f5f5f5;
+}
+
+.test-cases-table tbody tr.test-pass {
+    background: #e8f5e9;
+}
+
+.test-cases-table tbody tr.test-fail {
+    background: #ffebee;
+}
+
+.test-cases-table code {
+    background: #f5f5f5;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+}
+
+.expected-accept {
+    color: #2e7d32;
+    font-weight: 600;
+}
+
+.expected-reject {
+    color: #c62828;
+    font-weight: 600;
+}
+
+.result-pass,
+.result-fail {
+    font-weight: 600;
+}
+
+.pass-icon {
+    color: #4CAF50;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.fail-icon {
+    color: #f44336;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.challenge-hints {
+    margin: 2rem 0;
+}
+
+.hints-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: 2px solid #FF9800;
+    border-radius: 8px;
+    background: white;
+    color: #F57C00;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.hints-toggle-btn:hover {
+    background: #FFF3E0;
+    transform: translateY(-2px);
+}
+
+.hints-list {
+    margin-top: 1rem;
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    animation: slideIn 0.3s ease;
+}
+
+.hint-item {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    background: #fff9e6;
+    border-left: 4px solid #FFC107;
+    border-radius: 4px;
+    line-height: 1.6;
+}
+
+.hint-item:last-child {
+    margin-bottom: 0;
+}
+
+.challenge-actions-box {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid rgba(33, 150, 243, 0.3);
+}
+
+.simulator-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.simulator-btn:hover {
+    background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(33, 150, 243, 0.4);
+}
+
+.challenge-feedback {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease;
+}
+
+.challenge-feedback.all-pass {
+    border: 3px solid #4CAF50;
+    background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+}
+
+.challenge-feedback.some-fail {
+    border: 3px solid #FF9800;
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+}
+
+.challenge-feedback .feedback-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.challenge-feedback h3 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.challenge-feedback .score-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.challenge-feedback .success-message {
+    color: #2e7d32;
+    font-weight: 500;
+    margin: 0;
+}
+
+.challenge-instructions {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    border: 2px dashed #2196F3;
+}
+
+.challenge-instructions svg {
+    color: #2196F3;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.challenge-instructions p {
+    margin: 0;
+    line-height: 1.8;
+    color: #424242;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .exercise-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .hands-on-question {
+        padding: 1.5rem;
+    }
+    
+    .test-cases-table {
+        font-size: 0.9rem;
+    }
+    
+    .test-cases-table th,
+    .test-cases-table td {
+        padding: 0.5rem;
+    }
+
+    .exercise-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .exercise-progress {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .question-box {
+        padding: 1.5rem;
+    }
+
+    .option-btn {
+        padding: 0.875rem 1rem;
+    }
+
+    .exercise-actions {
+        flex-direction: column;
+    }
+
+    .action-btn {
+        width: 100%;
+    }
+}
+

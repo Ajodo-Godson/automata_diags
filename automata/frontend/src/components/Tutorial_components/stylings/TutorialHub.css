@@ -1,0 +1,289 @@
+.tutorial-hub {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    background: #f5f5f5;
+    overflow: hidden;
+}
+
+.tutorial-sidebar {
+    width: 320px;
+    background: white;
+    border-right: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.tutorial-title {
+    padding: 1.5rem;
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #4CAF50;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.automaton-selector {
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.automaton-selector h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.automaton-btn {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    color: #333;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.automaton-btn:hover {
+    border-color: #4CAF50;
+    background: #f9fdf9;
+    transform: translateX(2px);
+}
+
+.automaton-btn.active {
+    background: #4CAF50;
+    border-color: #4CAF50;
+    color: white;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.progress-section {
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    background: #fafafa;
+}
+
+.progress-section h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.progress-item {
+    margin-bottom: 0.75rem;
+}
+
+.progress-item span {
+    font-size: 0.85rem;
+    color: #555;
+    display: block;
+    margin-bottom: 0.4rem;
+}
+
+.progress-bar {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50 0%, #66BB6A 100%);
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+.content-list {
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.content-list h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.content-item {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: left;
+    color: #333;
+}
+
+.content-item svg:first-child {
+    color: #999;
+    flex-shrink: 0;
+}
+
+.content-item span {
+    flex: 1;
+}
+
+.content-item .chevron {
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: all 0.2s ease;
+    color: #4CAF50;
+}
+
+.content-item:hover {
+    border-color: #4CAF50;
+    background: #f9fdf9;
+    transform: translateX(2px);
+}
+
+.content-item:hover .chevron {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.content-item.active {
+    background: #e8f5e9;
+    border-color: #4CAF50;
+    font-weight: 600;
+}
+
+.content-item.active .chevron {
+    opacity: 1;
+}
+
+/* Green checkmark for completed items */
+.content-item svg:first-child {
+    transition: color 0.2s ease;
+}
+
+.content-item:has(svg[data-lucide="check-circle"]) svg:first-child {
+    color: #4CAF50;
+}
+
+.tutorial-content {
+    flex: 1;
+    background: white;
+    overflow-y: auto;
+    padding: 2rem;
+}
+
+.welcome-screen {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 3rem 2rem;
+}
+
+.welcome-screen svg {
+    color: #4CAF50;
+    margin-bottom: 1.5rem;
+}
+
+.welcome-screen h2 {
+    font-size: 2rem;
+    color: #333;
+    margin: 0 0 1rem 0;
+}
+
+.welcome-screen > p {
+    font-size: 1.1rem;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.quick-start {
+    background: #f9f9f9;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-top: 2rem;
+    text-align: left;
+}
+
+.quick-start h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.3rem;
+    color: #333;
+}
+
+.quick-start ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.quick-start li {
+    padding: 0.75rem 0;
+    font-size: 1rem;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.quick-start li::before {
+    content: "✓";
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    background: #4CAF50;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 24px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .tutorial-hub {
+        flex-direction: column;
+    }
+
+    .tutorial-sidebar {
+        width: 100%;
+        max-height: 300px;
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .tutorial-content {
+        padding: 1rem;
+    }
+
+    .welcome-screen {
+        padding: 2rem 1rem;
+    }
+}
+
+

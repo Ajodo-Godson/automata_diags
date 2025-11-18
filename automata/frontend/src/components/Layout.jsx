@@ -53,21 +53,29 @@ const Layout = ({ children, currentAutomaton, setCurrentAutomaton }) => {
                     >
                         TM
                     </button>
+                    <button 
+                        className={`type-btn-horizontal tutorial-btn ${currentAutomaton === 'Tutorial' ? 'active' : ''}`}
+                        onClick={() => setCurrentAutomaton('Tutorial')}
+                    >
+                        📚 Tutorial
+                    </button>
                 </nav>
 
                 {/* Tool buttons in header */}
-                <div className="header-tools">
-                    {getToolboxButtons(currentAutomaton).map((tool, index) => (
-                        <button 
-                            key={index}
-                            onClick={() => window.dispatchEvent(new CustomEvent(tool.event, { detail: tool.data }))}
-                            className="header-tool-btn"
-                            title={tool.description}
-                        >
-                            {tool.label}
-                        </button>
-                    ))}
-                </div>
+                {currentAutomaton !== 'Tutorial' && (
+                    <div className="header-tools">
+                        {getToolboxButtons(currentAutomaton).map((tool, index) => (
+                            <button 
+                                key={index}
+                                onClick={() => window.dispatchEvent(new CustomEvent(tool.event, { detail: tool.data }))}
+                                className="header-tool-btn"
+                                title={tool.description}
+                            >
+                                {tool.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </header>
 
             <div className="main-content">

@@ -9,11 +9,21 @@ import { AlphabetEditor } from './AlphabetEditor';
 import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { useDFA } from './useDFA';
+import { validateDFAChallenge } from '../Tutorial_components/ChallengeValidator';
 
-const DFASimulatorNew = () => {
+const DFASimulatorNew = ({ challenge }) => {
+    const [validationResults, setValidationResults] = useState(null);
     const { examples } = useExamples();
     const [currentExampleName, setCurrentExampleName] = useState(null);
     const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
+    
+    // Check if in challenge mode (reactive to prop changes)
+    const isInChallengeMode = challenge && challenge.challenge;
+    
+    // Clear validation results when challenge changes
+    useEffect(() => {
+        setValidationResults(null);
+    }, [challenge]);
     
     // Start with a blank DFA
     const dfa = useDFA({
@@ -223,6 +233,32 @@ const DFASimulatorNew = () => {
         };
     }, [dfa, currentExampleName, handleReset]);
 
+    // Challenge validation function
+    const handleValidateChallenge = useCallback(() => {
+        if (!challenge || !challenge.challenge || !challenge.challenge.testCases) {
+            return;
+        }
+
+        const userDFA = {
+            states: dfa.states,
+            alphabet: dfa.alphabet,
+            transitions: dfa.transitions,
+            startState: dfa.startState,
+            acceptStates: Array.from(dfa.acceptStates)
+        };
+
+        const results = validateDFAChallenge(userDFA, challenge.challenge.testCases);
+        setValidationResults(results);
+
+        // Send results back to tutorial window (opener)
+        if (window.opener) {
+            window.opener.postMessage({
+                type: 'CHALLENGE_RESULT',
+                results: results
+            }, '*');
+        }
+    }, [challenge, dfa.states, dfa.alphabet, dfa.transitions, dfa.startState, dfa.acceptStates]);
+
     return (
         <div className="dfa-simulator-new">
             <div className="dfa-container">
@@ -234,7 +270,39 @@ const DFASimulatorNew = () => {
                     </p>
                 </div>
 
+                {/* Challenge Banner */}
+                {isInChallengeMode && (
+                    <div className="challenge-banner">
+                        <div className="challenge-banner-content">
+                            <h2>🎯 Challenge Mode</h2>
+                            <p><strong>Goal:</strong> {challenge.challenge.description}</p>
+                            <button 
+                                className="validate-challenge-btn"
+                                onClick={handleValidateChallenge}
+                            >
+                                Validate Challenge
+                            </button>
+                        </div>
+                        {validationResults && (
+                            <div className={`validation-results ${validationResults.passed === validationResults.total ? 'all-passed' : 'some-failed'}`}>
+                                <h3>{validationResults.passed === validationResults.total ? '🎉 Perfect!' : '⚠️ Keep Trying'}</h3>
+                                <p>Passed {validationResults.passed}/{validationResults.total} tests ({validationResults.percentage}%)</p>
+                                <div className="test-results-list">
+                                    {validationResults.results.map((result, idx) => (
+                                        <div key={idx} className={`test-result-item ${result.passed ? 'pass' : 'fail'}`}>
+                                            <span className="test-input">"{result.input || 'ε'}"</span>
+                                            <span className="test-status">{result.passed ? '✓' : '✗'}</span>
+                                            <span className="test-description">{result.description}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Example Selector */}
+                {!isInChallengeMode && (
                 <div className="dfa-example-selector">
                     <label className="dfa-selector-label">Load Example:</label>
                     <div className="dfa-selector-buttons">
@@ -255,6 +323,7 @@ const DFASimulatorNew = () => {
                         </div>
                     )}
                 </div>
+                )}
 
                 {/* Main Grid */}
                 <div className="dfa-grid">
