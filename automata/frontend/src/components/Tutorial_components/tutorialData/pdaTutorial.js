@@ -400,40 +400,28 @@ Accepts: (), (()), (())(), etc.`
             questions: [
                 {
                     type: 'hands-on',
-                    automatonType: 'PDA',
-                    challenge: 'Build a PDA that accepts the language {0ⁿ1ⁿ | n ≥ 0} - equal numbers of 0s followed by 1s.',
-                    testCases: [
-                        { input: '', expected: true, description: 'Empty string (n=0)' },
-                        { input: '01', expected: true, description: 'n=1' },
-                        { input: '0011', expected: true, description: 'n=2' },
-                        { input: '000111', expected: true, description: 'n=3' },
-                        { input: '00001111', expected: true, description: 'n=4' },
-                        { input: '0', expected: false, description: 'More 0s than 1s' },
-                        { input: '1', expected: false, description: 'More 1s than 0s' },
-                        { input: '001', expected: false, description: 'Unequal counts' },
-                        { input: '011', expected: false, description: 'Unequal counts' },
-                        { input: '0110', expected: false, description: 'Wrong order' }
-                    ],
-                    hints: [
-                        'Use the stack to count 0s',
-                        'Push a symbol (like X) for each 0 you read',
-                        'Pop a symbol for each 1 you read',
-                        'Accept if the stack returns to just the start symbol Z when input ends',
-                        'You\'ll need three states: start (q0), counting (q1), and accept (q2)'
-                    ],
-                    solution: {
-                        states: ['q0', 'q1', 'q2'],
-                        alphabet: ['0', '1'],
-                        stackAlphabet: ['Z', 'X'],
-                        startState: 'q0',
-                        startStackSymbol: 'Z',
-                        acceptStates: ['q2'],
-                        transitions: [
-                            { from: 'q0', input: 'ε', pop: 'Z', to: 'q2', push: 'Z' },
-                            { from: 'q0', input: '0', pop: 'Z', to: 'q1', push: 'XZ' },
-                            { from: 'q1', input: '0', pop: 'X', to: 'q1', push: 'XX' },
-                            { from: 'q1', input: '1', pop: 'X', to: 'q1', push: 'ε' },
-                            { from: 'q1', input: 'ε', pop: 'Z', to: 'q2', push: 'Z' }
+                    question: 'Build a PDA that accepts the language {0ⁿ1ⁿ | n ≥ 0}',
+                    simulatorType: 'PDA',
+                    challenge: {
+                        description: 'Create a Pushdown Automaton that accepts equal numbers of 0s followed by 1s (including the empty string). Your PDA should accept "", "01", "0011", "000111", but reject "0", "1", "001", "0110".',
+                        testCases: [
+                            { input: '', expected: true, description: 'Empty string (n=0)' },
+                            { input: '01', expected: true, description: 'n=1' },
+                            { input: '0011', expected: true, description: 'n=2' },
+                            { input: '000111', expected: true, description: 'n=3' },
+                            { input: '00001111', expected: true, description: 'n=4' },
+                            { input: '0', expected: false, description: 'More 0s than 1s' },
+                            { input: '1', expected: false, description: 'More 1s than 0s' },
+                            { input: '001', expected: false, description: 'Unequal counts' },
+                            { input: '011', expected: false, description: 'Unequal counts' },
+                            { input: '0110', expected: false, description: 'Wrong order' }
+                        ],
+                        hints: [
+                            'Use the stack to count 0s',
+                            'Push a symbol (like X) for each 0 you read',
+                            'Pop a symbol for each 1 you read',
+                            'Accept if the stack returns to just the start symbol Z when input ends',
+                            'You\'ll need three states: start (q0), counting (q1), and accept (q2)'
                         ]
                     }
                 }

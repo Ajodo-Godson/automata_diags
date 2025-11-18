@@ -519,6 +519,38 @@ Thousands of problems are NP-complete!`,
                     hint: 'NP-complete combines two properties.'
                 }
             ]
+        },
+        {
+            id: 'tm-ex-3',
+            title: 'Hands-On: Build Turing Machines',
+            description: 'Create TMs to recognize and compute specific functions',
+            questions: [
+                {
+                    type: 'hands-on',
+                    question: 'Build a Turing Machine that accepts the language {0ⁿ1ⁿ0ⁿ | n ≥ 1}',
+                    simulatorType: 'TM',
+                    challenge: {
+                        description: 'Create a Turing Machine that accepts strings with three equal groups of 0s, 1s, and 0s. Your TM should accept "010", "001100", "000111000", but reject "", "01", "00110", "0011000".',
+                        testCases: [
+                            { input: '010', expected: true, description: 'n=1' },
+                            { input: '00110', expected: false, description: 'Unequal groups' },
+                            { input: '001100', expected: true, description: 'n=2' },
+                            { input: '000111000', expected: true, description: 'n=3' },
+                            { input: '', expected: false, description: 'Empty string' },
+                            { input: '01', expected: false, description: 'Missing final 0s' },
+                            { input: '0011000', expected: false, description: 'Too many final 0s' },
+                            { input: '001110', expected: false, description: 'Wrong order' }
+                        ],
+                        hints: [
+                            'Use the tape to mark symbols you\'ve processed',
+                            'Strategy: Cross off one 0, then one 1, then one 0, repeat',
+                            'Use special symbols like X to mark crossed-off positions',
+                            'After each pass, return to the beginning',
+                            'Accept when all symbols have been crossed off in matching groups'
+                        ]
+                    }
+                }
+            ]
         }
     ]
 };

@@ -459,6 +459,40 @@ This is optimal for worst-case general CFG parsing.`,
                     hint: 'CNF restricts right-hand sides to length 1 or 2.'
                 }
             ]
+        },
+        {
+            id: 'cfg-ex-2',
+            title: 'Hands-On: Build Context-Free Grammars',
+            description: 'Create CFGs to generate specific languages',
+            questions: [
+                {
+                    type: 'hands-on',
+                    question: 'Build a CFG that generates the language {0ⁿ1ⁿ | n ≥ 1}',
+                    simulatorType: 'CFG',
+                    challenge: {
+                        description: 'Create a Context-Free Grammar that generates equal numbers of 0s followed by 1s (at least one of each). Your grammar should generate strings like "01", "0011", "000111", but NOT "", "0", "1", "001", or "0110".',
+                        testCases: [
+                            { input: '01', expected: true, description: 'n=1' },
+                            { input: '0011', expected: true, description: 'n=2' },
+                            { input: '000111', expected: true, description: 'n=3' },
+                            { input: '00001111', expected: true, description: 'n=4' },
+                            { input: '', expected: false, description: 'Empty string (n=0)' },
+                            { input: '0', expected: false, description: 'Only 0s' },
+                            { input: '1', expected: false, description: 'Only 1s' },
+                            { input: '001', expected: false, description: 'Unequal counts' },
+                            { input: '011', expected: false, description: 'Unequal counts' },
+                            { input: '0110', expected: false, description: 'Wrong order' }
+                        ],
+                        hints: [
+                            'Start with a single variable S',
+                            'Think recursively: wrap each pair in more 0s and 1s',
+                            'Base case: S → 01',
+                            'Recursive case: S → 0S1',
+                            'The complete grammar has just two productions: S → 01 | 0S1'
+                        ]
+                    }
+                }
+            ]
         }
     ]
 };

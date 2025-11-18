@@ -1,0 +1,14 @@
+{
+    "name": "DFA: Accepts strings ending in '1'",
+    "description": "A simple Deterministic Finite Automaton with two states, q0 and q1, that accepts any binary string ending with a '1'.",
+    "states": ["q0", "q1"],
+    "alphabet": ["0", "1"],
+    "transitions": [
+      {"from": "q0", "symbol": "0", "to": "q0"},
+      {"from": "q0", "symbol": "1", "to": "q1"},
+      {"from": "q1", "symbol": "0", "to": "q0"},
+      {"from": "q1", "symbol": "1", "to": "q1"}
+    ],
+    "startState": "q0",
+    "acceptStates": ["q1"]
+  }

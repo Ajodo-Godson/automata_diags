@@ -1,168 +1,329 @@
 .tutorial-hub {
     display: flex;
-    height: 100%;
+    flex-direction: column;
+    height: 100vh;
     width: 100%;
-    background: #f5f5f5;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     overflow: hidden;
 }
 
-.tutorial-sidebar {
-    width: 320px;
+/* ===== TOP HEADER BAR ===== */
+.tutorial-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2.5rem;
     background: white;
-    border-right: 1px solid #e0e0e0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    z-index: 100;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.header-left svg {
+    color: #667eea;
+    filter: drop-shadow(0 2px 4px rgba(102, 126, 234, 0.3));
+}
+
+.header-left h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.header-left p {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* Progress Cards in Header */
+.header-progress {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.progress-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+    border: 2px solid rgba(102, 126, 234, 0.1);
+    transition: all 0.3s ease;
+}
+
+.progress-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+}
+
+.progress-card-icon {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.progress-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.progress-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.progress-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.circular-progress {
+    position: relative;
+    width: 50px;
+    height: 50px;
+}
+
+.circular-progress svg {
+    transform: rotate(-90deg);
+}
+
+.progress-percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+/* ===== MAIN CONTAINER ===== */
+.tutorial-main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    padding: 1rem;
+    gap: 1rem;
+}
+
+/* ===== SIDEBAR ===== */
+.tutorial-sidebar {
+    width: 380px;
+    background: white;
+    border-radius: 20px;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
-}
-
-.tutorial-title {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
     padding: 1.5rem;
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #333;
-    border-bottom: 2px solid #4CAF50;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
 }
 
+/* Automaton Selector - Grid Layout */
 .automaton-selector {
-    padding: 1rem;
-    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 1.5rem;
 }
 
 .automaton-selector h3 {
-    margin: 0 0 0.75rem 0;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #666;
+    margin: 0 0 1rem 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #999;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1.5px;
 }
 
-.automaton-btn {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.5rem;
+.automaton-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.automaton-card {
+    padding: 1rem;
     border: 2px solid #e0e0e0;
-    border-radius: 8px;
+    border-radius: 12px;
     background: white;
-    color: #333;
     cursor: pointer;
     font-size: 0.95rem;
     font-weight: 600;
-    transition: all 0.2s ease;
-    text-align: left;
-}
-
-.automaton-btn:hover {
-    border-color: #4CAF50;
-    background: #f9fdf9;
-    transform: translateX(2px);
-}
-
-.automaton-btn.active {
-    background: #4CAF50;
-    border-color: #4CAF50;
-    color: white;
-    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
-}
-
-.progress-section {
-    padding: 1rem;
-    border-bottom: 1px solid #e0e0e0;
-    background: #fafafa;
-}
-
-.progress-section h3 {
-    margin: 0 0 0.75rem 0;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #666;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.progress-item {
-    margin-bottom: 0.75rem;
-}
-
-.progress-item span {
-    font-size: 0.85rem;
-    color: #555;
-    display: block;
-    margin-bottom: 0.4rem;
-}
-
-.progress-bar {
-    height: 8px;
-    background: #e0e0e0;
-    border-radius: 4px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+    color: #333;
+    position: relative;
     overflow: hidden;
 }
 
-.progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #4CAF50 0%, #66BB6A 100%);
-    transition: width 0.3s ease;
-    border-radius: 4px;
+.automaton-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
 }
 
-.content-list {
+.automaton-card:hover {
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.15);
+}
+
+.automaton-card:hover::before {
+    transform: scaleX(1);
+}
+
+.automaton-card.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    color: white;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.automaton-card.active::before {
+    transform: scaleX(1);
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Content Section */
+.content-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.content-tabs {
+    margin-bottom: 1rem;
+}
+
+.tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 1rem;
-    border-bottom: 1px solid #e0e0e0;
+    background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+    border-radius: 12px;
+    border: 2px solid rgba(102, 126, 234, 0.1);
 }
 
-.content-list h3 {
-    margin: 0 0 0.75rem 0;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #666;
+.tab-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.topic-badge {
+    padding: 0.4rem 0.8rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* Content Groups */
+.content-group {
+    margin-bottom: 1.5rem;
+}
+
+.group-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #667eea;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+}
+
+.content-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .content-item {
     width: 100%;
-    padding: 0.75rem;
-    margin-bottom: 0.5rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    background: white;
+    padding: 0.875rem 1rem;
+    border: none;
+    border-radius: 10px;
+    background: rgba(102, 126, 234, 0.03);
     cursor: pointer;
     font-size: 0.9rem;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
     text-align: left;
     color: #333;
+    position: relative;
+}
+
+.content-item::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 0 3px 3px 0;
+    transition: height 0.3s ease;
 }
 
 .content-item svg:first-child {
-    color: #999;
+    color: #ccc;
     flex-shrink: 0;
+    transition: all 0.3s ease;
 }
 
 .content-item span {
     flex: 1;
+    font-weight: 500;
 }
 
 .content-item .chevron {
     opacity: 0;
-    transform: translateX(-4px);
-    transition: all 0.2s ease;
-    color: #4CAF50;
+    transform: translateX(-8px);
+    transition: all 0.3s ease;
+    color: #667eea;
+    flex-shrink: 0;
 }
 
 .content-item:hover {
-    border-color: #4CAF50;
-    background: #f9fdf9;
-    transform: translateX(2px);
+    background: white;
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.content-item:hover::after {
+    height: 70%;
 }
 
 .content-item:hover .chevron {
@@ -171,68 +332,112 @@
 }
 
 .content-item.active {
-    background: #e8f5e9;
-    border-color: #4CAF50;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border: 2px solid #667eea;
     font-weight: 600;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+}
+
+.content-item.active::after {
+    height: 70%;
 }
 
 .content-item.active .chevron {
     opacity: 1;
+    transform: translateX(0);
 }
 
-/* Green checkmark for completed items */
+/* Checkmark for completed items */
 .content-item svg:first-child {
-    transition: color 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .content-item:has(svg[data-lucide="check-circle"]) svg:first-child {
-    color: #4CAF50;
+    color: #667eea;
+    animation: checkPulse 2s ease-in-out infinite;
 }
 
+@keyframes checkPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* ===== CONTENT AREA ===== */
 .tutorial-content {
     flex: 1;
     background: white;
+    border-radius: 20px;
     overflow-y: auto;
-    padding: 2rem;
+    padding: 2.5rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .welcome-screen {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
     text-align: center;
-    padding: 3rem 2rem;
+    padding: 4rem 2rem;
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .welcome-screen svg {
-    color: #4CAF50;
-    margin-bottom: 1.5rem;
+    color: #667eea;
+    margin-bottom: 2rem;
+    filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.3));
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
 }
 
 .welcome-screen h2 {
-    font-size: 2rem;
-    color: #333;
-    margin: 0 0 1rem 0;
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 1.5rem 0;
+    font-weight: 800;
 }
 
 .welcome-screen > p {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     color: #666;
-    line-height: 1.6;
-    margin-bottom: 2rem;
+    line-height: 1.8;
+    margin-bottom: 3rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .quick-start {
-    background: #f9f9f9;
-    border-radius: 12px;
-    padding: 2rem;
-    margin-top: 2rem;
+    background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin-top: 3rem;
     text-align: left;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.12);
+    border: 2px solid rgba(102, 126, 234, 0.1);
 }
 
 .quick-start h3 {
-    margin: 0 0 1rem 0;
-    font-size: 1.3rem;
+    margin: 0 0 1.5rem 0;
+    font-size: 1.5rem;
     color: #333;
+    font-weight: 700;
 }
 
 .quick-start ul {
@@ -242,48 +447,116 @@
 }
 
 .quick-start li {
-    padding: 0.75rem 0;
-    font-size: 1rem;
+    padding: 1rem 0;
+    font-size: 1.05rem;
     color: #555;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.quick-start li:last-child {
+    border-bottom: none;
 }
 
 .quick-start li::before {
     content: "✓";
     display: inline-block;
-    width: 24px;
-    height: 24px;
-    background: #4CAF50;
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border-radius: 50%;
     text-align: center;
-    line-height: 24px;
+    line-height: 32px;
     font-weight: bold;
     flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-/* Responsive Design */
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1200px) {
+    .tutorial-sidebar {
+        width: 320px;
+    }
+
+    .automaton-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .header-progress {
+        gap: 1rem;
+    }
+
+    .progress-card {
+        padding: 0.875rem 1.25rem;
+    }
+}
+
 @media (max-width: 768px) {
     .tutorial-hub {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .tutorial-header {
         flex-direction: column;
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .header-left {
+        width: 100%;
+    }
+
+    .header-left h1 {
+        font-size: 1.5rem;
+    }
+
+    .header-progress {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .progress-card {
+        flex: 1;
+        padding: 1rem;
+    }
+
+    .tutorial-main {
+        flex-direction: column;
+        padding: 0.5rem;
     }
 
     .tutorial-sidebar {
         width: 100%;
-        max-height: 300px;
-        border-right: none;
-        border-bottom: 1px solid #e0e0e0;
+        max-height: 400px;
+        margin-bottom: 1rem;
     }
 
     .tutorial-content {
-        padding: 1rem;
+        padding: 1.5rem;
     }
 
     .welcome-screen {
         padding: 2rem 1rem;
     }
+
+    .welcome-screen h2 {
+        font-size: 2rem;
+    }
+
+    .welcome-screen svg {
+        width: 48px;
+        height: 48px;
+    }
+
+    .quick-start {
+        padding: 1.5rem;
+    }
+
+    .quick-start h3 {
+        font-size: 1.25rem;
+    }
 }
-
-
