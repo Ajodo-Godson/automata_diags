@@ -18,7 +18,6 @@ const StateNode = ({ data, isConnectable }) => {
 
     const handleDelete = (e) => {
         e.stopPropagation();
-        // Dispatch a custom event to signal the delete request
         window.dispatchEvent(new CustomEvent('deleteState', { detail: data.label }));
     };
 
@@ -30,7 +29,6 @@ const StateNode = ({ data, isConnectable }) => {
             onMouseEnter={() => setShowDelete(true)}
             onMouseLeave={() => setShowDelete(false)}
         >
-            {/* Handles on all four sides for better edge routing */}
             <Handle type="target" position={Position.Top} id="top" isConnectable={isConnectable} />
             <Handle type="target" position={Position.Right} id="right" isConnectable={isConnectable} />
             <Handle type="target" position={Position.Bottom} id="bottom" isConnectable={isConnectable} />
@@ -41,7 +39,7 @@ const StateNode = ({ data, isConnectable }) => {
             <Handle type="source" position={Position.Left} id="left" isConnectable={isConnectable} />
             <div className="state-label">{data.label}</div>
             {isAcceptState && <div className="accept-circle" />}
-            {showDelete && !isStartState && ( // Don't allow deleting start state
+            {showDelete && !isStartState && (
                 <button className="state-delete-btn" onClick={handleDelete} title="Delete state">
                     ×
                 </button>
@@ -57,13 +55,11 @@ const nodeTypes = {
 const DFAGraph = ({ states, transitions, startState, acceptStates, currentState, currentTransition }) => {
     const [reactFlowInstance, setReactFlowInstance] = React.useState(null);
 
-    // REVERTED to your original, working layout logic.
-    // This creates the clean, centered horizontal layout.
     const getLayoutedElements = useCallback(() => {
         const nodePositions = {};
         const nodeWidth = 70;
         const nodeHeight = 70;
-        const horizontalSpacing = 180;
+        const horizontalSpacing = 200;
         const verticalSpacing = 150;
         
         const centerX = 400;
@@ -90,7 +86,6 @@ const DFAGraph = ({ states, transitions, startState, acceptStates, currentState,
                 x = centerX - horizontalSpacing / 2 + index * horizontalSpacing;
                 y = centerY;
             } else if (totalOtherStates === 3) {
-                // This is the logic that created your "good" layout
                 x = centerX - horizontalSpacing + index * horizontalSpacing;
                 y = centerY;
             } else if (totalOtherStates === 4) {
@@ -106,7 +101,6 @@ const DFAGraph = ({ states, transitions, startState, acceptStates, currentState,
             nodePositions[state] = { x: x - nodeWidth / 2, y: y - nodeHeight / 2 };
         });
 
-        // Create nodes with calculated positions
         const nodes = states.map((state) => {
             const isCurrentNode = state === currentState;
             const pos = nodePositions[state] || { x: centerX, y: centerY };
@@ -125,7 +119,6 @@ const DFAGraph = ({ states, transitions, startState, acceptStates, currentState,
             };
         });
 
-        // Group transitions
         const edgeGroups = {};
         Object.entries(transitions).forEach(([fromState, trans]) => {
             Object.entries(trans).forEach(([symbol, toState]) => {
@@ -137,7 +130,6 @@ const DFAGraph = ({ states, transitions, startState, acceptStates, currentState,
             });
         });
 
-        // Create edges
         const edges = Object.values(edgeGroups).map((group, index) => {
             const isSelfLoop = group.from === group.to;
             const sortedSymbols = group.symbols.sort();
@@ -151,37 +143,51 @@ const DFAGraph = ({ states, transitions, startState, acceptStates, currentState,
             const edgeColor = isActiveTransition ? '#667eea' : '#8b5cf6';
             const labelColor = isActiveTransition ? '#667eea' : '#1f2937';
 
-            let edgeType = 'smoothstep'; // Use smoothstep for nice curves
             let edgeStyle = {
                 stroke: edgeColor,
                 strokeWidth: isActiveTransition ? 4 : 2,
                 opacity: isActiveTransition ? 1 : 0.7,
             };
 
-            const sourcePos = nodePositions[group.from];
-            const targetPos = nodePositions[group.to];
+            let edgeType = 'smoothstep';
             let sourceHandle = Position.Right;
             let targetHandle = Position.Left;
 
+            const sourcePos = nodePositions[group.from];
+            const targetPos = nodePositions[group.to];
+            
+            // Determines if the label should be shifted up (top/standard) or down (bottom lanes)
+            let isBottomLane = false;
+
             if (isSelfLoop) {
-                // FIX: Use Top and Left handles. This creates the nice high arc.
+                edgeType = 'default'; 
                 sourceHandle = Position.Top;
-                targetHandle = Position.Left; 
-                edgeStyle = {
-                    ...edgeStyle,
-                    strokeWidth: isActiveTransition ? 3 : 2.5,
-                };
+                targetHandle = Position.Right;
+                edgeStyle.strokeWidth = isActiveTransition ? 3 : 2.5;
             } else if (sourcePos && targetPos) {
-                // Regular transitions: determine best handles
                 const dx = targetPos.x - sourcePos.x;
                 const dy = targetPos.y - sourcePos.y;
-                
-                if (Math.abs(dx) > Math.abs(dy)) {
-                    sourceHandle = dx > 0 ? Position.Right : Position.Left;
-                    targetHandle = dx > 0 ? Position.Left : Position.Right;
+                const isHorizontal = Math.abs(dx) > Math.abs(dy);
+
+                if (isHorizontal) {
+                     if (dx > 0) {
+                        // Forward
+                        sourceHandle = Position.Right;
+                        targetHandle = Position.Left;
+                    } else {
+                        // Backward (Return lane)
+                        sourceHandle = Position.Bottom;
+                        targetHandle = Position.Bottom;
+                        isBottomLane = true; // Mark this as a bottom lane
+                    }
                 } else {
-                    sourceHandle = dy > 0 ? Position.Bottom : Position.Top;
-                    targetHandle = dy > 0 ? Position.Top : Position.Bottom;
+                    if (dy > 0) {
+                        sourceHandle = Position.Bottom;
+                        targetHandle = Position.Top;
+                    } else {
+                        sourceHandle = Position.Right;
+                        targetHandle = Position.Right;
+                    }
                 }
             }
 
@@ -189,27 +195,22 @@ const DFAGraph = ({ states, transitions, startState, acceptStates, currentState,
                 id: `${group.from}-${group.to}-${index}`,
                 source: group.from,
                 target: group.to,
-                sourceHandle: sourceHandle,
-                targetHandle: targetHandle,
-                label: label,
+                sourceHandle,
+                targetHandle,
+                label,
                 type: edgeType,
                 animated: isActiveTransition,
                 style: edgeStyle,
-                data: { isSelfLoop: isSelfLoop },
+                // Apply CSS class to shift label position based on lane
+                className: isBottomLane ? 'edge-bottom' : 'edge-top',
+                data: { isSelfLoop },
                 labelStyle: {
                     fill: labelColor,
-                    fontWeight: 'bold',
-                    fontSize: 16,
+                    fontWeight: '800', // Extra bold since we lost the bg
+                    fontSize: 18,      // Slightly larger
                 },
-                // FIX: Make label background opaque and add more padding
-                labelBgStyle: {
-                    fill: '#f8f9fa',
-                    fillOpacity: 1.0, // Fully opaque
-                    rx: 6,
-                    ry: 6,
-                },
-                labelBgPadding: [8, 6], // More padding
-                labelShowBg: true,
+                // REMOVED: labelShowBg and labelBgStyle to remove the white box
+                labelShowBg: false,
                 markerEnd: {
                     type: MarkerType.ArrowClosed,
                     color: edgeColor,
@@ -224,7 +225,6 @@ const DFAGraph = ({ states, transitions, startState, acceptStates, currentState,
 
     const { nodes, edges } = getLayoutedElements();
 
-    // Auto zoom to fit when graph changes
     useEffect(() => {
         if (reactFlowInstance) {
             setTimeout(() => {
@@ -257,7 +257,7 @@ const DFAGraph = ({ states, transitions, startState, acceptStates, currentState,
                 nodesConnectable={false}
                 elementsSelectable={false}
                 defaultEdgeOptions={{
-                    type: 'smoothstep', // Default to smoothstep
+                    type: 'smoothstep',
                     style: { strokeWidth: 2, stroke: '#8b5cf6' },
                     markerEnd: {
                         type: MarkerType.ArrowClosed,

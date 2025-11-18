@@ -80,15 +80,15 @@ const LessonViewer = ({ lesson, automatonType, onComplete, isCompleted }) => {
                         <h3>Example:</h3>
                         <div className="example-content">
                             {step.example?.description && <p>{step.example.description}</p>}
-                            {step.example?.code && (
-                                <pre className="code-block">
-                                    <code>{step.example.code}</code>
-                                </pre>
-                            )}
                             {step.example?.visual && (
                                 <div className="visual-example">
                                     <img src={step.example.visual} alt="Example visualization" />
                                 </div>
+                            )}
+                            {step.example?.code && (
+                                <pre className="code-block">
+                                    <code>{step.example.code}</code>
+                                </pre>
                             )}
                         </div>
                     </div>

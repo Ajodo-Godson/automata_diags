@@ -51,6 +51,7 @@ Alphabet: Σ = {0, 1}
 States: Q = {q₀, q₁}`,
                     example: {
                         description: 'Visual structure and execution trace',
+                        visual: require('./Images/dfa_ending_with_1.png'),
                         code: `Visual Diagram:
 
       (q₀) --0--> (q₀)
@@ -149,6 +150,7 @@ Transitions:
 • δ(qₒdd, 1) = qₒdd   (1 doesn't change parity)`,
                     example: {
                         description: 'State diagram',
+                        visual: require('./Images/dfa_even_zeros.png'),
                         code: `        ┌────────┐
         │        │ 1 (loop)
         ▼        │
@@ -733,6 +735,7 @@ These operations preserve regularity and are useful in proving closure propertie
                 {
                     type: 'hands-on',
                     question: 'Build a DFA that accepts all strings over {0,1} ending with \'1\'',
+                    image: require('./Images/dfa_ending_with_1.png'),
                     simulatorType: 'DFA',
                     challenge: {
                         description: 'Your DFA should accept any string that ends with the symbol "1". Examples: "1", "01", "11", "001", "101" should be accepted. Examples: "", "0", "10", "100" should be rejected.',
@@ -761,6 +764,7 @@ These operations preserve regularity and are useful in proving closure propertie
                 {
                     type: 'hands-on',
                     question: 'Build a DFA that accepts all strings over {0,1} with an even number of 0s',
+                    image: require('./Images/dfa_even_zeros.png'),
                     simulatorType: 'DFA',
                     challenge: {
                         description: 'Your DFA should accept strings like "", "1", "00", "1001" and reject "0", "10", "101", "001". Think about using two states to track whether you\'ve seen an even or odd number of 0s.',

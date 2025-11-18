@@ -40,7 +40,7 @@ const StateNode = ({ data, isConnectable }) => {
             onMouseEnter={() => setShowDelete(true)}
             onMouseLeave={() => setShowDelete(false)}
         >
-            {/* Handles on all four sides to prevent edges going through nodes */}
+            {/* Handles on all four sides */}
             <Handle type="target" position={Position.Top} id="top" isConnectable={isConnectable} />
             <Handle type="target" position={Position.Right} id="right" isConnectable={isConnectable} />
             <Handle type="target" position={Position.Bottom} id="bottom" isConnectable={isConnectable} />
@@ -77,23 +77,19 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
     }, [nfa.states, nfa.transitions, reactFlowInstance]);
 
     const getLayoutedElements = useCallback(() => {
-        // Clean 2-row grid layout matching reference image
         const nodePositions = {};
         const nodeWidth = 70;
         const nodeHeight = 70;
         const horizontalSpacing = 200;
         const verticalSpacing = 180;
         
-        const numStates = nfa.states.length;
         const centerX = 400;
         const centerY = 250;
         
-        // Position start state on the left, then arrange others
-        // Start state MUST be positioned logically (usually on the left)
         const startStateIndex = nfa.states.indexOf(nfa.startState);
         const otherStates = nfa.states.filter((_, idx) => idx !== startStateIndex);
         
-        // Position start state on the left
+        // Position start state
         if (startStateIndex !== -1) {
             nodePositions[nfa.startState] = { 
                 x: centerX - horizontalSpacing * 2 - nodeWidth / 2, 
@@ -107,17 +103,17 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
             const totalOtherStates = otherStates.length;
             
             if (totalOtherStates === 4) {
-                // 2 rows: 2 each
+                // 2 rows
                 const row = index < 2 ? 0 : 1;
                 const col = index % 2;
                 x = centerX - horizontalSpacing / 2 + col * horizontalSpacing;
                 y = centerY - verticalSpacing / 2 + row * verticalSpacing;
             } else if (totalOtherStates === 3) {
-                // Single row
+                // Single row centered
                 x = centerX - horizontalSpacing + index * horizontalSpacing;
                 y = centerY;
             } else {
-                // Default: horizontal layout starting from centerX
+                // Default horizontal
                 x = centerX - (totalOtherStates - 1) * horizontalSpacing / 2 + index * horizontalSpacing;
                 y = centerY;
             }
@@ -125,7 +121,6 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
             nodePositions[state] = { x: x - nodeWidth / 2, y: y - nodeHeight / 2 };
         });
 
-        // Create nodes with calculated positions
         const nodes = nfa.states.map((state) => {
             const isCurrentNode = currentStates.includes(state);
             const pos = nodePositions[state];
@@ -144,7 +139,7 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
             };
         });
 
-        // Group transitions by (from, to) pair to combine labels
+        // Group transitions
         const edgeGroups = {};
         nfa.transitions.forEach((transition) => {
             const key = `${transition.from}-${transition.to}`;
@@ -163,44 +158,23 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
             edgeGroups[key].symbols.push(transition.symbol);
         });
 
-        // Group transitions by (from, symbol) to identify non-determinism
-        const nonDeterministicGroups = {};
-        nfa.transitions.forEach((transition) => {
-            const key = `${transition.from}-${transition.symbol}`;
-            if (!nonDeterministicGroups[key]) {
-                nonDeterministicGroups[key] = [];
-            }
-            nonDeterministicGroups[key].push(transition.to);
-        });
-
-        // Note: Bezier edges will automatically create smooth curves
-
-        // Create start state arrow from "nowhere" (no source state)
-        // Use a hidden node positioned to the left of start state
+        // Create hidden start arrow logic
         const startStateNodes = [];
         const startStateEdges = [];
         if (nfa.startState && nodePositions[nfa.startState]) {
             const startPos = nodePositions[nfa.startState];
-            const startNodeX = startPos.x - 80; // Position hidden node 80px to the left
-            const startNodeY = startPos.y; // Same vertical position
+            const startNodeX = startPos.x - 80;
+            const startNodeY = startPos.y;
             
-            // Create hidden start node (invisible, positioned to the left of start state)
             startStateNodes.push({
                 id: `start-node-${nfa.startState}`,
                 type: 'state',
                 position: { x: startNodeX, y: startNodeY },
-                data: { 
-                    label: '', 
-                    isStartState: false, 
-                    isAcceptState: false, 
-                    isCurrentState: false,
-                    isHidden: true // Flag to hide this node
-                },
+                data: { label: '', isHidden: true },
                 style: { opacity: 0, width: 1, height: 1 },
                 draggable: false,
             });
             
-            // Create arrow edge from hidden start node to start state
             startStateEdges.push({
                 id: `start-${nfa.startState}`,
                 source: `start-node-${nfa.startState}`,
@@ -208,35 +182,25 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
                 sourceHandle: 'right',
                 targetHandle: 'left',
                 type: 'smoothstep',
-                style: {
-                    stroke: '#000000',
-                    strokeWidth: 2,
-                },
-                markerEnd: {
-                    type: MarkerType.ArrowClosed,
-                    color: '#000000',
-                    width: 20,
-                    height: 20,
-                },
+                style: { stroke: '#000000', strokeWidth: 2 },
+                markerEnd: { type: MarkerType.ArrowClosed, color: '#000000', width: 20, height: 20 },
             });
         }
 
-        // Create edges with combined labels
+        // Create edges with combined labels and smart routing
         const edges = Object.values(edgeGroups).map((group, index) => {
             const isSelfLoop = group.from === group.to;
             const isEpsilon = group.isEpsilon;
             
-            // Sort symbols: epsilon first, then alphabetically
             const sortedSymbols = group.symbols.sort((a, b) => {
                 if (a === 'ε' || a === 'epsilon') return -1;
                 if (b === 'ε' || b === 'epsilon') return 1;
                 return a.localeCompare(b);
             });
             
-            // Combine symbols into label (e.g., "a, b" or "ε, a")
             const label = sortedSymbols.join(', ');
             
-            // Check if this edge is part of any active transition path
+            // Check for active path highlighting
             const matchingTransitions = activeTransitions.filter(at => 
                 at.from === group.from && 
                 at.to === group.to && 
@@ -245,118 +209,95 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
             
             const isHighlighted = matchingTransitions.length > 0;
             
-            // Check for non-determinism (multiple targets from same state with same symbol)
-            const hasNonDeterminism = sortedSymbols.some(symbol => {
-                const key = `${group.from}-${symbol}`;
-                return nonDeterministicGroups[key] && nonDeterministicGroups[key].length > 1;
-            });
-            
-            // Color scheme matching reference image: purple for regular transitions
-            let edgeColor = '#8b5cf6'; // Purple for regular transitions (matching reference)
-            let labelColor = '#1f2937'; // Dark gray/black for labels
-            let labelBgColor = 'transparent'; // No white background
-            let arrowColor = '#8b5cf6'; // Purple arrowheads
+            let edgeColor = '#8b5cf6';
+            let labelColor = '#1f2937';
+            let arrowColor = '#8b5cf6';
             
             if (isHighlighted) {
-                // Use the color from the active path(s)
-                // If multiple paths use this transition, use the first one's color
-                // The state diagram will show colors for active paths
                 const pathColor = matchingTransitions[0].color;
                 edgeColor = pathColor;
                 arrowColor = pathColor;
                 labelColor = pathColor;
-                labelBgColor = 'transparent'; // No background for highlighted edges
             } else if (isEpsilon) {
-                // Epsilon transitions: purple
-                edgeColor = '#8b5cf6';
                 arrowColor = '#8b5cf6';
-                labelColor = '#1f2937';
-                labelBgColor = 'transparent'; // No white background
             }
 
-            // Regular transitions: STRAIGHT lines (default type)
-            // Self-loops: CURVED arrows (smoothstep with curvature)
-            let edgeType = 'default'; // Straight lines for regular transitions
             let edgeStyle = {
                 stroke: edgeColor,
-                strokeWidth: isHighlighted ? 4 : 2, // Thicker for active paths
-                strokeDasharray: 'none',
-                opacity: isHighlighted ? 1 : 0.5, // Dim inactive transitions, full opacity for active paths
+                strokeWidth: isHighlighted ? 4 : 2,
+                opacity: isHighlighted ? 1 : 0.5,
             };
 
-            // Calculate source and target handles
+            // --- ROUTING LOGIC (Synced with DFAGraph) ---
+            let edgeType = 'smoothstep';
+            let sourceHandle = Position.Right;
+            let targetHandle = Position.Left;
+            let isBottomLane = false; // Flag to move label down via CSS
+
             const sourcePos = nodePositions[group.from];
             const targetPos = nodePositions[group.to];
-            let sourceHandle = 'right';
-            let targetHandle = 'left';
-            let pathOptions = {};
-            
+
             if (isSelfLoop) {
-                // Self-loops: CURVED arrow looping from node back to itself
-                // Reference shows curved loop above node (from top-right to top-left)
-                // Use smoothstep with top handles and high curvature for visible curved loop
-                edgeType = 'smoothstep';
-                sourceHandle = 'top'; // Start from top
-                targetHandle = 'top'; // End at top - creates curved loop above
-                pathOptions = {
-                    curvature: 1.0, // Maximum curvature for pronounced loop
-                };
-                edgeStyle = {
-                    stroke: edgeColor,
-                    strokeWidth: isHighlighted ? 3 : 2.5, // Thicker for visibility
-                    opacity: 1, // Full opacity - ensure it's visible
-                    strokeDasharray: 'none',
-                };
+                // Self-Loop: Top -> Right (Standardized)
+                edgeType = 'default'; // Bezier curve
+                sourceHandle = Position.Top;
+                targetHandle = Position.Right;
+                edgeStyle.strokeWidth = isHighlighted ? 3 : 2.5;
+                edgeStyle.opacity = 1;
             } else if (sourcePos && targetPos) {
-                // Regular transitions: STRAIGHT lines
                 const dx = targetPos.x - sourcePos.x;
                 const dy = targetPos.y - sourcePos.y;
-                
-                // Determine handle positions for straight connections
-                if (Math.abs(dx) > Math.abs(dy)) {
-                    // Horizontal connection
-                    sourceHandle = dx > 0 ? 'right' : 'left';
-                    targetHandle = dx > 0 ? 'left' : 'right';
+                const isHorizontal = Math.abs(dx) > Math.abs(dy);
+
+                if (isHorizontal) {
+                     if (dx > 0) {
+                        // Forward (Left -> Right): Right -> Left
+                        sourceHandle = Position.Right;
+                        targetHandle = Position.Left;
+                    } else {
+                        // Backward (Right -> Left): Bottom -> Bottom (Return Lane)
+                        sourceHandle = Position.Bottom;
+                        targetHandle = Position.Bottom;
+                        isBottomLane = true; // Move label down
+                    }
                 } else {
-                    // Vertical connection
-                    sourceHandle = dy > 0 ? 'bottom' : 'top';
-                    targetHandle = dy > 0 ? 'top' : 'bottom';
+                    // Vertical
+                    if (dy > 0) {
+                        // Down: Bottom -> Top
+                        sourceHandle = Position.Bottom;
+                        targetHandle = Position.Top;
+                    } else {
+                        // Up: Right -> Right (Loop around side)
+                        sourceHandle = Position.Right;
+                        targetHandle = Position.Right;
+                    }
                 }
-                
-                // No curvature for regular transitions - keep them straight
-                pathOptions = {};
             }
 
-            const edgeConfig = {
+            return {
                 id: `${group.from}-${group.to}-${label}-${index}`,
                 source: group.from,
                 target: group.to,
-                sourceHandle: sourceHandle,
-                targetHandle: targetHandle,
-                label: label,
+                sourceHandle,
+                targetHandle,
+                label,
                 type: edgeType,
                 animated: isHighlighted,
                 style: edgeStyle,
-                ...pathOptions, // Spread path options (curvature, offset)
-                data: {
-                    isSelfLoop: isSelfLoop, // Add data attribute for CSS targeting
-                },
+                // Use classes to control label position (above/below line)
+                className: isBottomLane ? 'edge-bottom' : 'edge-top',
+                data: { isSelfLoop },
                 labelStyle: {
                     fill: labelColor,
                     fontWeight: isHighlighted ? 700 : (isEpsilon ? 700 : 600),
-                    fontSize: isEpsilon ? 18 : 16, // Larger for visibility, even bigger for epsilon
+                    fontSize: isEpsilon ? 18 : 16,
                     fontStyle: isEpsilon ? 'italic' : 'normal',
                 },
                 labelBgStyle: {
-                    fill: labelBgColor,
+                    fill: 'transparent',
                     fillOpacity: 0,
-                    rx: 5,
-                    ry: 5,
                 },
-                labelBgPadding: [4, 4],
-                labelShowBg: false, // No background for labels
-                // Position labels above the arrow lines
-                labelOffset: isSelfLoop ? -20 : -15, // Negative offset moves label above the line
+                labelShowBg: false, // No white background
                 markerEnd: {
                     type: MarkerType.ArrowClosed,
                     color: arrowColor,
@@ -364,11 +305,8 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
                     height: isSelfLoop ? 15 : 20,
                 },
             };
-            
-            return edgeConfig;
         });
 
-        // Combine start state nodes and edges with regular nodes and edges
         const allNodes = [...startStateNodes, ...nodes];
         const allEdges = [...startStateEdges, ...edges];
         
@@ -394,7 +332,7 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
                 nodesConnectable={false}
                 elementsSelectable={false}
                 defaultEdgeOptions={{
-                    type: 'default', // Straight lines by default
+                    type: 'smoothstep', 
                     style: { strokeWidth: 2, stroke: '#8b5cf6' },
                     markerEnd: {
                         type: MarkerType.ArrowClosed,
@@ -403,7 +341,7 @@ const NFAGraph = ({ nfa, currentStates = [], activeTransitions = [] }) => {
                         height: 20,
                     },
                 }}
-                connectionLineType="default"
+                connectionLineType="smoothstep"
             >
                 <Background color="#e5e7eb" gap={16} />
                 <Controls />
