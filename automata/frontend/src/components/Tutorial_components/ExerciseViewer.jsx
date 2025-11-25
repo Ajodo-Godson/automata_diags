@@ -71,12 +71,8 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
             // Clear challenge data when moving to next question
             sessionStorage.removeItem('simulatorChallenge');
         } else if (exercise && exercise.questions) {
-            // Exercise completed
-            const correctCount = exercise.questions.filter((q, idx) => 
-                answers[idx] === q.correctAnswer
-            ).length;
-            
-            if (correctCount === exercise.questions.length && onComplete) {
+            // Exercise completed - call onComplete regardless of score
+            if (onComplete) {
                 onComplete();
             }
         }

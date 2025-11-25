@@ -1,26 +1,19 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import './stylings/CFGSimulator.css';
 import { CFGControlPanel } from './CFGControlPanel';
 import { CFGTestCases } from './CFGTestCases';
-import { ParseTree } from './ParseTree';
-import { VariablesEditor } from './VariablesEditor';
-import { TerminalsEditor } from './TerminalsEditor';
-import { ProductionRulesEditor } from './ProductionRulesEditor';
-import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { useCFG } from './useCFG';
 
 const CFGSimulator = () => {
     const { examples } = useExamples();
-    const [currentExampleName, setCurrentExampleName] = useState(null);
-    const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
+    const [currentExampleName, setCurrentExampleName] = useState('balanced_parentheses');
 
-    // Start with a blank CFG
     const cfg = useCFG({
-        variables: ['S'],
-        terminals: ['a', 'b'],
-        rules: [],
-        startVariable: 'S',
+        variables: examples['balanced_parentheses'].variables,
+        terminals: examples['balanced_parentheses'].terminals,
+        rules: examples['balanced_parentheses'].rules,
+        startVariable: examples['balanced_parentheses'].startVariable,
     });
 
     const [inputString, setInputString] = useState('');
@@ -29,103 +22,6 @@ const CFGSimulator = () => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [playbackSpeed, setPlaybackSpeed] = useState(1000);
     const [isAccepted, setIsAccepted] = useState(null);
-
-    // Event listeners for toolbox actions
-    useEffect(() => {
-        const handleImport = () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const cfgDefinition = JSON.parse(e.target.result);
-                            cfg.loadCFG({
-                                variables: cfgDefinition.variables || [],
-                                terminals: cfgDefinition.terminals || [],
-                                rules: cfgDefinition.rules || [],
-                                startVariable: cfgDefinition.startVariable || 'S'
-                            });
-                            setCurrentExampleName(cfgDefinition.name || 'Imported CFG');
-                            resetDerivation();
-                        } catch (error) {
-                            alert('Invalid JSON file or CFG definition format');
-                        }
-                    };
-                    reader.readAsText(file);
-                }
-            };
-            input.click();
-        };
-
-        const handleExport = () => {
-            const cfgDefinition = {
-                name: currentExampleName || 'Custom CFG',
-                description: 'Exported CFG definition',
-                variables: cfg.variables,
-                terminals: cfg.terminals,
-                rules: cfg.rules,
-                startVariable: cfg.startVariable
-            };
-            
-            const dataStr = JSON.stringify(cfgDefinition, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            
-            const exportFileDefaultName = 'cfg_definition.json';
-            
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-        };
-
-        const handleClearAll = () => {
-            if (window.confirm('Are you sure you want to clear all and start fresh?')) {
-                cfg.loadCFG({
-                    variables: ['S'],
-                    terminals: ['a', 'b'],
-                    rules: [],
-                    startVariable: 'S'
-                });
-                setCurrentExampleName(null);
-                setCurrentExampleDescription(null);
-                resetDerivation();
-            }
-        };
-
-        const resetDerivation = () => {
-            setDerivationSteps([]);
-            setCurrentStep(-1);
-            setIsPlaying(false);
-            setIsAccepted(null);
-        };
-
-        window.addEventListener('import', handleImport);
-        window.addEventListener('export', handleExport);
-        window.addEventListener('clearAll', handleClearAll);
-
-        return () => {
-            window.removeEventListener('import', handleImport);
-            window.removeEventListener('export', handleExport);
-            window.removeEventListener('clearAll', handleClearAll);
-        };
-    }, [cfg, currentExampleName]);
-
-    // Auto-play derivation steps
-    useEffect(() => {
-        let timer;
-        if (isPlaying && currentStep < derivationSteps.length - 1) {
-            timer = setTimeout(() => {
-                setCurrentStep(currentStep + 1);
-            }, playbackSpeed);
-        } else if (currentStep >= derivationSteps.length - 1) {
-            setIsPlaying(false);
-        }
-        return () => clearTimeout(timer);
-    }, [isPlaying, currentStep, derivationSteps.length, playbackSpeed]);
 
     // Helper functions for CNF conversion and CYK parsing
     const normalizeCFG = (cfg) => {
@@ -396,114 +292,23 @@ const CFGSimulator = () => {
         setCurrentStep(-1);
         setIsAccepted(null);
 
-        // Try leftmost derivation
-        const steps = generateLeftmostDerivation(cfg, inputString);
-        
-        if (steps.length > 0) {
-            setDerivationSteps(steps);
-            setIsAccepted(true);
-            setCurrentStep(0);
-        } else {
-            // If leftmost derivation fails, try CYK parsing
-            const cnfGrammar = toCNF(cfg);
-            const accepted = cykParse(cnfGrammar, inputString);
-            
-            const steps = [{
-                step: 1,
-                string: inputString,
-                production: null,
-                description: `No derivation found. CYK Result: ${accepted ? 'ACCEPTED' : 'REJECTED'}`
-            }];
-            
-            setDerivationSteps(steps);
-            setIsAccepted(accepted);
-            setCurrentStep(0);
-        }
-    };
+        // Convert CFG to CNF
+        const cnfGrammar = toCNF(cfg);
 
-    // Generate leftmost derivation steps with backtracking
-    const generateLeftmostDerivation = (cfg, target) => {
-        const maxSteps = 50; // Prevent infinite loops
-        const maxLength = target.length * 3; // Prevent strings from growing too long
-        
-        // Recursive backtracking function
-        const derive = (current, steps, depth) => {
-            // Base case: reached target
-            if (current === target) {
-                return steps;
-            }
-            
-            // Prevent excessive depth or length
-            if (depth >= maxSteps || current.length > maxLength) {
-                return null;
-            }
-            
-            // Find the leftmost variable
-            let variableIndex = -1;
-            let variable = null;
-            for (let i = 0; i < current.length; i++) {
-                if (cfg.variables.includes(current[i])) {
-                    variableIndex = i;
-                    variable = current[i];
-                    break;
-                }
-            }
-            
-            // No more variables to expand
-            if (variable === null) {
-                // No variables left but haven't reached target
-                return null;
-            }
-            
-            // Find applicable rules for this variable
-            const applicableRules = cfg.rules.filter(r => r.left === variable);
-            if (applicableRules.length === 0) {
-                return null; // No rules for this variable
-            }
-            
-            // Try each applicable rule (backtracking)
-            for (const rule of applicableRules) {
-                const replacement = rule.right === 'ε' ? '' : rule.right;
-                const newString = current.substring(0, variableIndex) + replacement + current.substring(variableIndex + 1);
-                
-                // Skip if the terminal prefix doesn't match target
-                const terminalPrefix = newString.split('').filter((_, idx) => {
-                    return idx < variableIndex || !cfg.variables.includes(newString[idx]);
-                }).join('').substring(0, variableIndex);
-                
-                if (terminalPrefix && !target.startsWith(terminalPrefix)) {
-                    continue; // Prune this branch
-                }
-                
-                // Create new step
-                const newSteps = [...steps, {
-                    step: depth,
-                    string: newString,
-                    production: rule,
-                    highlightIndices: Array.from({ length: replacement.length }, (_, i) => variableIndex + i),
-                    description: `Apply ${rule.left} → ${rule.right}`
-                }];
-                
-                // Recursively try to derive from this point
-                const result = derive(newString, newSteps, depth + 1);
-                if (result !== null) {
-                    return result;
-                }
-            }
-            
-            // No rule worked, backtrack
-            return null;
-        };
-        
-        // Start with the start variable
-        const initialSteps = [{
-            step: 0,
-            string: cfg.startVariable,
-            production: null,
-            description: `Start with ${cfg.startVariable}`
+        // Use CYK to parse
+        const accepted = cykParse(cnfGrammar, inputString);
+
+        // For now, just set accepted; later add derivation steps from CYK table
+        const steps = [{
+            step: 1,
+            string: inputString,
+            rule: null,
+            description: `Parsed using CNF grammar. Result: ${accepted ? 'ACCEPTED' : 'REJECTED'}`
         }];
-        
-        return derive(cfg.startVariable, initialSteps, 1) || [];
+
+        setDerivationSteps(steps);
+        setIsAccepted(accepted);
+        setCurrentStep(0);
     };
 
     const handleRun = () => {
@@ -525,65 +330,25 @@ const CFGSimulator = () => {
         }
     };
 
-    const handleReset = useCallback(() => {
+    const handleReset = () => {
         setDerivationSteps([]);
         setCurrentStep(-1);
         setIsPlaying(false);
         setIsAccepted(null);
-    }, []);
+    };
 
-    const loadExample = useCallback((exampleName) => {
+    const loadExample = (exampleName) => {
         const example = examples[exampleName];
         setCurrentExampleName(exampleName);
-        setCurrentExampleDescription(example?.description || null);
         cfg.loadCFG(example);
         setInputString('');
         handleReset();
-    }, [examples, cfg, setCurrentExampleName, setInputString, handleReset]);
+    };
 
     const handleLoadTest = (testInput) => {
         setInputString(testInput);
         handleReset();
     };
-
-    // Event listeners for toolbox actions
-    useEffect(() => {
-        const handleAddRule = () => {
-            alert('Adding rules is not implemented for CFG. Use Import to load a custom CFG.');
-        };
-
-        const handleEditRule = () => {
-            alert('Editing rules is not implemented for CFG. Use Import to load a custom CFG.');
-        };
-
-        const handleSetStartSymbol = () => {
-            alert('Setting start symbol is not implemented for CFG. Use Import to load a custom CFG.');
-        };
-
-        const handleConvertCNF = () => {
-            alert('Converting to CNF is not implemented in the toolbox. Use the Convert to CNF button in the simulator.');
-        };
-
-        const handleClearAll = () => {
-            // Reset to first example
-            const firstExample = Object.keys(examples)[0];
-            loadExample(firstExample);
-        };
-
-        window.addEventListener('addRule', handleAddRule);
-        window.addEventListener('editRule', handleEditRule);
-        window.addEventListener('setStartSymbol', handleSetStartSymbol);
-        window.addEventListener('convertCNF', handleConvertCNF);
-        window.addEventListener('clearAll', handleClearAll);
-
-        return () => {
-            window.removeEventListener('addRule', handleAddRule);
-            window.removeEventListener('editRule', handleEditRule);
-            window.removeEventListener('setStartSymbol', handleSetStartSymbol);
-            window.removeEventListener('convertCNF', handleConvertCNF);
-            window.removeEventListener('clearAll', handleClearAll);
-        };
-    }, [examples, loadExample]);
 
     return (
         <div className="cfg-simulator-new">
@@ -605,23 +370,36 @@ const CFGSimulator = () => {
                                 key={key}
                                 onClick={() => loadExample(key)}
                                 className={`cfg-selector-btn ${currentExampleName === key ? 'active' : ''}`}
-                                title={example.description || example.name}
                             >
                                 {example.name}
                             </button>
                         ))}
                     </div>
-                    {currentExampleDescription && (
-                        <div className="cfg-example-description">
-                            <strong>Description:</strong> {currentExampleDescription}
-                        </div>
-                    )}
                 </div>
 
                 {/* Main Grid */}
                 <div className="cfg-grid">
                     {/* Left Column */}
                     <div className="cfg-left-col">
+                        {/* Grammar Rules */}
+                        <div className="cfg-grammar-card">
+                            <h3 className="cfg-card-title">Grammar Rules</h3>
+                            <div className="cfg-rules-list">
+                                {cfg.rules.map((rule, index) => (
+                                    <div key={index} className="cfg-rule">
+                                        <span className="cfg-rule-left">{rule.left}</span>
+                                        <span className="cfg-rule-arrow">→</span>
+                                        <span className="cfg-rule-right">{rule.right}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="cfg-grammar-info">
+                                <p><strong>Variables:</strong> {cfg.variables.join(', ')}</p>
+                                <p><strong>Terminals:</strong> {cfg.terminals.join(', ')}</p>
+                                <p><strong>Start:</strong> {cfg.startVariable}</p>
+                            </div>
+                        </div>
+
                         {/* Input String */}
                         <div className="cfg-input-card">
                             <h3 className="cfg-card-title">Test Input String</h3>
@@ -664,107 +442,63 @@ const CFGSimulator = () => {
                             onReset={handleReset}
                             onSpeedChange={setPlaybackSpeed}
                         />
-
-                        {/* Grammar Rules */}
-                        <CollapsibleSection title="Grammar Rules" defaultOpen={true}>
-                            <div className="cfg-grammar-card">
-                                <div className="cfg-rules-list">
-                                    {cfg.rules.map((rule, index) => (
-                                        <div key={index} className="cfg-rule">
-                                            <span className="cfg-rule-left">{rule.left}</span>
-                                            <span className="cfg-rule-arrow">→</span>
-                                            <span className="cfg-rule-right">{rule.right}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="cfg-grammar-info">
-                                    <p><strong>Variables:</strong> {cfg.variables.join(', ')}</p>
-                                    <p><strong>Terminals:</strong> {cfg.terminals.join(', ')}</p>
-                                    <p><strong>Start:</strong> {cfg.startVariable}</p>
-                                </div>
-                            </div>
-                        </CollapsibleSection>
                     </div>
 
                     {/* Right Column */}
                     <div className="cfg-right-col">
-                        {/* Variables Editor */}
-                        <CollapsibleSection title="Variables Editor" defaultOpen={false}>
-                            <VariablesEditor cfg={cfg} onUpdate={handleReset} />
-                        </CollapsibleSection>
-
-                        {/* Terminals Editor */}
-                        <CollapsibleSection title="Terminals Editor" defaultOpen={false}>
-                            <TerminalsEditor cfg={cfg} onUpdate={handleReset} />
-                        </CollapsibleSection>
-
-                        {/* Production Rules Editor */}
-                        <CollapsibleSection title="Production Rules Editor" defaultOpen={false}>
-                            <ProductionRulesEditor cfg={cfg} onUpdate={handleReset} />
-                        </CollapsibleSection>
-
                         {/* Test Cases */}
-                        <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
-                            <CFGTestCases
-                                onLoadTest={handleLoadTest}
-                                currentExample={currentExampleName}
-                            />
-                        </CollapsibleSection>
+                        <CFGTestCases
+                            onLoadTest={handleLoadTest}
+                            currentExample={currentExampleName}
+                        />
 
-                        {/* Derivation Steps and Parse Tree Side by Side */}
-                        <div className="cfg-visualization-container">
-                            <CollapsibleSection title="Derivation Steps" defaultOpen={true}>
-                                <div className="cfg-derivation-card">
-                                    {derivationSteps.length > 0 ? (
-                                        <div className="cfg-derivation-steps">
-                                            {derivationSteps.map((step, index) => (
-                                                <div
-                                                    key={index}
-                                                    className={`cfg-derivation-step ${
-                                                        index === currentStep ? 'current' :
-                                                        index < currentStep ? 'completed' : 'pending'
-                                                    }`}
-                                                >
-                                                    <div className="cfg-step-header">
-                                                        <span className="cfg-step-number">Step {step.step}:</span>
-                                                        {step.production && (
-                                                            <span className="cfg-step-rule">
-                                                                Applied: {step.production.left} → {step.production.right}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <div className="cfg-step-string">
-                                                        {step.string.split('').map((char, charIndex) => (
-                                                            <span
-                                                                key={charIndex}
-                                                                className={`cfg-char ${
-                                                                    cfg.variables.includes(char) ? 'variable' : 'terminal'
-                                                                }`}
-                                                            >
-                                                                {char}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                    <div className="cfg-step-desc">{step.description}</div>
-                                                </div>
-                                            ))}
+                        {/* Derivation Steps */}
+                        {derivationSteps.length > 0 && (
+                            <div className="cfg-derivation-card">
+                                <h3 className="cfg-card-title">Derivation Steps</h3>
+                                <div className="cfg-derivation-steps">
+                                    {derivationSteps.map((step, index) => (
+                                        <div
+                                            key={index}
+                                            className={`cfg-derivation-step ${
+                                                index === currentStep ? 'current' :
+                                                index < currentStep ? 'completed' : 'pending'
+                                            }`}
+                                        >
+                                            <div className="cfg-step-header">
+                                                <span className="cfg-step-number">Step {step.step}:</span>
+                                                {step.rule && (
+                                                    <span className="cfg-step-rule">
+                                                        Applied: {step.rule.left} → {step.rule.right}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="cfg-step-string">
+                                                {step.string.split('').map((char, charIndex) => (
+                                                    <span
+                                                        key={charIndex}
+                                                        className={`cfg-char ${
+                                                            cfg.variables.includes(char) ? 'variable' : 'terminal'
+                                                        }`}
+                                                    >
+                                                        {char}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                            <div className="cfg-step-desc">{step.description}</div>
                                         </div>
-                                    ) : (
-                                        <div className="cfg-derivation-empty">
-                                            <p>Run a derivation to see the steps</p>
-                                        </div>
-                                    )}
+                                    ))}
                                 </div>
-                            </CollapsibleSection>
+                            </div>
+                        )}
 
-                            <CollapsibleSection title="Parse Tree" defaultOpen={true}>
-                                <div className="cfg-tree-card">
-                                    <ParseTree 
-                                        derivationSteps={derivationSteps}
-                                        currentStep={currentStep}
-                                    />
-                                </div>
-                            </CollapsibleSection>
+                        {/* Parse Tree Placeholder */}
+                        <div className="cfg-tree-card">
+                            <h3 className="cfg-card-title">Parse Tree</h3>
+                            <div className="cfg-tree-placeholder">
+                                <p>Parse tree visualization would be displayed here.</p>
+                                <p>This would show the hierarchical structure of the derivation.</p>
+                            </div>
                         </div>
                     </div>
                 </div>

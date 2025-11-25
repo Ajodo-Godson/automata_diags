@@ -861,7 +861,7 @@ These operations preserve regularity and are useful in proving closure propertie
                 {
                     type: 'hands-on',
                     question: 'Build a DFA that accepts all strings over {0,1} ending with \'1\'',
-                    image: require('./Images/dfa_ending_with_1.png'),
+                    // image: require('./Images/dfa_ending_with_1.png'),
                     simulatorType: 'DFA',
                     challenge: {
                         description: 'Your DFA should accept any string that ends with the symbol "1". Examples: "1", "01", "11", "001", "101" should be accepted. Examples: "", "0", "10", "100" should be rejected.',
@@ -890,7 +890,7 @@ These operations preserve regularity and are useful in proving closure propertie
                 {
                     type: 'hands-on',
                     question: 'Build a DFA that accepts all strings over {0,1} with an even number of 0s',
-                    image: require('./Images/dfa_even_zeros.png'),
+                    // image: require('./Images/dfa_even_zeros.png'),
                     simulatorType: 'DFA',
                     challenge: {
                         description: 'Your DFA should accept strings like "", "1", "00", "1001" and reject "0", "10", "101", "001". Think about using two states to track whether you\'ve seen an even or odd number of 0s.',
@@ -957,7 +957,7 @@ These operations preserve regularity and are useful in proving closure propertie
                             { input: 'ab', expected: false, description: 'Incomplete' },
                             { input: 'abb', expected: false, description: 'No "aba"' },
                             { input: 'bbb', expected: false, description: 'No "aba"' },
-                            { input: 'aabaa', expected: false, description: 'No "aba"' }
+                            { input: 'aabaa', expected: true, description: 'Contains "aba"' }
                         ],
                         hints: [
                             'You need 4 states: one for each prefix of "aba" and one for having seen "aba"',
