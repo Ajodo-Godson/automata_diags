@@ -106,5 +106,3 @@ This directory contains JSON files for all the key automata examples used in the
 - Capture transition labels without overlap
 - For complex automata, consider multiple views (zoomed in/out)
 - Save as PNG for best quality in tutorials
-
-

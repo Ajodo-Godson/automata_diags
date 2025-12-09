@@ -208,7 +208,7 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
                     {question?.type === 'hands-on' && question?.challenge && (
                         <div className="hands-on-question">
                             <div className="challenge-description">
-                                <h3>🛠️ Hands-On Challenge</h3>
+                                <h3> Hands-On Challenge</h3>
                                 <p>{question.challenge.description}</p>
                             </div>
 

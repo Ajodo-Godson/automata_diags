@@ -4,10 +4,13 @@ import { PDAControlPanel } from './PDAControlPanel';
 import { PDATestCases } from './PDATestCases';
 import { useExamples } from './examples';
 import { usePDA } from './usePDA';
+import { validatePDAChallenge } from '../Tutorial_components/ChallengeValidator';
+import { CheckCircle, XCircle, Target } from 'lucide-react';
 
-const PDASimulator = () => {
+const PDASimulator = ({ challenge }) => {
     const { examples } = useExamples();
     const [currentExampleName, setCurrentExampleName] = useState('balanced_parentheses');
+    const [validationResults, setValidationResults] = useState(null);
 
     const pda = usePDA({
         states: examples['balanced_parentheses'].states,
@@ -148,9 +151,85 @@ const PDASimulator = () => {
         handleReset();
     };
 
+    const handleValidateChallenge = () => {
+        if (!challenge || !challenge.challenge || !challenge.challenge.testCases) {
+            alert('No challenge data available');
+            return;
+        }
+
+        // Build PDA object for validation
+        const userPDA = {
+            states: pda.states,
+            alphabet: pda.alphabet,
+            stackAlphabet: pda.stackAlphabet,
+            transitions: pda.transitions,
+            startState: pda.startState,
+            startStackSymbol: pda.startStackSymbol,
+            acceptStates: pda.acceptStates
+        };
+
+        // Validate against test cases
+        const results = validatePDAChallenge(userPDA, challenge.challenge.testCases);
+        setValidationResults(results);
+
+        // Send results back to tutorial window (if opened from tutorial)
+        if (window.opener && challenge.returnTo === 'tutorial') {
+            window.opener.postMessage({
+                type: 'CHALLENGE_RESULT',
+                results: results
+            }, window.location.origin);
+        }
+    };
+
     return (
         <div className="pda-simulator-new">
             <div className="pda-container">
+                {/* Challenge Banner */}
+                {challenge && challenge.challenge && (
+                    <div className="challenge-banner">
+                        <div className="challenge-banner-content">
+                            <h2><Target size={28} /> Tutorial Challenge</h2>
+                            <p><strong>Task:</strong> {challenge.challenge.description}</p>
+                            <p><strong>Test Cases:</strong> {challenge.challenge.testCases.length} tests to pass</p>
+                        </div>
+                        <button 
+                            className="validate-challenge-btn"
+                            onClick={handleValidateChallenge}
+                        >
+                            <CheckCircle size={20} style={{ marginRight: '8px' }} />
+                            Validate Challenge
+                        </button>
+                        {validationResults && (
+                            <div className="validation-results">
+                                <h3>
+                                    {validationResults.passed === validationResults.total ? (
+                                        <><CheckCircle size={24} /> All Tests Passed!</>
+                                    ) : (
+                                        <><XCircle size={24} /> Some Tests Failed</>
+                                    )}
+                                </h3>
+                                <p>Passed: {validationResults.passed} / {validationResults.total} ({validationResults.percentage}%)</p>
+                                <div className="test-results-list">
+                                    {validationResults.results.map((result, idx) => (
+                                        <div key={idx} className={`test-result ${result.passed ? 'pass' : 'fail'}`}>
+                                            <span className="test-icon">
+                                                {result.passed ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                                            </span>
+                                            <span className="test-input">"{result.input || 'ε'}"</span>
+                                            <span className="test-expected">
+                                                Expected: {result.expected ? 'Accept' : 'Reject'}
+                                            </span>
+                                            <span className="test-actual">
+                                                Got: {result.actual ? 'Accept' : 'Reject'}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Header */}
                 <div className="pda-header">
                     <h1 className="pda-title">PDA Simulator</h1>

@@ -47,7 +47,7 @@ const TutorialHub = () => {
                 {/* Progress Cards in Header */}
                 <div className="header-progress">
                     <div className="progress-card">
-                        <div className="progress-card-icon">📚</div>
+                        <div className="progress-card-icon"></div>
                         <div className="progress-card-info">
                             <span className="progress-label">Lessons</span>
                             <span className="progress-value">{completedLessonsCount}/{totalLessons}</span>
@@ -69,7 +69,7 @@ const TutorialHub = () => {
                     </div>
                     
                     <div className="progress-card">
-                        <div className="progress-card-icon">🏆</div>
+                        <div className="progress-card-icon"></div>
                         <div className="progress-card-info">
                             <span className="progress-label">Exercises</span>
                             <span className="progress-value">{completedExercisesCount}/{totalExercises}</span>
@@ -120,7 +120,7 @@ const TutorialHub = () => {
                     <div className="content-section">
                         <div className="content-tabs">
                             <div className="tab-header">
-                                <h3>📖 Learning Materials</h3>
+                                <h3> Learning Materials</h3>
                                 <span className="topic-badge">{selectedAutomaton}</span>
                             </div>
                         </div>

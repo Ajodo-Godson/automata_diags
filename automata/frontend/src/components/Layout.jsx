@@ -57,7 +57,7 @@ const Layout = ({ children, currentAutomaton, setCurrentAutomaton }) => {
                         className={`type-btn-horizontal tutorial-btn ${currentAutomaton === 'Tutorial' ? 'active' : ''}`}
                         onClick={() => setCurrentAutomaton('Tutorial')}
                     >
-                        📚 Tutorial
+                        Tutorial
                     </button>
                 </nav>
 

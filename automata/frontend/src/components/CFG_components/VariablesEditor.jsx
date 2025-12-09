@@ -128,7 +128,3 @@ export function VariablesEditor({ cfg, onUpdate }) {
 }
 
 
-
-
-
-
