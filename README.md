@@ -9,7 +9,7 @@ A powerful, modern, and educational Python toolkit for automata theory. Visualiz
 
 **For the full, comprehensive documentation including tutorials and the API reference, please visit our [Documentation Website](https://automata-diags.readthedocs.io/).**
 
-## 🤔 Why Automata Diags?
+##  Why Automata Diags?
 
 | Feature                 | Why It Matters                                                                                                             |
 | :---------------------- | :------------------------------------------------------------------------------------------------------------------------- |
@@ -19,14 +19,14 @@ A powerful, modern, and educational Python toolkit for automata theory. Visualiz
 | **Instant Visualization**| Don't just build automata—see them. Instant visual feedback helps solidify complex concepts and makes debugging intuitive.    |
 | **Modern & Maintained** | Built with modern Python (type hints, clean architecture) and actively maintained for correctness and new features.           |
 
-## 📦 Installation
+##  Installation
 
 ```bash
 pip install automata-diags
 ```
 Requires Python 3.8+ and Graphviz.
 
-## 🚀 Quick Start
+##  Quick Start
 
 ```python
 from automata.backend.grammar.dist import State, Symbol
@@ -46,11 +46,11 @@ drawer.draw_dfa_from_object(dfa, "my_first_dfa")
 ```
 **For more examples and detailed guides, please visit the [Full Documentation Site](https://automata-diags.readthedocs.io/).**
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions are welcome! Please feel free to open a pull request or submit an issue on our [GitHub repository](https://github.com/Ajodo-Godson/automata_diags).
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License. 
 
