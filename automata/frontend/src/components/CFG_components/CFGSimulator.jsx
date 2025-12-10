@@ -24,60 +24,80 @@ const CFGSimulator = () => {
     const [isAccepted, setIsAccepted] = useState(null);
 
     // Helper functions for CNF conversion and CYK parsing
-    const normalizeCFG = (cfg) => {
-        const newCfg = JSON.parse(JSON.stringify(cfg));
-        if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
-        newCfg.rules = newCfg.rules.map(r => ({
-            left: r.left,
-            right: r.right === 'ε' ? [] : r.right.split('')
-        }));
-        return newCfg;
+    const toArrayRHS = (rhs) => {
+        if (Array.isArray(rhs)) {
+            return rhs.filter((sym) => typeof sym === 'string' && sym.length > 0);
+        }
+        if (typeof rhs !== 'string') return [];
+        const trimmed = rhs.trim();
+        if (!trimmed || trimmed === 'ε' || trimmed === 'epsilon') return [];
+        return trimmed.split('');
     };
 
-    const toCNF = (cfg) => {
-        let cnf = normalizeCFG(cfg); // Normalize first
+    const cloneCFG = (cfg) => ({
+        variables: [...cfg.variables],
+        terminals: [...cfg.terminals],
+        rules: cfg.rules.map((r) => ({ left: r.left, right: [...r.right] })),
+        startVariable: cfg.startVariable,
+    });
 
-        // Eliminate start symbol from RHS
-        cnf = eliminateStart(cnf);
+    const normalizeCFG = (cfg) => {
+        const variables = Array.isArray(cfg.variables) ? [...new Set(cfg.variables)] : [];
+        const terminals = Array.isArray(cfg.terminals) ? [...new Set(cfg.terminals)] : [];
+        const rules = Array.isArray(cfg.rules)
+            ? cfg.rules.map((rule) => ({ left: rule.left, right: toArrayRHS(rule.right) }))
+            : [];
+        const startVariable = typeof cfg.startVariable === 'string' ? cfg.startVariable : '';
+        if (startVariable && !variables.includes(startVariable)) {
+            variables.push(startVariable);
+        }
+        return {
+            variables,
+            terminals,
+            rules,
+            startVariable,
+        };
+    };
 
-        // Eliminate null productions
-        cnf = eliminateNull(cnf);
+    const ensureUniqueVariableName = (base, usedVariables) => {
+        let counter = 0;
+        let candidate = base;
+        while (usedVariables.has(candidate)) {
+            counter += 1;
+            candidate = `${base}_${counter}`;
+        }
+        usedVariables.add(candidate);
+        return candidate;
+    };
 
-        // Eliminate unit productions
-        cnf = eliminateUnit(cnf);
-
-        // Separate terminals
-        cnf = separateTerminals(cnf);
-
-        // Binarize
-        cnf = binarize(cnf);
-
-        // Remove duplicates
-        cnf = removeDuplicates(cnf);
-
-        //Sort productions
-        cnf.rules.sort((a, b) => {
-            const leftComparison = a.left.localeCompare(b.left);
-            if (leftComparison !== 0) return leftComparison;
-            return a.right.join(' ').localeCompare(b.right.join(' '));
+    const computeNullableSet = (cfg) => {
+        const nullable = new Set();
+        cfg.rules.forEach((rule) => {
+            if (rule.right.length === 0) {
+                nullable.add(rule.left);
+            }
         });
 
-        console.log(cnf);
-
-        return cnf;
+        let changed = true;
+        while (changed) {
+            changed = false;
+            cfg.rules.forEach((rule) => {
+                if (!nullable.has(rule.left) && rule.right.every((sym) => nullable.has(sym))) {
+                    nullable.add(rule.left);
+                    changed = true;
+                }
+            });
+        }
+        return nullable;
     };
 
     const eliminateStart = (cfg) => {
-        const newCfg = JSON.parse(JSON.stringify(cfg));
-        // Defensive guards for malformed input
-        if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
-        if (!Array.isArray(newCfg.variables)) newCfg.variables = [];
-        // Ensure each rule has a right-hand side array
-        newCfg.rules = newCfg.rules.map(r => ({ left: r.left, right: Array.isArray(r.right) ? r.right : (r.right === 'ε' ? [] : (typeof r.right === 'string' ? r.right.split('') : [])) }));
-
-        if (newCfg.rules.some(r => r.right.includes(newCfg.startVariable))) {
-            const newStart = newCfg.startVariable + '0';
-            if (!newCfg.variables.includes(newStart)) newCfg.variables.push(newStart);
+        const newCfg = cloneCFG(cfg);
+        const usedVariables = new Set(newCfg.variables);
+        const startOnRight = newCfg.rules.some((rule) => rule.right.includes(newCfg.startVariable));
+        if (startOnRight) {
+            const newStart = ensureUniqueVariableName(`${newCfg.startVariable}_S0`, usedVariables);
+            newCfg.variables = Array.from(usedVariables);
             newCfg.rules.push({ left: newStart, right: [newCfg.startVariable] });
             newCfg.startVariable = newStart;
         }
@@ -85,199 +105,212 @@ const CFGSimulator = () => {
     };
 
     const eliminateNull = (cfg) => {
-        const newCfg = JSON.parse(JSON.stringify(cfg));
-        if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
-        const nullable = new Set();
-        newCfg.rules.forEach(r => {
-            const rhs = Array.isArray(r.right) ? r.right : (r.right === 'ε' ? [] : (typeof r.right === 'string' ? r.right.split('') : []));
-            if (rhs.length === 0) nullable.add(r.left);
-            // normalize rule RHS
-            r.right = rhs;
-        });
-        let changed = true;
-        while (changed) {
-            changed = false;
-            for (let r of newCfg.rules) {
-                if (r.right.every(sym => nullable.has(sym))) {
-                    if (!nullable.has(r.left)) {
-                        nullable.add(r.left);
-                        changed = true;
-                    }
-                }
+        const newCfg = cloneCFG(cfg);
+        const nullable = computeNullableSet(newCfg);
+        const updatedRules = [];
+
+        newCfg.rules.forEach((rule) => {
+            if (rule.right.length === 0) {
+                return; // Skip ε-productions; combinations cover them
             }
-        }
-        const newRules = [];
-        newCfg.rules.forEach(r => {
-            if (r.right.length === 0) return; // Skip null rules
-            const nullableIndices = [];
-            r.right.forEach((sym, i) => {
-                if (nullable.has(sym)) nullableIndices.push(i);
+            const nullableIndices = rule.right
+                .map((sym, index) => (nullable.has(sym) ? index : -1))
+                .filter((index) => index !== -1);
+            const nullableIndexMap = new Map();
+            nullableIndices.forEach((index, position) => {
+                nullableIndexMap.set(index, position);
             });
-            const numCombos = 1 << nullableIndices.length;
-            for (let i = 0; i < numCombos; i++) {
-                const newRhs = [...r.right];
-                for (let j = 0; j < nullableIndices.length; j++) {
-                    if ((i >> j) & 1) {
-                        newRhs[nullableIndices[j]] = null;
-                    }
-                }
-                const finalRhs = newRhs.filter(sym => sym !== null);
-                if (finalRhs.length > 0) {
-                    newRules.push({ left: r.left, right: finalRhs });
+
+            const totalCombinations = 1 << nullableIndices.length;
+            for (let mask = 0; mask < totalCombinations; mask++) {
+                const nextRhs = rule.right.filter((_, idx) => {
+                    const position = nullableIndexMap.get(idx);
+                    if (position === undefined) return true;
+                    return ((mask >> position) & 1) === 0;
+                });
+                if (nextRhs.length > 0) {
+                    updatedRules.push({ left: rule.left, right: nextRhs });
                 }
             }
         });
-        newCfg.rules = newRules;
+
+        newCfg.rules = updatedRules;
         return newCfg;
     };
 
     const eliminateUnit = (cfg) => {
-        const newCfg = JSON.parse(JSON.stringify(cfg));
-        if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
-        if (!Array.isArray(newCfg.variables)) newCfg.variables = [];
-        const unitPairs = new Set();
-        newCfg.rules.forEach(r => {
-            if (!Array.isArray(r.right)) r.right = (r.right === 'ε' ? [] : (typeof r.right === 'string' ? r.right.split('') : []));
-            if (r.right.length === 1 && newCfg.variables.includes(r.right[0])) {
-                unitPairs.add(`${r.left}-${r.right[0]}`);
+        const newCfg = cloneCFG(cfg);
+        const variablesSet = new Set(newCfg.variables);
+        const unitPairs = [];
+
+        newCfg.rules.forEach((rule) => {
+            if (rule.right.length === 1 && variablesSet.has(rule.right[0])) {
+                unitPairs.push([rule.left, rule.right[0]]);
             }
         });
-        // Compute transitive closure (simplified)
+
         const closures = {};
-        newCfg.variables.forEach(v => closures[v] = new Set([v]));
-        unitPairs.forEach(pair => {
-            const [a, b] = pair.split('-');
-            closures[a].add(b);
+        newCfg.variables.forEach((variable) => {
+            closures[variable] = new Set([variable]);
         });
+
         let changed = true;
         while (changed) {
             changed = false;
-            for (let a of newCfg.variables) {
-                for (let b of newCfg.variables) {
-                    if (closures[a].has(b)) {
-                        for (let c of closures[b]) {
-                            if (!closures[a].has(c)) {
-                                closures[a].add(c);
-                                changed = true;
-                            }
-                        }
-                    }
+            unitPairs.forEach(([from, to]) => {
+                if (!closures[from].has(to)) {
+                    closures[from].add(to);
+                    changed = true;
                 }
-            }
-        }
-        const newRules = [];
-        for (let A of newCfg.variables) {
-            const closureA = closures[A] || new Set([A]);
-            for (let B of closureA) {
-                newCfg.rules.forEach(p => {
-                    if (p.left === B && !(p.right.length === 1 && newCfg.variables.includes(p.right[0]))) {
-                        newRules.push({ left: A, right: p.right });
+                closures[to]?.forEach((sym) => {
+                    if (!closures[from].has(sym)) {
+                        closures[from].add(sym);
+                        changed = true;
                     }
                 });
-            }
+            });
         }
-        newCfg.rules = newRules;
+
+        const filteredRules = [];
+        newCfg.variables.forEach((variable) => {
+            const closure = closures[variable] || new Set([variable]);
+            newCfg.rules.forEach((rule) => {
+                if (closure.has(rule.left) && !(rule.right.length === 1 && variablesSet.has(rule.right[0]))) {
+                    filteredRules.push({ left: variable, right: [...rule.right] });
+                }
+            });
+        });
+
+        newCfg.rules = filteredRules;
         return newCfg;
     };
 
     const separateTerminals = (cfg) => {
-        const newCfg = JSON.parse(JSON.stringify(cfg));
+        const newCfg = cloneCFG(cfg);
+        const terminalSet = new Set(newCfg.terminals);
+        const usedVariables = new Set(newCfg.variables);
         const terminalMap = {};
-        newCfg.terminals.forEach(t => {
-            const nt = 'X' + t.toUpperCase();
-            newCfg.variables.push(nt);
-            terminalMap[t] = nt;
-            newCfg.rules.push({ left: nt, right: [t] });
-        });
-        newCfg.rules = newCfg.rules.map(r => {
-            if (r.right.length > 1) {
-                return {
-                    left: r.left,
-                    right: r.right.map(sym => terminalMap[sym] || sym)
-                };
+        const newRules = [];
+
+        const sanitizeTerminal = (terminal) => terminal.replace(/[^a-zA-Z0-9]/g, (ch) => `_${ch.charCodeAt(0)}_`);
+
+        const getHelperVariable = (terminal) => {
+            if (terminalMap[terminal]) return terminalMap[terminal];
+            const base = `T_${sanitizeTerminal(terminal)}`;
+            const helper = ensureUniqueVariableName(base, usedVariables);
+            terminalMap[terminal] = helper;
+            newCfg.variables.push(helper);
+            newRules.push({ left: helper, right: [terminal] });
+            return helper;
+        };
+
+        newCfg.rules.forEach((rule) => {
+            if (rule.right.length > 1) {
+                const updatedRight = rule.right.map((sym) => (terminalSet.has(sym) ? getHelperVariable(sym) : sym));
+                newRules.push({ left: rule.left, right: updatedRight });
             } else {
-                return r;
+                newRules.push(rule);
             }
         });
+
+        newCfg.rules = newRules;
         return newCfg;
     };
 
     const binarize = (cfg) => {
-        const newCfg = JSON.parse(JSON.stringify(cfg));
-        const newRules = [];
-        const productionsToProcess = [...newCfg.rules];
-        const binarizationVars = ['P', 'Q', 'R', 'T'];
-        let varCounter = 0;
+        const newCfg = cloneCFG(cfg);
+        const usedVariables = new Set(newCfg.variables);
+        const queue = [...newCfg.rules];
+        const binarizedRules = [];
+        let helperCounter = 1;
 
-        while (productionsToProcess.length > 0) {
-            const p = productionsToProcess.shift();
-            if (p.right.length > 2) {
-                let newVar;
-                if (varCounter < binarizationVars.length) {
-                    newVar = binarizationVars[varCounter];
-                    varCounter++;
-                } else {
-                    newVar = 'BIN_' + varCounter;
-                    varCounter++;
-                }
-                newCfg.variables.push(newVar);
-                newRules.push({ left: p.left, right: [p.right[0], newVar] });
-                productionsToProcess.push({ left: newVar, right: p.right.slice(1) });
+        const createHelper = () => {
+            const helper = ensureUniqueVariableName(`B${helperCounter}`, usedVariables);
+            helperCounter += 1;
+            newCfg.variables.push(helper);
+            return helper;
+        };
+
+        while (queue.length > 0) {
+            const rule = queue.shift();
+            if (rule.right.length <= 2) {
+                binarizedRules.push(rule);
             } else {
-                newRules.push(p);
+                const helper = createHelper();
+                binarizedRules.push({ left: rule.left, right: [rule.right[0], helper] });
+                queue.unshift({ left: helper, right: rule.right.slice(1) });
             }
         }
 
-        // Remove duplicates
-        const uniqueRules = [];
-        const seen = new Set();
-        newRules.forEach(r => {
-            const key = `${r.left}-${r.right.join(',')}`;
-            if (!seen.has(key)) {
-                seen.add(key);
-                uniqueRules.push(r);
-            }
-        });
-
-        newCfg.rules = uniqueRules;
+        newCfg.rules = binarizedRules;
         return newCfg;
     };
 
     const removeDuplicates = (cfg) => {
+        const newCfg = cloneCFG(cfg);
         const seen = new Set();
-        cfg.rules = cfg.rules.filter(r => {
-            const key = `${r.left}->${r.right.join(' ')}`;
+        newCfg.rules = newCfg.rules.filter((rule) => {
+            const key = `${rule.left}->${rule.right.join(' ')}`;
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
         });
-        return cfg;
+        return newCfg;
+    };
+
+    const toCNF = (cfg) => {
+        const normalized = normalizeCFG(cfg);
+        const nullable = computeNullableSet(normalized);
+        const startGeneratesEmpty = nullable.has(normalized.startVariable);
+
+        let cnf = eliminateStart(normalized);
+        cnf = eliminateNull(cnf);
+        cnf = eliminateUnit(cnf);
+        cnf = separateTerminals(cnf);
+        cnf = binarize(cnf);
+        cnf = removeDuplicates(cnf);
+
+        cnf.rules.sort((a, b) => {
+            const leftComparison = a.left.localeCompare(b.left);
+            if (leftComparison !== 0) return leftComparison;
+            return a.right.join(' ').localeCompare(b.right.join(' '));
+        });
+
+        return { cnf, startGeneratesEmpty };
     };
 
     const cykParse = (cnf, input) => {
-        const n = input.length;
-        const table = Array.from({ length: n }, () => Array.from({ length: n }, () => new Set()));
+        if (!input) return false;
+        const symbols = input.split('');
+        if (symbols.length === 0) return false;
 
-        // Fill diagonal (length 1)
-        for (let i = 0; i < n; i++) {
-            cnf.rules.forEach(r => {
-                if (r.right.length === 1 && r.right[0] === input[i]) {
-                    table[i][i].add(r.left);
-                }
-            });
+        const terminalSet = new Set(cnf.terminals);
+        if (symbols.some((sym) => !terminalSet.has(sym))) {
+            return false;
         }
 
-        // Fill for lengths 2 to n
-        for (let len = 2; len <= n; len++) {
-            for (let i = 0; i <= n - len; i++) {
+        const n = symbols.length;
+        const table = Array.from({ length: n }, () => Array.from({ length: n }, () => new Set()));
+
+        cnf.rules
+            .filter((rule) => rule.right.length === 1 && terminalSet.has(rule.right[0]))
+            .forEach((rule) => {
+                symbols.forEach((symbol, index) => {
+                    if (rule.right[0] === symbol) {
+                        table[index][index].add(rule.left);
+                    }
+                });
+            });
+
+        const binaryRules = cnf.rules.filter((rule) => rule.right.length === 2);
+        for (let len = 2; len <= n; len += 1) {
+            for (let i = 0; i <= n - len; i += 1) {
                 const j = i + len - 1;
-                for (let k = i; k < j; k++) {
-                    cnf.rules.forEach(r => {
-                        if (r.right.length === 2) {
-                            const [b, c] = r.right;
-                            if (table[i][k].has(b) && table[k + 1][j].has(c)) {
-                                table[i][j].add(r.left);
-                            }
+                for (let k = i; k < j; k += 1) {
+                    binaryRules.forEach((rule) => {
+                        const [b, c] = rule.right;
+                        if (table[i][k].has(b) && table[k + 1][j].has(c)) {
+                            table[i][j].add(rule.left);
                         }
                     });
                 }
@@ -293,17 +326,32 @@ const CFGSimulator = () => {
         setIsAccepted(null);
 
         // Convert CFG to CNF
-        const cnfGrammar = toCNF(cfg);
+        const { cnf, startGeneratesEmpty } = toCNF(cfg);
 
-        // Use CYK to parse
-        const accepted = cykParse(cnfGrammar, inputString);
+        let accepted;
+        let description;
+        const invalidSymbol = inputString
+            .split('')
+            .find((symbol) => symbol && !cnf.terminals.includes(symbol));
+
+        if (inputString.length === 0) {
+            accepted = startGeneratesEmpty;
+            description = `Parsed empty string using CNF grammar. Result: ${accepted ? 'ACCEPTED' : 'REJECTED'}`;
+        } else if (invalidSymbol) {
+            accepted = false;
+            description = `String contains symbol "${invalidSymbol}" not present in the grammar terminals.`;
+        } else {
+            accepted = cykParse(cnf, inputString);
+            description = `Parsed using CNF grammar. Result: ${accepted ? 'ACCEPTED' : 'REJECTED'}`;
+        }
 
         // For now, just set accepted; later add derivation steps from CYK table
+        const displayString = inputString.length === 0 ? 'ε' : inputString;
         const steps = [{
             step: 1,
-            string: inputString,
+            string: displayString,
             rule: null,
-            description: `Parsed using CNF grammar. Result: ${accepted ? 'ACCEPTED' : 'REJECTED'}`
+            description
         }];
 
         setDerivationSteps(steps);
