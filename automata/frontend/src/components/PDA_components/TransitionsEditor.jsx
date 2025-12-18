@@ -16,8 +16,8 @@ export function PDATransitionsEditor({ pda, onUpdate }) {
     const handleAdd = () => {
         const { from, input, pop, to, push } = newTransition;
         
-        if (!from || !input || !pop || !to || !push) {
-            alert('All fields are required');
+        if (!from || !to) {
+            alert('From and To states are required');
             return;
         }
 
@@ -29,29 +29,34 @@ export function PDATransitionsEditor({ pda, onUpdate }) {
             alert(`State "${to}" does not exist`);
             return;
         }
-        if (input !== 'ε' && !pda.alphabet.includes(input)) {
-            alert(`Symbol "${input}" not in alphabet (use ε for epsilon)`);
+
+        // Standardize epsilon
+        const cleanInput = (input === 'ε' || input === 'epsilon' || input === '') ? 'ε' : input;
+        const cleanPop = (pop === 'ε' || pop === 'epsilon' || pop === '') ? 'ε' : pop;
+        const cleanPush = (push === 'ε' || push === 'epsilon' || push === '') ? 'ε' : push;
+
+        if (cleanInput !== 'ε' && !pda.alphabet.includes(cleanInput)) {
+            alert(`Symbol "${cleanInput}" not in alphabet`);
             return;
         }
-        if (!pda.stackAlphabet.includes(pop)) {
-            alert(`Stack symbol "${pop}" not in stack alphabet`);
+        if (cleanPop !== 'ε' && !pda.stackAlphabet.includes(cleanPop)) {
+            alert(`Stack symbol "${cleanPop}" not in stack alphabet`);
             return;
         }
-        // Allow ε for push (means pop without push)
-        if (push !== 'ε' && !push.split('').every(s => pda.stackAlphabet.includes(s))) {
+        if (cleanPush !== 'ε' && !cleanPush.split('').every(s => pda.stackAlphabet.includes(s))) {
             alert(`Push symbols must be from stack alphabet`);
             return;
         }
 
-        pda.addTransition(from, to, input, pop, push);
+        pda.addTransition(from, to, cleanInput, cleanPop, cleanPush);
         setNewTransition({ from: '', input: '', pop: '', to: '', push: '' });
         setIsAdding(false);
         onUpdate();
     };
 
-    const handleDelete = (from, to, input, pop, push) => {
-        if (window.confirm(`Delete transition δ(${from}, ${input}, ${pop})?`)) {
-            pda.removeTransition(from, to, input, pop, push);
+    const handleDelete = (trans) => {
+        if (window.confirm(`Delete transition δ(${trans.from}, ${trans.input}, ${trans.pop})?`)) {
+            pda.removeTransition(trans.from, trans.to, trans.input, trans.pop, trans.push);
             onUpdate();
         }
     };
@@ -78,16 +83,17 @@ export function PDATransitionsEditor({ pda, onUpdate }) {
                                 <span className="delta-symbol">δ(</span>
                                 <input
                                     type="text"
-                                    placeholder="q0"
+                                    placeholder="from"
                                     value={newTransition.from}
                                     onChange={(e) => setNewTransition({ ...newTransition, from: e.target.value })}
                                     className="input-small"
                                     list="pda-states-list"
+                                    style={{ width: '60px' }}
                                 />
                                 <span className="separator">,</span>
                                 <input
                                     type="text"
-                                    placeholder="a or ε"
+                                    placeholder="read"
                                     value={newTransition.input}
                                     onChange={(e) => setNewTransition({ ...newTransition, input: e.target.value })}
                                     className="input-small"
@@ -98,18 +104,25 @@ export function PDATransitionsEditor({ pda, onUpdate }) {
                                     type="button"
                                     onClick={() => setNewTransition({ ...newTransition, input: 'ε' })}
                                     title="Insert Epsilon (ε)"
-                                    style={{ padding: '2px 4px', cursor: 'pointer' }}
+                                    className="btn-epsilon-small"
                                 >ε</button>
                                 <span className="separator">,</span>
                                 <input
                                     type="text"
-                                    placeholder="Z"
+                                    placeholder="pop"
                                     value={newTransition.pop}
                                     onChange={(e) => setNewTransition({ ...newTransition, pop: e.target.value })}
                                     className="input-small"
                                     maxLength={1}
                                     list="pda-stack-list"
+                                    style={{ width: '60px' }}
                                 />
+                                <button 
+                                    type="button"
+                                    onClick={() => setNewTransition({ ...newTransition, pop: 'ε' })}
+                                    title="Insert Epsilon (ε)"
+                                    className="btn-epsilon-small"
+                                >ε</button>
                                 <span className="separator">)</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -117,27 +130,28 @@ export function PDATransitionsEditor({ pda, onUpdate }) {
                                 <span>(</span>
                                 <input
                                     type="text"
-                                    placeholder="q1"
+                                    placeholder="to"
                                     value={newTransition.to}
                                     onChange={(e) => setNewTransition({ ...newTransition, to: e.target.value })}
                                     className="input-small"
                                     list="pda-states-list"
+                                    style={{ width: '60px' }}
                                 />
                                 <span className="separator">,</span>
                                 <input
                                     type="text"
-                                    placeholder="XZ or ε"
+                                    placeholder="push"
                                     value={newTransition.push}
                                     onChange={(e) => setNewTransition({ ...newTransition, push: e.target.value })}
                                     className="input-small"
                                     list="pda-stack-list"
-                                    style={{ width: '60px' }}
+                                    style={{ width: '80px' }}
                                 />
                                 <button 
                                     type="button"
                                     onClick={() => setNewTransition({ ...newTransition, push: 'ε' })}
                                     title="Insert Epsilon (ε)"
-                                    style={{ padding: '2px 4px', cursor: 'pointer' }}
+                                    className="btn-epsilon-small"
                                 >ε</button>
                                 <span>)</span>
                             </div>
@@ -181,17 +195,17 @@ export function PDATransitionsEditor({ pda, onUpdate }) {
                         <span className="transition-text">
                             <span className="delta-symbol">δ(</span>
                             <span className="state-name">{trans.from}</span>
-                            <span className="symbol-name">, {trans.input}</span>
-                            <span className="symbol-name">, {trans.pop}</span>
+                            <span className="symbol-name">, {trans.input || 'ε'}</span>
+                            <span className="symbol-name">, {trans.pop || 'ε'}</span>
                             <span>) = (</span>
                             <span className="state-name">{trans.to}</span>
-                            <span className="symbol-name">, {trans.push}</span>
+                            <span className="symbol-name">, {trans.push || 'ε'}</span>
                             <span>)</span>
                         </span>
                         <div className="transition-actions">
                             <button 
                                 className="btn-icon btn-icon-delete"
-                                onClick={() => handleDelete(trans.from, trans.to, trans.input, trans.pop, trans.push)}
+                                onClick={() => handleDelete(trans)}
                                 title="Delete transition"
                             >
                                 <Trash2 size={16} />
@@ -210,4 +224,3 @@ export function PDATransitionsEditor({ pda, onUpdate }) {
         </div>
     );
 }
-

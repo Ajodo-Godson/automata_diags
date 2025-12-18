@@ -119,14 +119,26 @@ export const simulatePDA = (pda, input) => {
 
         for (const t of transitions) {
             const nextStack = [...stack];
-            if (t.pop && t.pop !== 'ε' && t.pop !== '' && t.pop !== 'epsilon') {
-                if (nextStack.length > 0 && nextStack[nextStack.length - 1] === t.pop) nextStack.pop();
-                else continue;
+            
+            // Handle Pop: If t.pop is not epsilon, it must be removed from the stack
+            if (t.pop && t.pop !== 'ε' && t.pop !== 'epsilon' && t.pop !== '') {
+                if (nextStack.length > 0 && nextStack[nextStack.length - 1] === t.pop) {
+                    nextStack.pop();
+                } else {
+                    // This transition is actually not applicable because the pop symbol doesn't match the stack top
+                    continue;
+                }
             }
+            
+            // Handle Push: Add symbols to the stack
             const push = t.push || '';
-            if (push && push !== 'ε' && push !== '' && push !== 'epsilon') {
-                for (let i = push.length - 1; i >= 0; i--) nextStack.push(push[i]);
+            if (push && push !== 'ε' && push !== 'epsilon' && push !== '') {
+                // Standard PDA: left-most symbol in push string becomes the new top
+                for (let i = push.length - 1; i >= 0; i--) {
+                    nextStack.push(push[i]);
+                }
             }
+            
             const consumes = t.input && t.input !== 'ε' && t.input !== '' && t.input !== 'epsilon';
             configs.push({ state: t.to, stack: nextStack, pos: consumes ? pos + 1 : pos });
         }

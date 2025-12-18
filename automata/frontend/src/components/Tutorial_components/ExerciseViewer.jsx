@@ -28,12 +28,20 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
             if (event.data.type === 'CHALLENGE_RESULT') {
                 setChallengeResults(event.data.results);
                 setShowResults(true);
+                
+                // If perfect score, mark as correct in answers for this specific question
+                if (event.data.results.passed === event.data.results.total) {
+                    setAnswers(prev => ({
+                        ...prev,
+                        [currentQuestion]: true
+                    }));
+                }
             }
         };
 
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
-    }, []);
+    }, [currentQuestion]);
 
     // Handle undefined exercise - check early
     if (!exercise || !exercise.questions || exercise.questions.length === 0) {
@@ -105,10 +113,19 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
         }
     };
 
-    const isCorrect = question && userAnswer === question.correctAnswer;
-    const correctCount = exercise && exercise.questions ? Object.keys(answers).filter(idx => 
-        exercise.questions[idx] && answers[idx] === exercise.questions[idx].correctAnswer
-    ).length : 0;
+    const isCorrect = (idx) => {
+        const q = exercise.questions[idx];
+        const ans = answers[idx];
+        if (!q || ans === undefined) return false;
+        
+        if (q.type === 'hands-on') {
+            return ans === true;
+        }
+        return ans === q.correctAnswer;
+    };
+
+    const correctCount = exercise && exercise.questions ? 
+        exercise.questions.reduce((count, _, idx) => count + (isCorrect(idx) ? 1 : 0), 0) : 0;
 
     return (
         <div className="exercise-viewer">
@@ -130,7 +147,7 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
                     Question {currentQuestion + 1} of {exercise.questions.length}
                 </span>
                 <div className="score-indicator">
-                    Correct: {correctCount}/{Object.keys(answers).length} answered
+                    Correct: {correctCount}/{exercise.questions.length}
                 </div>
             </div>
 
@@ -152,7 +169,7 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
                                     key={idx}
                                     className={`option-btn ${userAnswer === option ? 'selected' : ''} 
                                                ${showResults && option === question.correctAnswer ? 'correct' : ''}
-                                               ${showResults && userAnswer === option && !isCorrect ? 'incorrect' : ''}`}
+                                               ${showResults && userAnswer === option && userAnswer !== question.correctAnswer ? 'incorrect' : ''}`}
                                     onClick={() => handleAnswer(option)}
                                     disabled={showResults}
                                 >
@@ -161,7 +178,7 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
                                     {showResults && option === question.correctAnswer && (
                                         <CheckCircle size={20} className="status-icon" />
                                     )}
-                                    {showResults && userAnswer === option && !isCorrect && (
+                                    {showResults && userAnswer === option && userAnswer !== question.correctAnswer && (
                                         <XCircle size={20} className="status-icon" />
                                     )}
                                 </button>
@@ -176,7 +193,7 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
                                     key={option}
                                     className={`option-btn ${userAnswer === option ? 'selected' : ''}
                                                ${showResults && option === question.correctAnswer ? 'correct' : ''}
-                                               ${showResults && userAnswer === option && !isCorrect ? 'incorrect' : ''}`}
+                                               ${showResults && userAnswer === option && userAnswer !== question.correctAnswer ? 'incorrect' : ''}`}
                                     onClick={() => handleAnswer(option)}
                                     disabled={showResults}
                                 >
@@ -184,7 +201,7 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
                                     {showResults && option === question.correctAnswer && (
                                         <CheckCircle size={20} className="status-icon" />
                                     )}
-                                    {showResults && userAnswer === option && !isCorrect && (
+                                    {showResults && userAnswer === option && userAnswer !== question.correctAnswer && (
                                         <XCircle size={20} className="status-icon" />
                                     )}
                                 </button>
@@ -318,9 +335,9 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
                 </div>
 
                 {showResults && question && question.type !== 'hands-on' && (
-                    <div className={`feedback-box ${isCorrect ? 'correct' : 'incorrect'}`}>
+                    <div className={`feedback-box ${isCorrect(currentQuestion) ? 'correct' : 'incorrect'}`}>
                         <div className="feedback-header">
-                            {isCorrect ? (
+                            {isCorrect(currentQuestion) ? (
                                 <>
                                     <CheckCircle size={24} />
                                     <h3>Correct!</h3>
@@ -413,4 +430,3 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
 };
 
 export default ExerciseViewer;
-

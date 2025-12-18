@@ -99,7 +99,7 @@ const PDASimulator = ({ challenge }) => {
         }];
 
         const visited = new Set();
-        const maxIterations = 5000; // Reduced for performance
+        const maxIterations = 5000;
         let iterationCount = 0;
         let lastKnownPath = initialPath;
 
@@ -109,16 +109,15 @@ const PDASimulator = ({ challenge }) => {
             const { state, stack, inputPosition, path } = config;
             lastKnownPath = path;
             
-            // Optimization: limit stack depth to prevent infinite recursion in cycles
-            if (stack.length > inputString.length + 10) continue;
+            if (stack.length > inputString.length + 20) continue;
 
-            const topOfStack = stack[stack.length - 1];
-            const configKey = `${state}|${stack.slice(-20).join(',')}|${inputPosition}`; // Only check last 20 of stack for key
+            const topOfStack = stack[stack.length - 1] || 'ε';
+            const configKey = `${state}|${stack.slice(-20).join(',')}|${inputPosition}`;
             if (visited.has(configKey)) continue;
             visited.add(configKey);
 
-            const stackIsEmpty = stack.length === 1 && stack[0] === pda.startStackSymbol;
-            if (inputPosition >= inputString.length && pda.acceptStates.has(state) && stackIsEmpty) {
+            // Final state acceptance check (Accept if input exhausted and state is accepting)
+            if (inputPosition === inputString.length && pda.acceptStates.has(state)) {
                 path[path.length - 1].accepted = true;
                 path[path.length - 1].description += ' → ACCEPTED';
                 setSimulationSteps(path);
@@ -127,40 +126,41 @@ const PDASimulator = ({ challenge }) => {
             }
 
             const applicableTransitions = [];
-            if (inputPosition < inputString.length) {
-                const inputSymbol = inputString[inputPosition];
-                for (const t of pda.transitions) {
-                    if (t.from === state && t.input === inputSymbol && t.pop === topOfStack) applicableTransitions.push(t);
-                }
-            }
-            // Epsilon transitions
+            const currentInput = inputPosition < inputString.length ? inputString[inputPosition] : null;
+
             for (const t of pda.transitions) {
-                if (t.from === state && (t.input === 'ε' || t.input === 'epsilon' || t.input === '') && t.pop === topOfStack) {
-                    applicableTransitions.push(t);
-                }
-            }
-            
-            if (inputPosition >= inputString.length && applicableTransitions.length === 0) {
-                if (pda.acceptStates.has(state) && stackIsEmpty) {
-                    path[path.length - 1].accepted = true;
-                    path[path.length - 1].description += ' → ACCEPTED';
-                    setSimulationSteps(path);
-                    setCurrentStep(0);
-                    return;
-                }
+                // Match State
+                if (t.from !== state) continue;
+
+                // Match Input (Symbol or ε)
+                const inputMatch = (currentInput !== null && t.input === currentInput) || (t.input === 'ε' || t.input === 'epsilon' || t.input === '');
+                if (!inputMatch) continue;
+
+                // Match Pop (Symbol or ε)
+                // If t.pop is not epsilon, it MUST match the top of the stack.
+                const popMatch = (t.pop === 'ε' || t.pop === 'epsilon' || t.pop === '') || (t.pop === topOfStack);
+                if (!popMatch) continue;
+
+                applicableTransitions.push(t);
             }
 
             for (const transition of applicableTransitions) {
                 const newState = transition.to;
                 const newStack = [...stack];
-                newStack.pop();
                 
-                if (transition.push && transition.push !== 'ε' && transition.push !== 'epsilon' && transition.push !== '') {
+                // Perform Pop if required
+                if (transition.pop && transition.pop !== 'ε' && transition.pop !== 'epsilon') {
+                    newStack.pop();
+                }
+                
+                // Perform Push if required
+                if (transition.push && transition.push !== 'ε' && transition.push !== 'epsilon') {
+                    // Standard PDA: left-most symbol in push string becomes the new top
                     const pushSymbols = transition.push.split('').reverse();
                     newStack.push(...pushSymbols);
                 }
                 
-                const consumesInput = transition.input && transition.input !== 'ε' && transition.input !== 'epsilon' && transition.input !== '';
+                const consumesInput = transition.input && transition.input !== 'ε' && transition.input !== 'epsilon';
                 const newInputPosition = consumesInput ? inputPosition + 1 : inputPosition;
                 
                 const newPath = [...path, {
@@ -168,7 +168,7 @@ const PDASimulator = ({ challenge }) => {
                     stack: [...newStack],
                     remainingInput: inputString.slice(newInputPosition),
                     inputPosition: newInputPosition,
-                    description: `Read '${transition.input}', popped '${topOfStack}', pushed '${transition.push}', moved to ${newState}`,
+                    description: `Read '${transition.input || 'ε'}', popped '${transition.pop || 'ε'}', pushed '${transition.push || 'ε'}', moved to ${newState}`,
                     transition: transition,
                     accepted: false
                 }];
@@ -176,7 +176,6 @@ const PDASimulator = ({ challenge }) => {
             }
         }
 
-        // If we reach here, rejected or timeout
         let finalPath = [...lastKnownPath];
         finalPath[finalPath.length-1].description += iterationCount >= maxIterations ? ' (Timeout/Complex)' : ' → REJECTED';
         setSimulationSteps(finalPath);

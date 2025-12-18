@@ -36,12 +36,14 @@ export const usePDA = (initialConfig) => {
         if (startState === stateName) setStartState('');
     }, [startState]);
 
-    const addTransition = useCallback((transition) => {
-        setTransitions(prev => [...prev, transition]);
+    const addTransition = useCallback((from, to, input, pop, push) => {
+        setTransitions(prev => [...prev, { from, to, input, pop, push }]);
     }, []);
 
-    const removeTransition = useCallback((index) => {
-        setTransitions(prev => prev.filter((_, i) => i !== index));
+    const removeTransition = useCallback((from, to, input, pop, push) => {
+        setTransitions(prev => prev.filter(t => 
+            !(t.from === from && t.to === to && t.input === input && t.pop === pop && t.push === push)
+        ));
     }, []);
 
     const toggleAcceptState = useCallback((stateName) => {
