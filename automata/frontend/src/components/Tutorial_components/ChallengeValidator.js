@@ -314,6 +314,199 @@ export const validatePDAChallenge = (userPDA, testCases) => {
 };
 
 /**
+ * Simulates a CFG to check if it generates a given string using CYK algorithm
+ * @param {Object} cfg - CFG with variables, terminals, rules, startVariable
+ * @param {string} input - Input string to test
+ * @returns {boolean} - true if generated, false otherwise
+ */
+export const simulateCFG = (cfg, input) => {
+    if (!cfg || !cfg.rules || !cfg.startVariable) {
+        return false;
+    }
+
+    // Handle empty string
+    if (input === '' || input.length === 0) {
+        return cfg.rules.some(r => 
+            r.left === cfg.startVariable && 
+            (r.right === 'ε' || r.right === '' || r.right === 'epsilon')
+        );
+    }
+
+    // Simple derivation check for small inputs
+    // Try to derive the string using BFS
+    const maxIterations = 5000;
+    const queue = [cfg.startVariable];
+    const visited = new Set([cfg.startVariable]);
+    let iterations = 0;
+
+    while (queue.length > 0 && iterations < maxIterations) {
+        iterations++;
+        const current = queue.shift();
+
+        // Check if we've derived the target string
+        if (current === input) {
+            return true;
+        }
+
+        // Skip if current string is longer than target (won't match)
+        if (current.length > input.length * 2) {
+            continue;
+        }
+
+        // Try applying each rule
+        for (const rule of cfg.rules) {
+            const idx = current.indexOf(rule.left);
+            if (idx !== -1) {
+                const rightSide = rule.right === 'ε' ? '' : rule.right;
+                const newString = current.slice(0, idx) + rightSide + current.slice(idx + 1);
+                
+                if (!visited.has(newString) && newString.length <= input.length * 2) {
+                    visited.add(newString);
+                    queue.push(newString);
+                }
+            }
+        }
+    }
+
+    return false;
+};
+
+/**
+ * Validates a user's CFG against test cases
+ */
+export const validateCFGChallenge = (userCFG, testCases) => {
+    if (!testCases || testCases.length === 0) {
+        return { passed: 0, total: 0, results: [], valid: false };
+    }
+
+    let passed = 0;
+    const results = testCases.map(testCase => {
+        const actual = simulateCFG(userCFG, testCase.input);
+        const isPassed = actual === testCase.expected;
+        
+        if (isPassed) {
+            passed++;
+        }
+        
+        return {
+            input: testCase.input,
+            expected: testCase.expected,
+            actual: actual,
+            passed: isPassed,
+            description: testCase.description || ''
+        };
+    });
+
+    return {
+        passed,
+        total: testCases.length,
+        results,
+        valid: true,
+        percentage: Math.round((passed / testCases.length) * 100)
+    };
+};
+
+/**
+ * Simulates a Turing Machine on a given input
+ * @param {Object} tm - TM with rules array
+ * @param {string} input - Input string to test
+ * @returns {boolean} - true if accepted, false otherwise
+ */
+export const simulateTM = (tm, input) => {
+    if (!tm || !tm.rules || tm.rules.length === 0) {
+        return false;
+    }
+
+    const blankSymbol = tm.blankSymbol || '□';
+    const maxSteps = 10000;
+    
+    // Initialize tape
+    let tape = input.split('');
+    if (tape.length === 0) tape = [blankSymbol];
+    for (let i = 0; i < 50; i++) tape.push(blankSymbol);
+    
+    let headPosition = 0;
+    let currentState = 'q0';
+    let steps = 0;
+
+    while (steps < maxSteps) {
+        steps++;
+        
+        // Check halt states
+        if (currentState === 'qaccept' || currentState === tm.acceptState) {
+            return true;
+        }
+        if (currentState === 'qreject' || currentState === tm.rejectState) {
+            return false;
+        }
+
+        // Ensure head is within bounds
+        if (headPosition < 0) {
+            tape.unshift(blankSymbol);
+            headPosition = 0;
+        }
+        if (headPosition >= tape.length) {
+            tape.push(blankSymbol);
+        }
+
+        const currentSymbol = tape[headPosition];
+        
+        // Find matching rule
+        const rule = tm.rules.find(r =>
+            r.currentState === currentState && r.readSymbol === currentSymbol
+        );
+
+        if (!rule) {
+            return false;
+        }
+
+        // Execute transition
+        tape[headPosition] = rule.writeSymbol;
+        currentState = rule.nextState;
+        
+        if (rule.direction === 'R') headPosition++;
+        else if (rule.direction === 'L') headPosition--;
+    }
+
+    return false;
+};
+
+/**
+ * Validates a user's TM against test cases
+ */
+export const validateTMChallenge = (userTM, testCases) => {
+    if (!testCases || testCases.length === 0) {
+        return { passed: 0, total: 0, results: [], valid: false };
+    }
+
+    let passed = 0;
+    const results = testCases.map(testCase => {
+        const actual = simulateTM(userTM, testCase.input);
+        const isPassed = actual === testCase.expected;
+        
+        if (isPassed) {
+            passed++;
+        }
+        
+        return {
+            input: testCase.input,
+            expected: testCase.expected,
+            actual: actual,
+            passed: isPassed,
+            description: testCase.description || ''
+        };
+    });
+
+    return {
+        passed,
+        total: testCases.length,
+        results,
+        valid: true,
+        percentage: Math.round((passed / testCases.length) * 100)
+    };
+};
+
+/**
  * Main challenge validator - dispatches to appropriate validator
  * @param {string} automatonType - Type of automaton (DFA, NFA, etc.)
  * @param {Object} userAutomaton - User's automaton
@@ -328,6 +521,10 @@ export const validateChallenge = (automatonType, userAutomaton, testCases) => {
             return validateNFAChallenge(userAutomaton, testCases);
         case 'PDA':
             return validatePDAChallenge(userAutomaton, testCases);
+        case 'CFG':
+            return validateCFGChallenge(userAutomaton, testCases);
+        case 'TM':
+            return validateTMChallenge(userAutomaton, testCases);
         default:
             return { 
                 passed: 0, 
@@ -343,9 +540,12 @@ export default {
     simulateDFA,
     simulateNFA,
     simulatePDA,
+    simulateCFG,
+    simulateTM,
     validateDFAChallenge,
     validateNFAChallenge,
     validatePDAChallenge,
+    validateCFGChallenge,
+    validateTMChallenge,
     validateChallenge
 };
-

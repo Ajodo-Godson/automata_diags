@@ -1,19 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { TapeVisualizer } from './TapeVisualizer';
 import { ControlPanel } from './ControlPanel';
 import { ProgramEditor } from './ProgramEditor';
 import { ExampleTestCases } from './ExampleTestCases';
 import { useExamples } from './examples';
+import { validateTMChallenge } from '../Tutorial_components/ChallengeValidator';
+import { CheckCircle, XCircle, Target } from 'lucide-react';
 import './stylings/TMSimulator.css';
 
-export default function TMSimulator() {
+export default function TMSimulator({ challenge }) {
   const { examples } = useExamples();
-  const [currentExampleName, setCurrentExampleName] = useState('Binary Incrementer');
+  const [currentExampleName, setCurrentExampleName] = useState(challenge ? null : 'Binary Incrementer');
+  const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
+  const [validationResults, setValidationResults] = useState(null);
   
-  // Initialize with Binary Incrementer
-  const [rules, setRules] = useState(examples["Binary Incrementer"].rules);
+  // Start with minimal blank setup in challenge mode (no rules, blank tape)
+  // Otherwise load default example
+  const initialRules = challenge ? [] : examples["Binary Incrementer"].rules;
+  const initialTape = challenge ? ['□', '□', '□', '□', '□', '□'] : ['1', '0', '1', '□', '□', '□'];
+  
+  const [rules, setRules] = useState(initialRules);
   const [machineState, setMachineState] = useState({
-    tape: ['1', '0', '1', '□', '□', '□'],
+    tape: initialTape,
     headPosition: 0,
     currentState: 'q0',
     stepCount: 0,
@@ -23,10 +31,116 @@ export default function TMSimulator() {
 
   const [speed, setSpeed] = useState(500);
   const [activeRuleId, setActiveRuleId] = useState(null);
-  const [initialInput, setInitialInput] = useState('101');
+  const [initialInput, setInitialInput] = useState(challenge ? '' : '101');
   const [acceptState, setAcceptState] = useState('qaccept');
   const [rejectState, setRejectState] = useState('qreject');
   const [blankSymbol, setBlankSymbol] = useState('□');
+  const [startState, setStartState] = useState('q0');
+
+  // Maximum steps before timeout
+  const MAX_STEPS = 10000;
+
+  // Event listeners for toolbox actions
+  useEffect(() => {
+    const handleExport = () => {
+      const tmDefinition = {
+        name: currentExampleName || 'Custom TM',
+        description: currentExampleDescription || 'Exported TM definition',
+        rules: rules,
+        acceptState: acceptState,
+        rejectState: rejectState,
+        blankSymbol: blankSymbol,
+        startState: startState,
+        initialInput: initialInput
+      };
+      
+      const dataStr = JSON.stringify(tmDefinition, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', 'tm_definition.json');
+      linkElement.click();
+    };
+
+    const handleImport = () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const tmDefinition = JSON.parse(e.target.result);
+              if (tmDefinition.rules) setRules(tmDefinition.rules);
+              if (tmDefinition.acceptState) setAcceptState(tmDefinition.acceptState);
+              if (tmDefinition.rejectState) setRejectState(tmDefinition.rejectState);
+              if (tmDefinition.blankSymbol) setBlankSymbol(tmDefinition.blankSymbol);
+              if (tmDefinition.startState) setStartState(tmDefinition.startState);
+              if (tmDefinition.initialInput) setInitialInput(tmDefinition.initialInput);
+              setCurrentExampleName(tmDefinition.name || 'Imported TM');
+              setCurrentExampleDescription(tmDefinition.description || null);
+              handleReset();
+            } catch (error) {
+              alert('Invalid JSON file or TM definition format');
+            }
+          };
+          reader.readAsText(file);
+        }
+      };
+      input.click();
+    };
+
+    const handleClearAll = () => {
+      setRules([]);
+      setAcceptState('qaccept');
+      setRejectState('qreject');
+      setBlankSymbol('□');
+      setStartState('q0');
+      setInitialInput('');
+      setCurrentExampleName(null);
+      setCurrentExampleDescription(null);
+      setMachineState({
+        tape: ['□', '□', '□', '□', '□', '□'],
+        headPosition: 0,
+        currentState: 'q0',
+        stepCount: 0,
+        isRunning: false,
+        isHalted: false,
+        haltReason: undefined
+      });
+      setActiveRuleId(null);
+      setValidationResults(null);
+    };
+
+    window.addEventListener('export', handleExport);
+    window.addEventListener('import', handleImport);
+    window.addEventListener('clearAll', handleClearAll);
+
+    return () => {
+      window.removeEventListener('export', handleExport);
+      window.removeEventListener('import', handleImport);
+      window.removeEventListener('clearAll', handleClearAll);
+    };
+  }, [rules, acceptState, rejectState, blankSymbol, initialInput, startState, currentExampleName, currentExampleDescription]);
+
+  // Reset to blank when challenge mode is activated
+  useEffect(() => {
+    if (challenge) {
+      setRules([]);
+      setMachineState({
+        tape: ['□', '□', '□', '□', '□', '□'],
+        headPosition: 0,
+        currentState: 'q0',
+        stepCount: 0,
+        isRunning: false,
+        isHalted: false
+      });
+      setInitialInput('');
+      setValidationResults(null);
+    }
+  }, [challenge]);
 
   // Run simulation
   useEffect(() => {
@@ -39,78 +153,93 @@ export default function TMSimulator() {
     return () => clearTimeout(timer);
   }, [machineState.isRunning, machineState.isHalted, machineState.stepCount, speed]);
 
-  const executeStep = () => {
-    const currentSymbol = machineState.tape[machineState.headPosition] || blankSymbol;
-    const matchingRule = rules.find(
-      rule =>
-        rule.currentState === machineState.currentState &&
-        rule.readSymbol === currentSymbol
-    );
+  const executeStep = useCallback(() => {
+    setMachineState(prev => {
+      // Prevent runaway loops
+      if (prev.stepCount >= MAX_STEPS) {
+        setActiveRuleId(null);
+        return { ...prev, isRunning: false, isHalted: true, haltReason: 'reject' };
+      }
 
-    if (!matchingRule) {
-      // No matching rule found - machine halts in current state
-      // Check if current state is an accept state
-      const isCurrentlyAccepting = machineState.currentState.toLowerCase() === acceptState.toLowerCase();
-      
-      setMachineState(prev => ({
+      const tape = [...prev.tape];
+      const head = prev.headPosition;
+
+      // Normalize blank - handle empty strings and undefined
+      const currentSymbol = tape[head] === undefined || tape[head] === '' ? blankSymbol : tape[head];
+
+      // Find matching rule
+      const matchingRule = rules.find(
+        r => r.currentState === prev.currentState && r.readSymbol === currentSymbol
+      );
+
+      if (!matchingRule) {
+        const haltReason =
+          prev.currentState === acceptState ? 'accept' :
+          prev.currentState === rejectState ? 'reject' :
+          'reject';
+
+        setActiveRuleId(null);
+        return { ...prev, isRunning: false, isHalted: true, haltReason };
+      }
+
+      // Highlight rule
+      setActiveRuleId(matchingRule.id);
+
+      // Write symbol
+      tape[head] = matchingRule.writeSymbol;
+
+      // Move head
+      let newHead = head + (matchingRule.moveDirection === 'R' ? 1 : -1);
+
+      if (newHead < 0) {
+        tape.unshift(blankSymbol);
+        newHead = 0;
+      }
+      if (newHead >= tape.length) tape.push(blankSymbol);
+
+      const newState = matchingRule.newState;
+
+      // Check halt - use exact match (case-sensitive)
+      const isAccept = newState === acceptState;
+      const isReject = newState === rejectState;
+      const halted = isAccept || isReject;
+
+      if (halted) setTimeout(() => setActiveRuleId(null), 300);
+
+      return {
         ...prev,
-        isRunning: false,
-        isHalted: true,
-        haltReason: isCurrentlyAccepting ? 'accept' : 'reject'
-      }));
-      setActiveRuleId(null);
-      return;
-    }
+        tape,
+        headPosition: newHead,
+        currentState: newState,
+        stepCount: prev.stepCount + 1,
+        isRunning: !halted,
+        isHalted: halted,
+        haltReason: isAccept ? 'accept' : isReject ? 'reject' : undefined
+      };
+    });
+  }, [rules, acceptState, rejectState, blankSymbol]);
 
-    setActiveRuleId(matchingRule.id);
+  // Run simulation
+  useEffect(() => {
+    if (!machineState.isRunning || machineState.isHalted) return;
 
-    // Create new tape
-    const newTape = [...machineState.tape];
-    newTape[machineState.headPosition] = matchingRule.writeSymbol;
+    const timer = setTimeout(() => {
+      executeStep();
+    }, speed);
 
-    // Calculate new head position
-    let newHeadPosition = machineState.headPosition;
-    if (matchingRule.moveDirection === 'R') {
-      newHeadPosition++;
-      // Extend tape if needed
-      if (newHeadPosition >= newTape.length) {
-        newTape.push(blankSymbol);
-      }
-    } else {
-      newHeadPosition--;
-      // Extend tape to the left if needed
-      if (newHeadPosition < 0) {
-        newTape.unshift(blankSymbol);
-        newHeadPosition = 0;
-      }
-    }
-
-    // Apply the transition
-    const newState = matchingRule.newState;
-    
-    // Check if new state is a halting state
-    const isAcceptState = newState.toLowerCase() === acceptState.toLowerCase();
-    const isRejectState = newState.toLowerCase() === rejectState.toLowerCase();
-    const isHalted = isAcceptState || isRejectState;
-
-    setMachineState(prev => ({
-      ...prev,
-      tape: newTape,
-      headPosition: newHeadPosition,
-      currentState: newState,
-      stepCount: prev.stepCount + 1,
-      isRunning: !isHalted,
-      isHalted: isHalted,
-      haltReason: isAcceptState ? 'accept' : isRejectState ? 'reject' : undefined
-    }));
-
-    if (isHalted) {
-      setTimeout(() => setActiveRuleId(null), 1000);
-    }
-  };
+    return () => clearTimeout(timer);
+  }, [machineState.isRunning, machineState.isHalted, machineState.stepCount, speed, executeStep]);
 
   const handleRun = () => {
-    if (machineState.isHalted) return;
+    // If halted, reset first
+    if (machineState.isHalted) {
+      handleReset();
+      // Use setTimeout to ensure reset completes before starting
+      setTimeout(() => {
+        setMachineState(prev => ({ ...prev, isRunning: true }));
+      }, 0);
+      return;
+    }
     setMachineState(prev => ({ ...prev, isRunning: true }));
   };
 
@@ -125,15 +254,16 @@ export default function TMSimulator() {
 
   const handleReset = () => {
     const newTape = initialInput.split('');
-    // Ensure we have some blank cells
-    while (newTape.length < 7) {
-      newTape.push(blankSymbol);
+    // Normalize blanks and ensure we have some blank cells
+    const normalizedTape = newTape.map(cell => (cell === undefined || cell === '') ? blankSymbol : cell);
+    while (normalizedTape.length < 7) {
+      normalizedTape.push(blankSymbol);
     }
 
     setMachineState({
-      tape: newTape,
+      tape: normalizedTape,
       headPosition: 0,
-      currentState: 'q0',
+      currentState: startState,
       stepCount: 0,
       isRunning: false,
       isHalted: false,
@@ -144,19 +274,38 @@ export default function TMSimulator() {
 
   const handleInitialInputChange = (input) => {
     setInitialInput(input);
+    // Auto-reset machine when input changes
+    const newTape = input.split('');
+    // Normalize blanks
+    const normalizedTape = newTape.map(cell => (cell === undefined || cell === '') ? blankSymbol : cell);
+    while (normalizedTape.length < 7) {
+      normalizedTape.push(blankSymbol);
+    }
+    setMachineState({
+      tape: normalizedTape,
+      headPosition: 0,
+      currentState: startState,
+      stepCount: 0,
+      isRunning: false,
+      isHalted: false,
+      haltReason: undefined
+    });
+    setActiveRuleId(null);
   };
 
   const handleLoadExample = (input) => {
     setInitialInput(input);
     // Auto-reset with the new input
     const newTape = input.split('');
-    while (newTape.length < 7) {
-      newTape.push(blankSymbol);
+    // Normalize blanks
+    const normalizedTape = newTape.map(cell => (cell === undefined || cell === '') ? blankSymbol : cell);
+    while (normalizedTape.length < 7) {
+      normalizedTape.push(blankSymbol);
     }
     setMachineState({
-      tape: newTape,
+      tape: normalizedTape,
       headPosition: 0,
-      currentState: 'q0',
+      currentState: startState,
       stepCount: 0,
       isRunning: false,
       isHalted: false,
@@ -170,27 +319,38 @@ export default function TMSimulator() {
     if (!example) return;
 
     setCurrentExampleName(exampleName);
+    setCurrentExampleDescription(example?.description || null);
     setRules(example.rules);
     setAcceptState(example.acceptState);
     setRejectState(example.rejectState);
     setBlankSymbol(example.blankSymbol);
+    setStartState(example.startState);
     
     // Set default input based on example
-    const defaultInput = exampleName === 'Binary Incrementer' ? '101' :
+    const defaultInput = exampleName === 'Test: Write 3 ones' ? '' :
+                        exampleName === 'Binary Incrementer' ? '101' :
                         exampleName === 'Palindrome Checker' ? '101' :
                         exampleName === '0^n 1^n' ? '0011' :
+                        exampleName === 'Busy Beaver (3-state)' ? '' :
+                        exampleName === 'Copy Machine' ? '101' :
+                        exampleName === 'Unary Addition' ? '111+11' :
+                        exampleName === 'Unary Doubling' ? '111' :
+                        exampleName === 'String Reversal' ? 'abc' :
+                        exampleName === 'Unary Multiplication' ? '11*111' :
                         '';
     
     setInitialInput(defaultInput);
     
     // Reset machine
     const newTape = defaultInput.split('');
-    while (newTape.length < 7) {
-      newTape.push(example.blankSymbol);
+    // Normalize blanks
+    const normalizedTape = newTape.map(cell => (cell === undefined || cell === '') ? example.blankSymbol : cell);
+    while (normalizedTape.length < 7) {
+      normalizedTape.push(example.blankSymbol);
     }
 
     setMachineState({
-      tape: newTape,
+      tape: normalizedTape,
       headPosition: 0,
       currentState: example.startState,
       stepCount: 0,
@@ -201,32 +361,89 @@ export default function TMSimulator() {
     setActiveRuleId(null);
   };
 
+  const handleValidateChallenge = () => {
+    if (!challenge || !challenge.challenge || !challenge.challenge.testCases) {
+      alert('No challenge data available');
+      return;
+    }
+
+    const userTM = {
+      rules: rules,
+      startState: 'q0',
+      acceptState: acceptState,
+      rejectState: rejectState,
+      blankSymbol: blankSymbol
+    };
+
+    const results = validateTMChallenge(userTM, challenge.challenge.testCases);
+    setValidationResults(results);
+
+    if (window.opener && challenge.returnTo === 'tutorial') {
+      window.opener.postMessage({
+        type: 'CHALLENGE_RESULT',
+        results: results
+      }, window.location.origin);
+    }
+  };
+
   return (
     <div className="tm-simulator">
       <div className="tm-container">
-        {/* Header */}
-        <div className="tm-header">
-          <h1 className="tm-title">Turing Machine Simulator</h1>
-          <p className="tm-subtitle">
-            Visualize and understand how a Turing machine operates step-by-step
-          </p>
-        </div>
-
-        {/* Example Selector */}
-        <div className="example-selector">
-          <label className="selector-label">Load Preset Example:</label>
-          <div className="selector-buttons">
-            {Object.keys(examples).map((name) => (
-              <button
-                key={name}
-                onClick={() => loadPresetExample(name)}
-                className={`selector-btn ${currentExampleName === name ? 'active' : ''}`}
-              >
-                {name}
-              </button>
-            ))}
+        {/* Compact Challenge Header */}
+        {challenge && challenge.challenge && (
+          <div className="compact-challenge-header">
+            <div className="challenge-info">
+              <Target size={20} />
+              <span><strong>Challenge:</strong> {challenge.challenge.description}</span>
+            </div>
+            <button 
+              className="validate-btn-compact"
+              onClick={handleValidateChallenge}
+            >
+              <CheckCircle size={16} />
+              Validate
+            </button>
+            {validationResults && (
+              <div className={`mini-results ${validationResults.passed === validationResults.total ? 'pass' : 'fail'}`}>
+                {validationResults.passed}/{validationResults.total} Passed
+              </div>
+            )}
           </div>
-        </div>
+        )}
+
+        {/* Header - hide in challenge mode to keep it bare */}
+        {!challenge && (
+          <div className="tm-header">
+            <h1 className="tm-title">Turing Machine Simulator</h1>
+            <p className="tm-subtitle">
+              Visualize and understand how a Turing machine operates step-by-step
+            </p>
+          </div>
+        )}
+
+        {/* Example Selector - hide in challenge mode */}
+        {!challenge && (
+          <div className="example-selector">
+            <label className="selector-label">Load Example:</label>
+            <div className="selector-buttons">
+              {Object.entries(examples).map(([key, example]) => (
+                <button
+                  key={key}
+                  onClick={() => loadPresetExample(key)}
+                  className={`selector-btn ${currentExampleName === key ? 'active' : ''}`}
+                  title={example.description || example.name || key}
+                >
+                  {example.name || key}
+                </button>
+              ))}
+            </div>
+            {currentExampleDescription && (
+              <div className="tm-example-description">
+                <strong>Description:</strong> {currentExampleDescription}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Main Layout */}
         <div className="tm-grid">
@@ -238,6 +455,8 @@ export default function TMSimulator() {
               currentState={machineState.currentState}
               initialInput={initialInput}
               onInitialInputChange={handleInitialInputChange}
+              isHalted={machineState.isHalted}
+              haltReason={machineState.haltReason}
             />
             
             <ControlPanel
@@ -254,10 +473,12 @@ export default function TMSimulator() {
               onSpeedChange={setSpeed}
             />
 
-            <ExampleTestCases 
-              onLoadExample={handleLoadExample}
-              currentExample={currentExampleName}
-            />
+            {!challenge && (
+              <ExampleTestCases 
+                onLoadExample={handleLoadExample}
+                currentExample={currentExampleName}
+              />
+            )}
           </div>
 
           {/* Right Column: Program Editor */}

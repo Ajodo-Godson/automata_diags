@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './stylings/DFASimulator.css';
 import DFAGraph from './DFAGraph';
 import { DFAControlPanel } from './DFAControlPanel';
 import { DFATestCases } from './DFATestCases';
+import { TransitionsEditor } from './TransitionsEditor';
+import { StatesEditor } from './StatesEditor';
+import { AlphabetEditor } from './AlphabetEditor';
+import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { useDFA } from './useDFA';
 import { validateDFAChallenge } from '../Tutorial_components/ChallengeValidator';
@@ -10,16 +14,26 @@ import { CheckCircle, XCircle, Target } from 'lucide-react';
 
 const DFASimulatorNew = ({ challenge }) => {
     const { examples } = useExamples();
-    const [currentExampleName, setCurrentExampleName] = useState('ends_with_ab');
+    const [currentExampleName, setCurrentExampleName] = useState(challenge ? null : 'ends_with_ab');
+    const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
     const [validationResults, setValidationResults] = useState(null);
     
-    const dfa = useDFA({
+    // Start with a blank DFA in challenge mode
+    const initialConfig = challenge ? {
+        states: ['q0'],
+        alphabet: ['0', '1'],
+        transitions: {},
+        startState: 'q0',
+        acceptStates: new Set(),
+    } : {
         states: examples['ends_with_ab'].states,
         alphabet: examples['ends_with_ab'].alphabet,
         transitions: examples['ends_with_ab'].transitions,
         startState: examples['ends_with_ab'].startState,
         acceptStates: examples['ends_with_ab'].acceptStates,
-    });
+    };
+    
+    const dfa = useDFA(initialConfig);
 
     const [inputString, setInputString] = useState('');
     const [simulationSteps, setSimulationSteps] = useState([]);
@@ -119,24 +133,123 @@ const DFASimulatorNew = ({ challenge }) => {
         }
     };
 
-    const handleReset = () => {
+    const handleReset = useCallback(() => {
         setSimulationSteps([]);
         setCurrentStep(-1);
         setIsPlaying(false);
-    };
+    }, []);
 
-    const loadExample = (exampleName) => {
+    const loadExample = useCallback((exampleName) => {
         const example = examples[exampleName];
         setCurrentExampleName(exampleName);
+        setCurrentExampleDescription(example?.description || null);
         dfa.loadDFA(example);
         setInputString('');
         handleReset();
-    };
+    }, [examples, dfa, setCurrentExampleName, setInputString, handleReset]);
 
     const handleLoadTest = (testInput) => {
         setInputString(testInput);
         handleReset();
     };
+
+    // Event listeners for toolbox actions (Import, Export, and Clear All)
+    useEffect(() => {
+        const handleImport = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const dfaDefinition = JSON.parse(e.target.result);
+                            dfa.loadDFA({
+                                states: dfaDefinition.states || [],
+                                alphabet: dfaDefinition.alphabet || [],
+                                transitions: dfaDefinition.transitions || {},
+                                startState: dfaDefinition.startState || 'q0',
+                                acceptStates: new Set(dfaDefinition.acceptStates || [])
+                            });
+                            setCurrentExampleName(dfaDefinition.name || 'Imported DFA');
+                            setCurrentExampleDescription(dfaDefinition.description || null);
+                            handleReset();
+                        } catch (error) {
+                            alert('Invalid JSON file or DFA definition format');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        };
+
+        const handleExport = () => {
+            const dfaDefinition = {
+                name: currentExampleName || 'Custom DFA',
+                description: 'Exported DFA definition',
+                states: dfa.states,
+                alphabet: dfa.alphabet,
+                transitions: dfa.transitions,
+                startState: dfa.startState,
+                acceptStates: Array.from(dfa.acceptStates)
+            };
+            
+            const dataStr = JSON.stringify(dfaDefinition, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'dfa_definition.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        };
+
+        const handleClearAll = () => {
+            if (window.confirm('Are you sure you want to clear all and start fresh?')) {
+                dfa.loadDFA({
+                    states: ['q0'],
+                    alphabet: ['0', '1'],
+                    transitions: {},
+                    startState: 'q0',
+                    acceptStates: new Set()
+                });
+                setCurrentExampleName(null);
+                setCurrentExampleDescription(null);
+                handleReset();
+                setValidationResults(null);
+            }
+        };
+
+        window.addEventListener('import', handleImport);
+        window.addEventListener('export', handleExport);
+        window.addEventListener('clearAll', handleClearAll);
+
+        return () => {
+            window.removeEventListener('import', handleImport);
+            window.removeEventListener('export', handleExport);
+            window.removeEventListener('clearAll', handleClearAll);
+        };
+    }, [dfa, currentExampleName, handleReset]);
+
+    // Reset to blank when challenge mode is activated
+    useEffect(() => {
+        if (challenge) {
+            dfa.loadDFA({
+                states: ['q0'],
+                alphabet: ['0', '1'],
+                transitions: {},
+                startState: 'q0',
+                acceptStates: new Set(),
+            });
+            setInputString('');
+            handleReset();
+            setValidationResults(null);
+        }
+    }, [challenge]);
 
     const handleValidateChallenge = () => {
         if (!challenge || !challenge.challenge || !challenge.challenge.testCases) {
@@ -144,7 +257,6 @@ const DFASimulatorNew = ({ challenge }) => {
             return;
         }
 
-        // Build DFA object for validation
         const userDFA = {
             states: dfa.states,
             alphabet: dfa.alphabet,
@@ -153,11 +265,9 @@ const DFASimulatorNew = ({ challenge }) => {
             acceptStates: dfa.acceptStates
         };
 
-        // Validate against test cases
         const results = validateDFAChallenge(userDFA, challenge.challenge.testCases);
         setValidationResults(results);
 
-        // Send results back to tutorial window (if opened from tutorial)
         if (window.opener && challenge.returnTo === 'tutorial') {
             window.opener.postMessage({
                 type: 'CHALLENGE_RESULT',
@@ -169,119 +279,91 @@ const DFASimulatorNew = ({ challenge }) => {
     return (
         <div className="dfa-simulator-new">
             <div className="dfa-container">
-                {/* Challenge Banner */}
+                {/* Compact Challenge Header */}
                 {challenge && challenge.challenge && (
-                    <div className="challenge-banner">
-                        <div className="challenge-banner-content">
-                            <h2><Target size={28} /> Tutorial Challenge</h2>
-                            <p><strong>Task:</strong> {challenge.challenge.description}</p>
-                            <p><strong>Test Cases:</strong> {challenge.challenge.testCases.length} tests to pass</p>
+                    <div className="compact-challenge-header">
+                        <div className="challenge-info">
+                            <Target size={20} />
+                            <span><strong>Challenge:</strong> {challenge.challenge.description}</span>
                         </div>
                         <button 
-                            className="validate-challenge-btn"
+                            className="validate-btn-compact"
                             onClick={handleValidateChallenge}
                         >
-                            <CheckCircle size={20} style={{ marginRight: '8px' }} />
-                            Validate Challenge
+                            <CheckCircle size={16} />
+                            Validate
                         </button>
                         {validationResults && (
-                            <div className="validation-results">
-                                <h3>
-                                    {validationResults.passed === validationResults.total ? (
-                                        <><CheckCircle size={24} /> All Tests Passed!</>
-                                    ) : (
-                                        <><XCircle size={24} /> Some Tests Failed</>
-                                    )}
-                                </h3>
-                                <p>Passed: {validationResults.passed} / {validationResults.total} ({validationResults.percentage}%)</p>
-                                <div className="test-results-list">
-                                    {validationResults.results.map((result, idx) => (
-                                        <div key={idx} className={`test-result ${result.passed ? 'pass' : 'fail'}`}>
-                                            <span className="test-icon">
-                                                {result.passed ? <CheckCircle size={16} /> : <XCircle size={16} />}
-                                            </span>
-                                            <span className="test-input">"{result.input || 'ε'}"</span>
-                                            <span className="test-expected">
-                                                Expected: {result.expected ? 'Accept' : 'Reject'}
-                                            </span>
-                                            <span className="test-actual">
-                                                Got: {result.actual ? 'Accept' : 'Reject'}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
+                            <div className={`mini-results ${validationResults.passed === validationResults.total ? 'pass' : 'fail'}`}>
+                                {validationResults.passed}/{validationResults.total} Passed
                             </div>
                         )}
                     </div>
                 )}
 
-                {/* Header */}
-                <div className="dfa-header">
-                    <h1 className="dfa-title">DFA Simulator</h1>
-                    <p className="dfa-subtitle">
-                        Deterministic Finite Automaton - Step-by-step visualization
-                    </p>
-                </div>
-
-                {/* Example Selector */}
-                <div className="dfa-example-selector">
-                    <label className="dfa-selector-label">Load Example:</label>
-                    <div className="dfa-selector-buttons">
-                        {Object.entries(examples).map(([key, example]) => (
-                            <button
-                                key={key}
-                                onClick={() => loadExample(key)}
-                                className={`dfa-selector-btn ${currentExampleName === key ? 'active' : ''}`}
-                            >
-                                {example.name}
-                            </button>
-                        ))}
+                {/* Header - hide in challenge mode */}
+                {!challenge && (
+                    <div className="dfa-header">
+                        <h1 className="dfa-title">DFA Simulator</h1>
+                        <p className="dfa-subtitle">
+                            Deterministic Finite Automaton - Step-by-step visualization
+                        </p>
                     </div>
-                </div>
+                )}
+
+                {/* Example Selector - hide in challenge mode */}
+                {!challenge && (
+                    <div className="dfa-example-selector">
+                        <label className="dfa-selector-label">Load Example:</label>
+                        <div className="dfa-selector-buttons">
+                            {Object.entries(examples).map(([key, example]) => (
+                                <button
+                                    key={key}
+                                    onClick={() => loadExample(key)}
+                                    className={`dfa-selector-btn ${currentExampleName === key ? 'active' : ''}`}
+                                >
+                                    {example.name}
+                                </button>
+                            ))}
+                        </div>
+                        {currentExampleDescription && (
+                            <div className="dfa-example-description">
+                                <strong>Description:</strong> {currentExampleDescription}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Main Grid */}
                 <div className="dfa-grid">
                     {/* Left Column */}
                     <div className="dfa-left-col">
-                        {/* Graph Visualization */}
-                        <div className="dfa-graph-card">
-                            <h3 className="dfa-card-title">State Diagram</h3>
-                            <DFAGraph
-                                states={dfa.states}
-                                transitions={dfa.transitions}
-                                startState={dfa.startState}
-                                acceptStates={dfa.acceptStates}
-                                currentState={simulationSteps.length > 0 && currentStep >= 0 
-                                    ? simulationSteps[currentStep].state 
-                                    : null}
-                                currentTransition={simulationSteps.length > 0 && currentStep >= 0 
-                                    ? simulationSteps[currentStep].transition 
-                                    : null}
-                                isPlaying={isPlaying}
-                            />
-                        </div>
-
-                        {/* Input Tester */}
-                        <div className="dfa-input-card">
-                            <h3 className="dfa-card-title">Test Input String</h3>
+                        {/* Input Tester - Compact */}
+                        <div className="dfa-input-card-compact">
+                            <h3 className="dfa-card-title-compact">Test Input String</h3>
                             <div className="dfa-input-group">
                                 <input
                                     type="text"
                                     value={inputString}
                                     onChange={(e) => setInputString(e.target.value)}
-                                    placeholder="Enter input string (e.g., aab)"
+                                    placeholder="e.g., aab"
                                     className="dfa-input"
                                 />
                                 <button 
                                     onClick={simulateString}
-                                    className="dfa-btn dfa-btn-primary"
+                                    className="dfa-btn dfa-btn-primary dfa-btn-compact"
                                 >
-                                    Test
+                                    TEST
                                 </button>
                             </div>
-                            <p className="dfa-input-help">
+                            <p className="dfa-input-help-compact">
                                 Alphabet: {dfa.alphabet.join(', ')}
                             </p>
+                            {isComplete && (
+                                <div className={`dfa-result-indicator ${isAccepted ? 'dfa-result-accepted' : 'dfa-result-rejected'}`}>
+                                    {isAccepted ? '✓ ACCEPTED' : '✗ REJECTED'}
+                                </div>
+                            )}
                         </div>
 
                         {/* Control Panel */}
@@ -300,15 +382,49 @@ const DFASimulatorNew = ({ challenge }) => {
                             onReset={handleReset}
                             onSpeedChange={setPlaybackSpeed}
                         />
+
+                        {/* Graph Visualization */}
+                        <div className="dfa-graph-card">
+                            <h3 className="dfa-card-title">State Diagram</h3>
+                            <DFAGraph
+                                states={dfa.states}
+                                transitions={dfa.transitions}
+                                startState={dfa.startState}
+                                acceptStates={dfa.acceptStates}
+                                currentState={simulationSteps.length > 0 && currentStep >= 0 
+                                    ? simulationSteps[currentStep].state 
+                                    : null}
+                                currentTransition={simulationSteps.length > 0 && currentStep >= 0 
+                                    ? simulationSteps[currentStep].transition 
+                                    : null}
+                                isPlaying={isPlaying}
+                            />
+                        </div>
                     </div>
 
                     {/* Right Column */}
                     <div className="dfa-right-col">
-                        {/* Test Cases */}
-                        <DFATestCases 
-                            onLoadTest={handleLoadTest}
-                            currentExample={currentExampleName}
-                        />
+                        {/* Editors - Always visible, especially in challenge mode */}
+                        <CollapsibleSection title="States Editor" defaultOpen={challenge ? true : false}>
+                            <StatesEditor dfa={dfa} onUpdate={handleReset} />
+                        </CollapsibleSection>
+
+                        <CollapsibleSection title="Alphabet" defaultOpen={challenge ? true : false}>
+                            <AlphabetEditor dfa={dfa} onUpdate={handleReset} />
+                        </CollapsibleSection>
+
+                        <CollapsibleSection title="Transitions Editor" defaultOpen={challenge ? true : false}>
+                            <TransitionsEditor dfa={dfa} onUpdate={handleReset} />
+                        </CollapsibleSection>
+
+                        {!challenge && (
+                            <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
+                                <DFATestCases 
+                                    onLoadTest={handleLoadTest}
+                                    currentExample={currentExampleName}
+                                />
+                            </CollapsibleSection>
+                        )}
 
                         {/* Simulation Steps */}
                         {simulationSteps.length > 0 && (
@@ -336,8 +452,7 @@ const DFASimulatorNew = ({ challenge }) => {
                         )}
 
                         {/* Transition Table */}
-                        <div className="dfa-table-card">
-                            <h3 className="dfa-card-title">Transition Table</h3>
+                        <CollapsibleSection title="Transition Table" defaultOpen={!currentExampleName}>
                             <div className="dfa-table-wrapper">
                                 <table className="dfa-table">
                                     <thead>
@@ -351,59 +466,32 @@ const DFASimulatorNew = ({ challenge }) => {
                                     </thead>
                                     <tbody>
                                         {dfa.states.map(state => {
-                                            // Get the current step data
                                             const currentStepData = currentStep >= 0 && currentStep < simulationSteps.length 
                                                 ? simulationSteps[currentStep] 
                                                 : null;
-                                            
-                                            // Current state (where we are now)
                                             const isCurrentState = currentStepData && currentStepData.state === state;
-                                            
-                                            // Get the transition that was taken to reach the current state
                                             const currentTransition = currentStepData?.transition;
-                                            
-                                            // Previous state (where we came from) - only if there was a transition
                                             const isPreviousState = currentTransition && currentTransition.from === state;
                                             
                                             return (
-                                                <tr 
-                                                    key={state}
-                                                    className={
-                                                        isCurrentState ? 'dfa-current-state' : 
-                                                        isPreviousState ? 'dfa-previous-state' : ''
-                                                    }
-                                                >
+                                                <tr key={state} className={isCurrentState ? 'dfa-current-state' : isPreviousState ? 'dfa-previous-state' : ''}>
                                                     <td className="dfa-state-cell">{state}</td>
                                                     {dfa.alphabet.map(symbol => {
-                                                        // Highlight the transition cell that was just used
-                                                        // This is the cell at [from_state][symbol] that led to current state
-                                                        const isCurrentTransitionCell = currentTransition && 
-                                                            currentTransition.from === state && 
-                                                            currentTransition.symbol === symbol;
-                                                        
+                                                        const isCurrentTransitionCell = currentTransition && currentTransition.from === state && currentTransition.symbol === symbol;
                                                         return (
-                                                            <td 
-                                                                key={`${state}-${symbol}`}
-                                                                className={isCurrentTransitionCell ? 'dfa-current-transition' : ''}
-                                                                title={isCurrentTransitionCell ? `Just used: ${state} --${symbol}--> ${currentTransition.to}` : ''}
-                                                            >
-                                                                {dfa.hasTransition(state, symbol) 
-                                                                    ? dfa.transitions[state][symbol]
-                                                                    : '—'
-                                                                }
+                                                            <td key={`${state}-${symbol}`} className={isCurrentTransitionCell ? 'dfa-current-transition' : ''}>
+                                                                {dfa.hasTransition(state, symbol) ? dfa.transitions[state][symbol] : '—'}
                                                             </td>
                                                         );
                                                     })}
-                                                    <td>
-                                                        {dfa.acceptStates.has(state) ? '✓' : ''}
-                                                    </td>
+                                                    <td>{dfa.acceptStates.has(state) ? '✓' : ''}</td>
                                                 </tr>
                                             );
                                         })}
                                     </tbody>
                                 </table>
                             </div>
-                        </div>
+                        </CollapsibleSection>
                     </div>
                 </div>
             </div>

@@ -17,7 +17,7 @@ export function AlphabetEditor({ dfa, onUpdate }) {
             setIsAdding(false);
             onUpdate();
         } else {
-            alert('Symbol must be a single character.');
+            alert('Symbol must be a single character');
         }
     };
 
@@ -81,6 +81,5 @@ export function AlphabetEditor({ dfa, onUpdate }) {
         </div>
     );
 }
-
 
 
