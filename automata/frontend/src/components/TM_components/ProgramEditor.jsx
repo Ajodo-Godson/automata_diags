@@ -3,7 +3,13 @@ import { Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './stylings/ProgramEditor.css';
 
-export function ProgramEditor({ rules, activeRuleId, onRulesChange }) {
+export function ProgramEditor({ 
+  rules, 
+  activeRuleId, 
+  onRulesChange,
+  availableStates = [], 
+  availableSymbols = [] 
+}) {
   const [editingId, setEditingId] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({
@@ -16,6 +22,7 @@ export function ProgramEditor({ rules, activeRuleId, onRulesChange }) {
 
   const handleAdd = () => {
     if (!formData.currentState || !formData.readSymbol || !formData.newState || !formData.writeSymbol) {
+      alert('All fields are required');
       return;
     }
 
@@ -81,12 +88,8 @@ export function ProgramEditor({ rules, activeRuleId, onRulesChange }) {
   };
 
   return (
-    <div className="program-editor-card">
-      <div className="editor-header">
-        <div>
-          <h3 className="tm-card-title"> Transition Rules</h3>
-          <p className="editor-subtitle">Define the machine's behavior</p>
-        </div>
+    <div className="program-editor">
+      <div className="editor-header-actions">
         <button
           onClick={() => setIsAdding(true)}
           disabled={isAdding || editingId !== null}
@@ -106,6 +109,8 @@ export function ProgramEditor({ rules, activeRuleId, onRulesChange }) {
               onSave={handleAdd}
               onCancel={handleCancelEdit}
               isNew={true}
+              availableStates={availableStates}
+              availableSymbols={availableSymbols}
             />
           )}
         </AnimatePresence>
@@ -126,6 +131,8 @@ export function ProgramEditor({ rules, activeRuleId, onRulesChange }) {
                   onSave={handleSaveEdit}
                   onCancel={handleCancelEdit}
                   isNew={false}
+                  availableStates={availableStates}
+                  availableSymbols={availableSymbols}
                 />
               ) : (
                 <RuleCard
@@ -175,7 +182,7 @@ function RuleCard({ rule, isActive, onEdit, onDelete }) {
             <span className="rule-badge-highlight">{rule.writeSymbol}</span>
             <span className="rule-label">Move:</span>
             <span className="rule-badge-highlight">
-              {rule.moveDirection === 'R' ? '→ Right' : '← Left'}
+              {rule.moveDirection === 'R' ? '→ Right (R)' : '← Left (L)'}
             </span>
           </div>
         </div>
@@ -212,7 +219,7 @@ function RuleCard({ rule, isActive, onEdit, onDelete }) {
   );
 }
 
-function RuleForm({ formData, onFormChange, onSave, onCancel, isNew }) {
+function RuleForm({ formData, onFormChange, onSave, onCancel, isNew, availableStates, availableSymbols }) {
   return (
     <motion.div
       initial={{ opacity: 0, height: 0 }}
@@ -230,6 +237,7 @@ function RuleForm({ formData, onFormChange, onSave, onCancel, isNew }) {
               onChange={(e) => onFormChange({ ...formData, currentState: e.target.value })}
               placeholder="q0"
               className="form-input"
+              list="tm-states-list"
             />
           </div>
           <div className="form-field">
@@ -241,6 +249,7 @@ function RuleForm({ formData, onFormChange, onSave, onCancel, isNew }) {
               placeholder="0"
               className="form-input"
               maxLength={3}
+              list="tm-symbols-list"
             />
           </div>
         </div>
@@ -254,6 +263,7 @@ function RuleForm({ formData, onFormChange, onSave, onCancel, isNew }) {
               onChange={(e) => onFormChange({ ...formData, newState: e.target.value })}
               placeholder="q1"
               className="form-input"
+              list="tm-states-list"
             />
           </div>
           <div className="form-field">
@@ -265,6 +275,7 @@ function RuleForm({ formData, onFormChange, onSave, onCancel, isNew }) {
               placeholder="1"
               className="form-input"
               maxLength={3}
+              list="tm-symbols-list"
             />
           </div>
         </div>
@@ -277,10 +288,21 @@ function RuleForm({ formData, onFormChange, onSave, onCancel, isNew }) {
             onChange={(e) => onFormChange({ ...formData, moveDirection: e.target.value })}
             className="form-select"
           >
-            <option value="R">→ Right</option>
-            <option value="L">← Left</option>
+            <option value="R">→ Right (R)</option>
+            <option value="L">← Left (L)</option>
           </select>
         </div>
+
+        <datalist id="tm-states-list">
+          {availableStates.map(state => (
+            <option key={state} value={state} />
+          ))}
+        </datalist>
+        <datalist id="tm-symbols-list">
+          {availableSymbols.map(symbol => (
+            <option key={symbol} value={symbol} />
+          ))}
+        </datalist>
 
         <div className="form-actions">
           <button
@@ -302,11 +324,3 @@ function RuleForm({ formData, onFormChange, onSave, onCancel, isNew }) {
     </motion.div>
   );
 }
-
-
-
-
-
-
-
-

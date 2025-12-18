@@ -9,7 +9,7 @@ export function ControlPanel({
   isRunning,
   isHalted,
   haltReason,
-  speed,
+  playbackSpeed,
   onRun,
   onPause,
   onStep,
@@ -31,7 +31,7 @@ export function ControlPanel({
   };
 
   return (
-    <div className="control-panel-card">
+    <div className="tm-control-card">
       <h3 className="tm-card-title"> Control Panel</h3>
       <div className="control-grid">
         {/* Left: Controls */}
@@ -81,13 +81,13 @@ export function ControlPanel({
             <div className="speed-label-row">
               <label htmlFor="speed-slider" className="control-label">Speed</label>
               <span className="speed-value">
-                {speed <= 200 ? 'Fast' : speed <= 500 ? 'Medium' : 'Slow'}
+                {playbackSpeed <= 200 ? 'Fast' : playbackSpeed <= 500 ? 'Medium' : 'Slow'}
               </span>
             </div>
             <input
               id="speed-slider"
               type="range"
-              value={speed}
+              value={playbackSpeed}
               onChange={(e) => onSpeedChange(Number(e.target.value))}
               min="100"
               max="1000"
@@ -146,4 +146,3 @@ export function ControlPanel({
     </div>
   );
 }
-

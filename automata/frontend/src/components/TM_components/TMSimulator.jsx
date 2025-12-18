@@ -2,10 +2,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { TapeVisualizer } from './TapeVisualizer';
 import { ControlPanel } from './ControlPanel';
 import { ProgramEditor } from './ProgramEditor';
-import { ExampleTestCases } from './ExampleTestCases';
+import { TMTestCases } from './TMTestCases';
 import { useExamples } from './examples';
 import { validateTMChallenge } from '../Tutorial_components/ChallengeValidator';
 import { CheckCircle, XCircle, Target } from 'lucide-react';
+import { CollapsibleSection } from '../shared/CollapsibleSection';
 import './stylings/TMSimulator.css';
 
 export default function TMSimulator({ challenge }) {
@@ -32,7 +33,7 @@ export default function TMSimulator({ challenge }) {
     isHalted: false
   });
 
-  const [speed, setSpeed] = useState(500);
+  const [playbackSpeed, setPlaybackSpeed] = useState(500);
   const [activeRuleId, setActiveRuleId] = useState(null);
   const [initialInput, setInitialInput] = useState(initialData.input);
   const [acceptState, setAcceptState] = useState('qaccept');
@@ -41,7 +42,7 @@ export default function TMSimulator({ challenge }) {
   const [startState, setStartState] = useState('q0');
 
   // Maximum steps before timeout
-  const MAX_STEPS = 5000; // Lowered safety cutoff
+  const MAX_STEPS = 5000;
 
   const handleReset = useCallback(() => {
     const newTape = initialInput.split('');
@@ -217,9 +218,9 @@ export default function TMSimulator({ challenge }) {
   // Simulation timer
   useEffect(() => {
     if (!machineState.isRunning || machineState.isHalted) return;
-    const timer = setTimeout(executeStep, speed);
+    const timer = setTimeout(executeStep, playbackSpeed);
     return () => clearTimeout(timer);
-  }, [machineState.isRunning, machineState.isHalted, machineState.stepCount, speed, executeStep]);
+  }, [machineState.isRunning, machineState.isHalted, machineState.stepCount, playbackSpeed, executeStep]);
 
   const handleRun = () => {
     if (machineState.isHalted) handleReset();
@@ -236,23 +237,6 @@ export default function TMSimulator({ challenge }) {
   };
 
   const handleInitialInputChange = (input) => {
-    setInitialInput(input);
-    const newTape = input.split('');
-    const normalizedTape = newTape.map(cell => (cell === undefined || cell === '') ? blankSymbol : cell);
-    while (normalizedTape.length < 7) normalizedTape.push(blankSymbol);
-    setMachineState(prev => ({
-      ...prev,
-      tape: normalizedTape,
-      headPosition: 0,
-      currentState: startState,
-      stepCount: 0,
-      isRunning: false,
-      isHalted: false
-    }));
-    setActiveRuleId(null);
-  };
-
-  const handleLoadExample = (input) => {
     setInitialInput(input);
     const newTape = input.split('');
     const normalizedTape = newTape.map(cell => (cell === undefined || cell === '') ? blankSymbol : cell);
@@ -323,9 +307,31 @@ export default function TMSimulator({ challenge }) {
     }
   };
 
+  // Calculate available states and symbols for dropdowns/datalists
+  const availableStates = useMemo(() => {
+    const states = new Set(['q0', acceptState, rejectState, startState]);
+    rules.forEach(rule => {
+      states.add(rule.currentState);
+      states.add(rule.newState);
+    });
+    return Array.from(states).filter(s => s && s.trim() !== '');
+  }, [rules, acceptState, rejectState, startState]);
+
+  const availableSymbols = useMemo(() => {
+    const symbols = new Set(['0', '1', blankSymbol, 'X', 'Y', 'A', 'B', '#']);
+    rules.forEach(rule => {
+      symbols.add(rule.readSymbol);
+      symbols.add(rule.writeSymbol);
+    });
+    // Add symbols from current tape
+    machineState.tape.forEach(s => symbols.add(s));
+    return Array.from(symbols).filter(s => s && s.trim() !== '');
+  }, [rules, blankSymbol, machineState.tape]);
+
   return (
     <div className="tm-simulator">
       <div className="tm-container">
+        {/* Compact Challenge Header */}
         {challenge && challenge.challenge && (
           <div className="compact-challenge-header">
             <div className="challenge-info">
@@ -351,11 +357,16 @@ export default function TMSimulator({ challenge }) {
         )}
 
         {!challenge && (
-          <div className="example-selector">
-            <label className="selector-label">Load Example:</label>
-            <div className="selector-buttons">
+          <div className="tm-example-selector">
+            <label className="tm-selector-label">Load Example:</label>
+            <div className="tm-selector-buttons">
               {Object.entries(examples).map(([key, example]) => (
-                <button key={key} onClick={() => loadPresetExample(key)} className={`selector-btn ${currentExampleName === key ? 'active' : ''}`} title={example.description || example.name || key}>
+                <button 
+                  key={key} 
+                  onClick={() => loadPresetExample(key)} 
+                  className={`tm-selector-btn ${currentExampleName === key ? 'active' : ''}`} 
+                  title={example.description || example.name || key}
+                >
                   {example.name || key}
                 </button>
               ))}
@@ -368,12 +379,45 @@ export default function TMSimulator({ challenge }) {
 
         <div className="tm-grid">
           <div className="tm-left-col">
-            <TapeVisualizer tape={machineState.tape} headPosition={machineState.headPosition} currentState={machineState.currentState} initialInput={initialInput} onInitialInputChange={handleInitialInputChange} isHalted={machineState.isHalted} haltReason={machineState.haltReason} />
-            <ControlPanel currentState={machineState.currentState} stepCount={machineState.stepCount} isRunning={machineState.isRunning} isHalted={machineState.isHalted} haltReason={machineState.haltReason} speed={speed} onRun={handleRun} onPause={handlePause} onStep={handleStep} onReset={handleReset} onSpeedChange={setSpeed} />
-            {!challenge && <ExampleTestCases onLoadExample={handleLoadExample} currentExample={currentExampleName} />}
+            <TapeVisualizer 
+              tape={machineState.tape} 
+              headPosition={machineState.headPosition} 
+              currentState={machineState.currentState} 
+              initialInput={initialInput} 
+              onInitialInputChange={handleInitialInputChange} 
+              isHalted={machineState.isHalted} 
+              haltReason={machineState.haltReason} 
+            />
+            <ControlPanel 
+              currentState={machineState.currentState} 
+              stepCount={machineState.stepCount} 
+              isRunning={machineState.isRunning} 
+              isHalted={machineState.isHalted} 
+              haltReason={machineState.haltReason} 
+              playbackSpeed={playbackSpeed} 
+              onRun={handleRun} 
+              onPause={handlePause} 
+              onStep={handleStep} 
+              onReset={handleReset} 
+              onSpeedChange={setPlaybackSpeed} 
+            />
           </div>
           <div className="tm-right-col">
-            <ProgramEditor rules={rules} activeRuleId={activeRuleId} onRulesChange={setRules} />
+            <CollapsibleSection title="Transition Rules" defaultOpen={true}>
+              <ProgramEditor 
+                rules={rules} 
+                activeRuleId={activeRuleId} 
+                onRulesChange={setRules}
+                availableStates={availableStates}
+                availableSymbols={availableSymbols}
+              />
+            </CollapsibleSection>
+
+            {!challenge && (
+              <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
+                <TMTestCases onLoadExample={handleInitialInputChange} currentExample={currentExampleName} />
+              </CollapsibleSection>
+            )}
           </div>
         </div>
       </div>

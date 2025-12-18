@@ -27,7 +27,7 @@ export function TapeVisualizer({ tape, headPosition, currentState, initialInput,
   const tapeOutput = getTapeOutput();
 
   return (
-    <div className="tape-visualizer-card">
+    <div className="tm-tape-card">
       <h3 className="tm-card-title"> Tape Visualizer</h3>
       <div className="input-section">
         <label htmlFor="initial-input" className="input-label">Initial Tape Input</label>

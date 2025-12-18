@@ -1,65 +1,13 @@
-.program-editor-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 28px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
+.program-editor {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 180px);
-  max-height: 800px;
+  gap: 1rem;
 }
 
-.program-editor-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
-  background-size: 200% 100%;
-  animation: gradientMove 3s ease infinite;
-}
-
-@keyframes gradientMove {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.program-editor-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-}
-
-.editor-header {
+.editor-header-actions {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.editor-title {
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0 0 8px 0;
-  color: #1f2937;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.editor-title::after {
-  content: '';
-  flex: 1;
-  height: 2px;
-  background: linear-gradient(90deg, #e5e7eb, transparent);
-  margin-left: 16px;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
 }
 
 .editor-subtitle {
@@ -79,36 +27,15 @@
 }
 
 .rules-container {
-  flex: 1;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-right: 4px;
-}
-
-.rules-container::-webkit-scrollbar {
-  width: 8px;
-}
-
-.rules-container::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
-}
-
-.rules-container::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-.rules-container::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
 }
 
 .rule-card {
   border: 2px solid #e5e7eb;
   border-radius: 8px;
-  padding: 16px;
+  padding: 12px;
   background: white;
   transition: all 0.2s;
 }
@@ -129,7 +56,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .rule-info {
@@ -173,6 +100,8 @@
   color: #3b82f6;
   font-size: 14px;
   margin: 2px 0;
+  text-align: center;
+  width: 100%;
 }
 
 .rule-actions {
@@ -236,6 +165,7 @@
   border-radius: 8px;
   padding: 16px;
   background: rgba(59, 130, 246, 0.05);
+  margin-bottom: 1rem;
 }
 
 .form-grid {
@@ -291,7 +221,7 @@
 
 .empty-state {
   text-align: center;
-  padding: 32px 16px;
+  padding: 24px 16px;
   color: #6b7280;
 }
 
@@ -302,5 +232,3 @@
 .empty-state-hint {
   font-size: 13px;
 }
-
-

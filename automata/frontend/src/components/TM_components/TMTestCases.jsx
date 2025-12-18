@@ -1,7 +1,7 @@
 import React from 'react';
-import './stylings/ExampleTestCases.css';
+import './stylings/TMTestCases.css';
 
-export function ExampleTestCases({ onLoadExample, currentExample }) {
+export function TMTestCases({ onLoadExample, currentExample }) {
   const getExamples = () => {
     if (currentExample === 'Test: Write 3 ones') {
       return [
@@ -79,7 +79,7 @@ export function ExampleTestCases({ onLoadExample, currentExample }) {
   }
 
   return (
-    <div className="tm-test-cases">
+    <div className="tm-test-list-container">
       <h3 className="tm-card-title">Test Cases</h3>
       <div className="tm-test-list">
         {examples.map((example, index) => (
