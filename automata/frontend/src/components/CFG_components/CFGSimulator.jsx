@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './stylings/CFGSimulator.css';
 import { CFGControlPanel } from './CFGControlPanel';
 import { CFGTestCases } from './CFGTestCases';
@@ -18,18 +18,18 @@ const CFGSimulator = ({ challenge }) => {
     const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
     const [validationResults, setValidationResults] = useState(null);
 
-    // Start with a blank CFG in challenge mode
-    const initialConfig = challenge ? {
-        variables: ['S'],
-        terminals: ['a', 'b'],
+    // Memoize initialConfig to prevent re-renders
+    const initialConfig = useMemo(() => challenge ? {
+        variables: challenge.challenge?.variables || ['S'],
+        terminals: challenge.challenge?.terminals || ['0', '1'],
         rules: [],
-        startVariable: 'S',
+        startVariable: challenge.challenge?.variables?.[0] || 'S',
     } : {
         variables: examples['balanced_parentheses'].variables,
         terminals: examples['balanced_parentheses'].terminals,
         rules: examples['balanced_parentheses'].rules,
         startVariable: examples['balanced_parentheses'].startVariable,
-    };
+    }, [challenge, examples]);
 
     const cfg = useCFG(initialConfig);
 
@@ -113,14 +113,15 @@ const CFGSimulator = ({ challenge }) => {
             window.removeEventListener('export', handleExport);
             window.removeEventListener('clearAll', handleClearAll);
         };
-    }, [cfg, currentExampleName, resetDerivation]);
+        // Use individual cfg properties to avoid re-running when cfg object changes
+    }, [cfg.loadCFG, cfg.variables, cfg.terminals, cfg.rules, cfg.startVariable, currentExampleName, resetDerivation]);
 
     // Reset to blank when challenge mode is activated
     useEffect(() => {
         if (challenge) {
             cfg.loadCFG({
                 variables: challenge.challenge?.variables || ['S'],
-                terminals: challenge.challenge?.terminals || ['a', 'b'],
+                terminals: challenge.challenge?.terminals || ['0', '1'],
                 rules: [],
                 startVariable: challenge.challenge?.variables?.[0] || 'S'
             });
@@ -128,7 +129,8 @@ const CFGSimulator = ({ challenge }) => {
             resetDerivation();
             setValidationResults(null);
         }
-    }, [challenge, resetDerivation]);
+        // Only run when challenge changes
+    }, [challenge]);
 
     // Auto-play derivation steps
     useEffect(() => {
@@ -147,7 +149,7 @@ const CFGSimulator = ({ challenge }) => {
         if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
         newCfg.rules = newCfg.rules.map(r => ({
             left: r.left,
-            right: r.right === 'ε' ? [] : r.right.split('')
+            right: (r.right === 'ε' || r.right === 'epsilon' || r.right === '') ? [] : r.right.split('')
         }));
         return newCfg;
     };
@@ -172,7 +174,10 @@ const CFGSimulator = ({ challenge }) => {
         const newCfg = JSON.parse(JSON.stringify(cfg));
         if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
         if (!Array.isArray(newCfg.variables)) newCfg.variables = [];
-        newCfg.rules = newCfg.rules.map(r => ({ left: r.left, right: Array.isArray(r.right) ? r.right : (r.right === 'ε' ? [] : (typeof r.right === 'string' ? r.right.split('') : [])) }));
+        newCfg.rules = newCfg.rules.map(r => ({ 
+            left: r.left, 
+            right: Array.isArray(r.right) ? r.right : ((r.right === 'ε' || r.right === 'epsilon' || r.right === '') ? [] : (typeof r.right === 'string' ? r.right.split('') : [])) 
+        }));
         if (newCfg.rules.some(r => r.right.includes(newCfg.startVariable))) {
             const newStart = newCfg.startVariable + '0';
             if (!newCfg.variables.includes(newStart)) newCfg.variables.push(newStart);
@@ -187,12 +192,14 @@ const CFGSimulator = ({ challenge }) => {
         if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
         const nullable = new Set();
         newCfg.rules.forEach(r => {
-            const rhs = Array.isArray(r.right) ? r.right : (r.right === 'ε' ? [] : (typeof r.right === 'string' ? r.right.split('') : []));
+            const rhs = Array.isArray(r.right) ? r.right : ((r.right === 'ε' || r.right === 'epsilon' || r.right === '') ? [] : (typeof r.right === 'string' ? r.right.split('') : []));
             if (rhs.length === 0) nullable.add(r.left);
             r.right = rhs;
         });
         let changed = true;
-        while (changed) {
+        let safetyCount = 0;
+        while (changed && safetyCount < 100) {
+            safetyCount++;
             changed = false;
             for (let r of newCfg.rules) {
                 if (r.right.every(sym => nullable.has(sym))) {
@@ -205,8 +212,10 @@ const CFGSimulator = ({ challenge }) => {
             if (r.right.length === 0) return;
             const nullableIndices = [];
             r.right.forEach((sym, i) => { if (nullable.has(sym)) nullableIndices.push(i); });
-            const numCombos = 1 << nullableIndices.length;
-            for (let i = 0; i < numCombos; i++) {
+            
+            // Limit to prevent exponential blowup
+            const maxCombos = Math.min(1 << nullableIndices.length, 1024);
+            for (let i = 0; i < maxCombos; i++) {
                 const newRhs = [...r.right];
                 for (let j = 0; j < nullableIndices.length; j++) { if ((i >> j) & 1) newRhs[nullableIndices[j]] = null; }
                 const finalRhs = newRhs.filter(sym => sym !== null);
@@ -223,19 +232,21 @@ const CFGSimulator = ({ challenge }) => {
         if (!Array.isArray(newCfg.variables)) newCfg.variables = [];
         const unitPairs = new Set();
         newCfg.rules.forEach(r => {
-            if (!Array.isArray(r.right)) r.right = (r.right === 'ε' ? [] : (typeof r.right === 'string' ? r.right.split('') : []));
+            if (!Array.isArray(r.right)) r.right = ((r.right === 'ε' || r.right === 'epsilon' || r.right === '') ? [] : (typeof r.right === 'string' ? r.right.split('') : []));
             if (r.right.length === 1 && newCfg.variables.includes(r.right[0])) unitPairs.add(`${r.left}-${r.right[0]}`);
         });
         const closures = {};
         newCfg.variables.forEach(v => closures[v] = new Set([v]));
-        unitPairs.forEach(pair => { const [a, b] = pair.split('-'); closures[a].add(b); });
+        unitPairs.forEach(pair => { const [a, b] = pair.split('-'); if (closures[a]) closures[a].add(b); });
         let changed = true;
-        while (changed) {
+        let safetyCount = 0;
+        while (changed && safetyCount < 100) {
+            safetyCount++;
             changed = false;
             for (let a of newCfg.variables) {
                 for (let b of newCfg.variables) {
                     if (closures[a].has(b)) {
-                        for (let c of closures[b]) { if (!closures[a].has(c)) { closures[a].add(c); changed = true; } }
+                        for (let c of (closures[b] || [])) { if (!closures[a].has(c)) { closures[a].add(c); changed = true; } }
                     }
                 }
             }
@@ -258,7 +269,7 @@ const CFGSimulator = ({ challenge }) => {
         const terminalMap = {};
         newCfg.terminals.forEach(t => {
             const nt = 'X' + t.toUpperCase();
-            newCfg.variables.push(nt);
+            if (!newCfg.variables.includes(nt)) newCfg.variables.push(nt);
             terminalMap[t] = nt;
             newCfg.rules.push({ left: nt, right: [t] });
         });
@@ -273,14 +284,14 @@ const CFGSimulator = ({ challenge }) => {
         const newCfg = JSON.parse(JSON.stringify(cfg));
         const newRules = [];
         const productionsToProcess = [...newCfg.rules];
-        const binarizationVars = ['P', 'Q', 'R', 'T'];
+        const binarizationVars = ['P', 'Q', 'R', 'T', 'U', 'V', 'W', 'Y', 'Z'];
         let varCounter = 0;
         while (productionsToProcess.length > 0) {
             const p = productionsToProcess.shift();
             if (p.right.length > 2) {
-                let newVar = varCounter < binarizationVars.length ? binarizationVars[varCounter] : 'BIN_' + varCounter;
+                let newVar = varCounter < binarizationVars.length ? binarizationVars[varCounter] : 'B' + varCounter;
                 varCounter++;
-                newCfg.variables.push(newVar);
+                if (!newCfg.variables.includes(newVar)) newCfg.variables.push(newVar);
                 newRules.push({ left: p.left, right: [p.right[0], newVar] });
                 productionsToProcess.push({ left: newVar, right: p.right.slice(1) });
             } else newRules.push(p);
@@ -330,45 +341,86 @@ const CFGSimulator = ({ challenge }) => {
     };
 
     const generateLeftmostDerivation = (cfg, target) => {
-        const maxSteps = 50;
-        const maxLength = target.length * 3;
-        const derive = (current, steps, depth) => {
+        // Use BFS instead of recursion to prevent deep call stacks and provide better progress
+        const queue = [{
+            current: cfg.startVariable,
+            steps: [{ step: 0, string: cfg.startVariable, production: null, description: `Start with ${cfg.startVariable}` }],
+            depth: 1
+        }];
+        const visited = new Set([cfg.startVariable]);
+        const maxDepth = 1000; // Limit iterations
+        let count = 0;
+
+        while (queue.length > 0 && count < maxDepth) {
+            count++;
+            const { current, steps, depth } = queue.shift();
+
             if (current === target) return steps;
-            if (depth >= maxSteps || current.length > maxLength) return null;
+            if (current.length > target.length * 2 + 2) continue;
+
             let variableIndex = -1;
             let variable = null;
-            for (let i = 0; i < current.length; i++) { if (cfg.variables.includes(current[i])) { variableIndex = i; variable = current[i]; break; } }
-            if (variable === null) return null;
+            for (let i = 0; i < current.length; i++) { 
+                if (cfg.variables.includes(current[i])) { 
+                    variableIndex = i; 
+                    variable = current[i]; 
+                    break; 
+                } 
+            }
+
+            if (variable === null) continue;
+
             const applicableRules = cfg.rules.filter(r => r.left === variable);
             for (const rule of applicableRules) {
-                const replacement = rule.right === 'ε' ? '' : rule.right;
+                const replacement = (rule.right === 'ε' || rule.right === 'epsilon' || rule.right === '') ? '' : rule.right;
                 const newString = current.substring(0, variableIndex) + replacement + current.substring(variableIndex + 1);
+                
+                // Heuristic: terminal prefix must match target
                 const terminalPrefix = newString.split('').filter((_, idx) => idx < variableIndex || !cfg.variables.includes(newString[idx])).join('').substring(0, variableIndex);
                 if (terminalPrefix && !target.startsWith(terminalPrefix)) continue;
-                const newSteps = [...steps, { step: depth, string: newString, production: rule, highlightIndices: Array.from({ length: replacement.length }, (_, i) => variableIndex + i), description: `Apply ${rule.left} → ${rule.right}` }];
-                const result = derive(newString, newSteps, depth + 1);
-                if (result !== null) return result;
+
+                if (!visited.has(newString)) {
+                    visited.add(newString);
+                    const newSteps = [...steps, { 
+                        step: depth, 
+                        string: newString, 
+                        production: rule, 
+                        highlightIndices: Array.from({ length: replacement.length }, (_, i) => variableIndex + i), 
+                        description: `Apply ${rule.left} → ${rule.right}` 
+                    }];
+                    queue.push({ current: newString, steps: newSteps, depth: depth + 1 });
+                }
             }
-            return null;
-        };
-        const initialSteps = [{ step: 0, string: cfg.startVariable, production: null, description: `Start with ${cfg.startVariable}` }];
-        return derive(cfg.startVariable, initialSteps, 1) || [];
+        }
+        return null;
     };
 
     const parseString = () => {
         setDerivationSteps([]);
         setCurrentStep(-1);
         setIsAccepted(null);
+
+        // Run CYK first - it's O(n^3) and safer for rejection
+        const cnfGrammar = toCNF(cfg);
+        const accepted = cykParse(cnfGrammar, inputString);
+        
+        if (!accepted) {
+            setIsAccepted(false);
+            setDerivationSteps([{ step: 0, string: inputString, production: null, description: `REJECTED: No derivation possible.` }]);
+            setCurrentStep(0);
+            return;
+        }
+
+        // If accepted, try to find a derivation for visualization
         const steps = generateLeftmostDerivation(cfg, inputString);
-        if (steps.length > 0) {
+        if (steps) {
             setDerivationSteps(steps);
             setIsAccepted(true);
             setCurrentStep(0);
         } else {
-            const cnfGrammar = toCNF(cfg);
-            const accepted = cykParse(cnfGrammar, inputString);
-            setDerivationSteps([{ step: 1, string: inputString, production: null, description: `No derivation found. CYK Result: ${accepted ? 'ACCEPTED' : 'REJECTED'}` }]);
-            setIsAccepted(accepted);
+            // Should not happen if CYK accepted, but as fallback
+            setIsAccepted(true);
+            setDerivationSteps([{ step: 0, string: inputString, production: null, description: `ACCEPTED (CYK Result)` }]);
             setCurrentStep(0);
         }
     };
@@ -382,7 +434,7 @@ const CFGSimulator = ({ challenge }) => {
             setInputString('');
             resetDerivation();
         }
-    }, [examples, cfg, resetDerivation]);
+    }, [examples, cfg.loadCFG, resetDerivation]);
 
     const handleValidateChallenge = () => {
         if (!challenge || !challenge.challenge || !challenge.challenge.testCases) {

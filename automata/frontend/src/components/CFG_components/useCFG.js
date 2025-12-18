@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 export const useCFG = (initialCFG) => {
     const [variables, setVariables] = useState(initialCFG.variables || []);
@@ -6,38 +6,32 @@ export const useCFG = (initialCFG) => {
     const [rules, setRules] = useState(initialCFG.rules || []);
     const [startVariable, setStartVariable] = useState(initialCFG.startVariable || '');
 
-    const loadCFG = (cfg) => {
+    const loadCFG = useCallback((cfg) => {
         setVariables(cfg.variables || []);
         setTerminals(cfg.terminals || []);
         setRules(cfg.rules || []);
         setStartVariable(cfg.startVariable || '');
-    };
+    }, []);
 
-    const addRule = (left, right) => {
-        const newRule = { left, right };
-        setRules([...rules, newRule]);
-    };
+    const addRule = useCallback((left, right) => {
+        setRules(prev => [...prev, { left, right }]);
+    }, []);
 
-    const removeRule = (index) => {
-        const newRules = rules.filter((_, i) => i !== index);
-        setRules(newRules);
-    };
+    const removeRule = useCallback((index) => {
+        setRules(prev => prev.filter((_, i) => i !== index));
+    }, []);
 
-    const addProduction = (left, right) => {
-        const newRule = { left, right };
-        setRules([...rules, newRule]);
-    };
+    const addProduction = useCallback((left, right) => {
+        setRules(prev => [...prev, { left, right }]);
+    }, []);
 
-    const deleteProduction = (index) => {
-        const newRules = rules.filter((_, i) => i !== index);
-        setRules(newRules);
-    };
+    const deleteProduction = useCallback((index) => {
+        setRules(prev => prev.filter((_, i) => i !== index));
+    }, []);
 
-    const addVariable = (variable) => {
-        if (!variables.includes(variable)) {
-            setVariables([...variables, variable]);
-        }
-    };
+    const addVariable = useCallback((variable) => {
+        setVariables(prev => prev.includes(variable) ? prev : [...prev, variable]);
+    }, []);
 
     return {
         variables,

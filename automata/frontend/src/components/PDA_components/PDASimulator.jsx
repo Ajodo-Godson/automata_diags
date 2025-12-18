@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './stylings/PDASimulator.css';
 import { PDAControlPanel } from './PDAControlPanel';
 import { PDATestCases } from './PDATestCases';
@@ -17,11 +17,11 @@ const PDASimulator = ({ challenge }) => {
     const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
     const [validationResults, setValidationResults] = useState(null);
 
-    // Start with a blank PDA in challenge mode
-    const initialConfig = challenge ? {
+    // Memoize initialConfig
+    const initialConfig = useMemo(() => challenge ? {
         states: ['q0'],
-        alphabet: ['0', '1'],
-        stackAlphabet: ['Z', 'X'],
+        alphabet: challenge.challenge?.alphabet || ['0', '1'],
+        stackAlphabet: challenge.challenge?.stackAlphabet || ['Z', 'X'],
         transitions: [],
         startState: 'q0',
         startStackSymbol: 'Z',
@@ -34,7 +34,7 @@ const PDASimulator = ({ challenge }) => {
         startState: examples['balanced_parentheses'].startState,
         startStackSymbol: examples['balanced_parentheses'].startStackSymbol,
         acceptStates: examples['balanced_parentheses'].acceptStates,
-    };
+    }, [challenge, examples]);
 
     const pda = usePDA(initialConfig);
 
@@ -60,36 +60,60 @@ const PDASimulator = ({ challenge }) => {
         return () => clearTimeout(timer);
     }, [isPlaying, currentStep, simulationSteps.length, playbackSpeed]);
 
+    const handleReset = useCallback(() => {
+        setSimulationSteps([]);
+        setCurrentStep(-1);
+        setIsPlaying(false);
+    }, []);
+
+    const loadExample = useCallback((exampleName) => {
+        const example = examples[exampleName];
+        if (example) {
+            setCurrentExampleName(exampleName);
+            setCurrentExampleDescription(example?.description || null);
+            pda.loadPDA(example);
+            setInputString('');
+            handleReset();
+        }
+    }, [examples, pda.loadPDA, handleReset]);
+
     const simulateString = () => {
         setSimulationSteps([]);
         setCurrentStep(-1);
+
+        const initialPath = [{
+            state: pda.startState,
+            stack: [pda.startStackSymbol],
+            remainingInput: inputString,
+            inputPosition: 0,
+            description: `Start: state ${pda.startState}, stack [${pda.startStackSymbol}]`,
+            transition: null,
+            accepted: false
+        }];
 
         const configurations = [{
             state: pda.startState,
             stack: [pda.startStackSymbol],
             inputPosition: 0,
-            path: [{
-                state: pda.startState,
-                stack: [pda.startStackSymbol],
-                remainingInput: inputString,
-                inputPosition: 0,
-                description: `Start: state ${pda.startState}, stack [${pda.startStackSymbol}]`,
-                transition: null,
-                accepted: false
-            }]
+            path: initialPath
         }];
 
         const visited = new Set();
-        const maxIterations = 10000;
+        const maxIterations = 5000; // Reduced for performance
         let iterationCount = 0;
+        let lastKnownPath = initialPath;
 
         while (configurations.length > 0 && iterationCount < maxIterations) {
             iterationCount++;
             const config = configurations.shift();
             const { state, stack, inputPosition, path } = config;
-            const topOfStack = stack[stack.length - 1];
+            lastKnownPath = path;
+            
+            // Optimization: limit stack depth to prevent infinite recursion in cycles
+            if (stack.length > inputString.length + 10) continue;
 
-            const configKey = `${state}|${stack.join(',')}|${inputPosition}`;
+            const topOfStack = stack[stack.length - 1];
+            const configKey = `${state}|${stack.slice(-20).join(',')}|${inputPosition}`; // Only check last 20 of stack for key
             if (visited.has(configKey)) continue;
             visited.add(configKey);
 
@@ -109,8 +133,11 @@ const PDASimulator = ({ challenge }) => {
                     if (t.from === state && t.input === inputSymbol && t.pop === topOfStack) applicableTransitions.push(t);
                 }
             }
+            // Epsilon transitions
             for (const t of pda.transitions) {
-                if (t.from === state && t.input === 'ε' && t.pop === topOfStack) applicableTransitions.push(t);
+                if (t.from === state && (t.input === 'ε' || t.input === 'epsilon' || t.input === '') && t.pop === topOfStack) {
+                    applicableTransitions.push(t);
+                }
             }
             
             if (inputPosition >= inputString.length && applicableTransitions.length === 0) {
@@ -123,24 +150,25 @@ const PDASimulator = ({ challenge }) => {
                 }
             }
 
-            if (applicableTransitions.length === 0) continue;
-
             for (const transition of applicableTransitions) {
-                const inputSymbol = transition.input;
                 const newState = transition.to;
                 const newStack = [...stack];
                 newStack.pop();
-                if (transition.push !== 'ε') {
+                
+                if (transition.push && transition.push !== 'ε' && transition.push !== 'epsilon' && transition.push !== '') {
                     const pushSymbols = transition.push.split('').reverse();
                     newStack.push(...pushSymbols);
                 }
-                const newInputPosition = inputSymbol !== 'ε' ? inputPosition + 1 : inputPosition;
+                
+                const consumesInput = transition.input && transition.input !== 'ε' && transition.input !== 'epsilon' && transition.input !== '';
+                const newInputPosition = consumesInput ? inputPosition + 1 : inputPosition;
+                
                 const newPath = [...path, {
                     state: newState,
                     stack: [...newStack],
                     remainingInput: inputString.slice(newInputPosition),
                     inputPosition: newInputPosition,
-                    description: `Read '${inputSymbol}', popped '${topOfStack}', pushed '${transition.push}', moved to ${newState}`,
+                    description: `Read '${transition.input}', popped '${topOfStack}', pushed '${transition.push}', moved to ${newState}`,
                     transition: transition,
                     accepted: false
                 }];
@@ -148,27 +176,12 @@ const PDASimulator = ({ challenge }) => {
             }
         }
 
-        let fallbackPath = [{ state: pda.startState, stack: [pda.startStackSymbol], remainingInput: inputString, inputPosition: 0, description: `Start: state ${pda.startState}, stack [${pda.startStackSymbol}]`, transition: null, accepted: false }];
-        setSimulationSteps(fallbackPath);
+        // If we reach here, rejected or timeout
+        let finalPath = [...lastKnownPath];
+        finalPath[finalPath.length-1].description += iterationCount >= maxIterations ? ' (Timeout/Complex)' : ' → REJECTED';
+        setSimulationSteps(finalPath);
         setCurrentStep(0);
     };
-
-    const loadExample = useCallback((exampleName) => {
-        const example = examples[exampleName];
-        if (example) {
-            setCurrentExampleName(exampleName);
-            setCurrentExampleDescription(example?.description || null);
-            pda.loadPDA(example);
-            setInputString('');
-            handleReset();
-        }
-    }, [examples, pda]);
-
-    const handleReset = useCallback(() => {
-        setSimulationSteps([]);
-        setCurrentStep(-1);
-        setIsPlaying(false);
-    }, []);
 
     // Event listeners for toolbox actions
     useEffect(() => {
@@ -251,7 +264,7 @@ const PDASimulator = ({ challenge }) => {
             window.removeEventListener('export', handleExport);
             window.removeEventListener('clearAll', handleClearAll);
         };
-    }, [pda, currentExampleName, currentExampleDescription, handleReset]);
+    }, [pda.loadPDA, pda.states, pda.alphabet, pda.stackAlphabet, pda.transitions, pda.startState, pda.startStackSymbol, pda.acceptStates, currentExampleName, currentExampleDescription, handleReset]);
 
     // Reset to blank when challenge mode is activated
     useEffect(() => {

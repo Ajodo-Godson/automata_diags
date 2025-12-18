@@ -145,52 +145,52 @@ export const validatePDAChallenge = (userPDA, testCases) => {
 };
 
 /**
- * Simulates a CFG using CYK algorithm for robust validation
+ * Simulates a CFG using a robust BFS approach
  */
 export const simulateCFG = (cfg, input) => {
     if (!cfg || !cfg.rules || !cfg.startVariable) return false;
 
-    // Handle empty string
-    if (input === '' || input.length === 0) {
-        return cfg.rules.some(r => r.left === cfg.startVariable && (r.right === 'ε' || r.right === '' || r.right === 'epsilon'));
-    }
+    // Normalize rules and find nullable variables
+    const rules = cfg.rules.map(r => ({
+        left: r.left,
+        right: (r.right === 'ε' || r.right === 'epsilon' || r.right === '') ? '' : r.right
+    }));
 
-    // Convert to CNF for CYK
-    const toCNF = (grammar) => {
-        let g = JSON.parse(JSON.stringify(grammar));
-        // Simple normalization for CYK
-        // 1. Eliminate start symbol from RHS (simplified)
-        // 2. Eliminate ε-productions (simplified)
-        // 3. Eliminate unit productions (simplified)
-        // 4. Binarize long productions
-        // For validation, we use a simpler approach: BFS with depth limit but more generous than before
-        return g;
-    };
-
-    // Use a more robust BFS for validation
+    // Use BFS to find if input can be derived
+    // For CFGs, we can use a depth-limited BFS or CYK. 
+    // Since this is for validation, we'll use a more thorough BFS.
     const queue = [cfg.startVariable];
     const visited = new Set([cfg.startVariable]);
-    const maxDepth = 2000;
-    let count = 0;
+    const maxIterations = 5000;
+    let iterations = 0;
 
-    while (queue.length > 0 && count < maxDepth) {
-        count++;
+    // Special case for empty string input
+    const target = input === 'ε' || input === 'epsilon' ? '' : input;
+
+    while (queue.length > 0 && iterations < maxIterations) {
+        iterations++;
         const curr = queue.shift();
-        if (curr === input) return true;
-        if (curr.length > input.length * 2 + 5) continue; // More generous limit
 
-        for (const rule of cfg.rules) {
-            const idx = curr.indexOf(rule.left);
-            if (idx !== -1) {
-                const right = (rule.right === 'ε' || rule.right === 'epsilon' || rule.right === '') ? '' : rule.right;
-                const next = curr.slice(0, idx) + right + curr.slice(idx + 1);
-                if (!visited.has(next) && next.length <= input.length * 2 + 5) {
+        if (curr === target) return true;
+        
+        // Pruning: if current string is much longer than target and has no epsilon rules to shorten it, skip
+        // (Simplified pruning for validation)
+        if (curr.length > target.length + 10 && !rules.some(r => r.right === '')) continue;
+
+        // Try applying each rule to each variable in the current string
+        for (const rule of rules) {
+            let idx = curr.indexOf(rule.left);
+            while (idx !== -1) {
+                const next = curr.slice(0, idx) + rule.right + curr.slice(idx + 1);
+                if (!visited.has(next) && next.length <= target.length + 10) {
                     visited.add(next);
                     queue.push(next);
                 }
+                idx = curr.indexOf(rule.left, idx + 1);
             }
         }
     }
+
     return false;
 };
 

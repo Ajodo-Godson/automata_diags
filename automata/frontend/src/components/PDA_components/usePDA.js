@@ -1,71 +1,57 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
-export const usePDA = (initialPDA) => {
-    const [states, setStates] = useState(initialPDA.states || []);
-    const [alphabet, setAlphabet] = useState(initialPDA.alphabet || []);
-    const [stackAlphabet, setStackAlphabet] = useState(initialPDA.stackAlphabet || []);
-    const [transitions, setTransitions] = useState(initialPDA.transitions || []);
-    const [startState, setStartState] = useState(initialPDA.startState || '');
-    const [startStackSymbol, setStartStackSymbol] = useState(initialPDA.startStackSymbol || '');
-    const [acceptStates, setAcceptStates] = useState(new Set(initialPDA.acceptStates || []));
+export const usePDA = (initialConfig) => {
+    const [states, setStates] = useState(initialConfig.states || ['q0']);
+    const [alphabet, setAlphabet] = useState(initialConfig.alphabet || ['0', '1']);
+    const [stackAlphabet, setStackAlphabet] = useState(initialConfig.stackAlphabet || ['Z', 'X']);
+    const [transitions, setTransitions] = useState(initialConfig.transitions || []);
+    const [startState, setStartState] = useState(initialConfig.startState || 'q0');
+    const [startStackSymbol, setStartStackSymbol] = useState(initialConfig.startStackSymbol || 'Z');
+    const [acceptStates, setAcceptStates] = useState(new Set(initialConfig.acceptStates || []));
 
-    const loadPDA = (pda) => {
+    const loadPDA = useCallback((pda) => {
         setStates(pda.states || []);
         setAlphabet(pda.alphabet || []);
         setStackAlphabet(pda.stackAlphabet || []);
         setTransitions(pda.transitions || []);
-        setStartState(pda.startState || '');
-        setStartStackSymbol(pda.startStackSymbol || '');
+        setStartState(pda.startState || 'q0');
+        setStartStackSymbol(pda.startStackSymbol || 'Z');
         setAcceptStates(new Set(pda.acceptStates || []));
-    };
+    }, []);
 
-    const hasTransition = (from, input, pop) => {
-        return transitions.some(t => t.from === from && t.input === input && t.pop === pop);
-    };
-
-    const addState = (stateName) => {
+    const addState = useCallback((stateName) => {
         if (!states.includes(stateName)) {
-            setStates([...states, stateName]);
+            setStates(prev => [...prev, stateName]);
         }
-    };
+    }, [states]);
 
-    const removeState = (stateName) => {
-        setStates(states.filter(s => s !== stateName));
-        setTransitions(transitions.filter(t => t.from !== stateName && t.to !== stateName));
-        if (startState === stateName) {
-            setStartState('');
-        }
-        const newAcceptStates = new Set(acceptStates);
-        newAcceptStates.delete(stateName);
-        setAcceptStates(newAcceptStates);
-    };
+    const removeState = useCallback((stateName) => {
+        setStates(prev => prev.filter(s => s !== stateName));
+        setAcceptStates(prev => {
+            const next = new Set(prev);
+            next.delete(stateName);
+            return next;
+        });
+        setTransitions(prev => prev.filter(t => t.from !== stateName && t.to !== stateName));
+        if (startState === stateName) setStartState('');
+    }, [startState]);
 
-    const addTransition = (from, to, input, pop, push) => {
-        const newTransition = { from, to, input, pop, push };
-        setTransitions([...transitions, newTransition]);
-    };
+    const addTransition = useCallback((transition) => {
+        setTransitions(prev => [...prev, transition]);
+    }, []);
 
-    const removeTransition = (from, to, input, pop, push) => {
-        setTransitions(transitions.filter(t => 
-            !(t.from === from && t.to === to && t.input === input && t.pop === pop && t.push === push)
-        ));
-    };
+    const removeTransition = useCallback((index) => {
+        setTransitions(prev => prev.filter((_, i) => i !== index));
+    }, []);
 
-    const setStart = (stateName) => {
-        if (states.includes(stateName)) {
-            setStartState(stateName);
-        }
-    };
-
-    const toggleAcceptState = (stateName) => {
-        const newAcceptStates = new Set(acceptStates);
-        if (newAcceptStates.has(stateName)) {
-            newAcceptStates.delete(stateName);
-        } else {
-            newAcceptStates.add(stateName);
-        }
-        setAcceptStates(newAcceptStates);
-    };
+    const toggleAcceptState = useCallback((stateName) => {
+        setAcceptStates(prev => {
+            const next = new Set(prev);
+            if (next.has(stateName)) next.delete(stateName);
+            else next.add(stateName);
+            return next;
+        });
+    }, []);
 
     return {
         states,
@@ -75,20 +61,18 @@ export const usePDA = (initialPDA) => {
         startState,
         startStackSymbol,
         acceptStates,
-        loadPDA,
-        hasTransition,
-        addState,
-        removeState,
-        addTransition,
-        removeTransition,
-        setStart,
-        toggleAcceptState,
         setStates,
         setAlphabet,
         setStackAlphabet,
         setTransitions,
         setStartState,
         setStartStackSymbol,
-        setAcceptStates
+        setAcceptStates,
+        loadPDA,
+        addState,
+        removeState,
+        addTransition,
+        removeTransition,
+        toggleAcceptState
     };
 };
