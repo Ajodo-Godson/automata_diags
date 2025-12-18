@@ -40,6 +40,13 @@ const CFGSimulator = ({ challenge }) => {
     const [playbackSpeed, setPlaybackSpeed] = useState(1000);
     const [isAccepted, setIsAccepted] = useState(null);
 
+    const resetDerivation = useCallback(() => {
+        setDerivationSteps([]);
+        setCurrentStep(-1);
+        setIsPlaying(false);
+        setIsAccepted(null);
+    }, []);
+
     // Event listeners for toolbox actions
     useEffect(() => {
         const handleImport = () => {
@@ -60,7 +67,7 @@ const CFGSimulator = ({ challenge }) => {
                                 startVariable: cfgDefinition.startVariable || 'S'
                             });
                             setCurrentExampleName(cfgDefinition.name || 'Imported CFG');
-                            handleReset();
+                            resetDerivation();
                         } catch (error) {
                             alert('Invalid JSON file or CFG definition format');
                         }
@@ -93,7 +100,7 @@ const CFGSimulator = ({ challenge }) => {
                 cfg.loadCFG({ variables: ['S'], terminals: ['a', 'b'], rules: [], startVariable: 'S' });
                 setCurrentExampleName(null);
                 setCurrentExampleDescription(null);
-                handleReset();
+                resetDerivation();
                 setValidationResults(null);
             }
         };
@@ -106,17 +113,22 @@ const CFGSimulator = ({ challenge }) => {
             window.removeEventListener('export', handleExport);
             window.removeEventListener('clearAll', handleClearAll);
         };
-    }, [cfg, currentExampleName, handleReset]);
+    }, [cfg, currentExampleName, resetDerivation]);
 
     // Reset to blank when challenge mode is activated
     useEffect(() => {
         if (challenge) {
-            cfg.loadCFG({ variables: ['S'], terminals: ['a', 'b'], rules: [], startVariable: 'S' });
+            cfg.loadCFG({
+                variables: challenge.challenge?.variables || ['S'],
+                terminals: challenge.challenge?.terminals || ['a', 'b'],
+                rules: [],
+                startVariable: challenge.challenge?.variables?.[0] || 'S'
+            });
             setInputString('');
-            handleReset();
+            resetDerivation();
             setValidationResults(null);
         }
-    }, [challenge]);
+    }, [challenge, resetDerivation]);
 
     // Auto-play derivation steps
     useEffect(() => {
@@ -129,19 +141,236 @@ const CFGSimulator = ({ challenge }) => {
         return () => clearTimeout(timer);
     }, [isPlaying, currentStep, derivationSteps.length, playbackSpeed]);
 
-    const handleReset = useCallback(() => {
-        setDerivationSteps([]);
-        setCurrentStep(-1);
-        setIsPlaying(false);
-        setIsAccepted(null);
-    }, []);
+    // Helper functions for CNF conversion and CYK parsing
+    const normalizeCFG = (cfg) => {
+        const newCfg = JSON.parse(JSON.stringify(cfg));
+        if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
+        newCfg.rules = newCfg.rules.map(r => ({
+            left: r.left,
+            right: r.right === 'ε' ? [] : r.right.split('')
+        }));
+        return newCfg;
+    };
+
+    const toCNF = (cfg) => {
+        let cnf = normalizeCFG(cfg);
+        cnf = eliminateStart(cnf);
+        cnf = eliminateNull(cnf);
+        cnf = eliminateUnit(cnf);
+        cnf = separateTerminals(cnf);
+        cnf = binarize(cnf);
+        cnf = removeDuplicates(cnf);
+        cnf.rules.sort((a, b) => {
+            const leftComparison = a.left.localeCompare(b.left);
+            if (leftComparison !== 0) return leftComparison;
+            return a.right.join(' ').localeCompare(b.right.join(' '));
+        });
+        return cnf;
+    };
+
+    const eliminateStart = (cfg) => {
+        const newCfg = JSON.parse(JSON.stringify(cfg));
+        if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
+        if (!Array.isArray(newCfg.variables)) newCfg.variables = [];
+        newCfg.rules = newCfg.rules.map(r => ({ left: r.left, right: Array.isArray(r.right) ? r.right : (r.right === 'ε' ? [] : (typeof r.right === 'string' ? r.right.split('') : [])) }));
+        if (newCfg.rules.some(r => r.right.includes(newCfg.startVariable))) {
+            const newStart = newCfg.startVariable + '0';
+            if (!newCfg.variables.includes(newStart)) newCfg.variables.push(newStart);
+            newCfg.rules.push({ left: newStart, right: [newCfg.startVariable] });
+            newCfg.startVariable = newStart;
+        }
+        return newCfg;
+    };
+
+    const eliminateNull = (cfg) => {
+        const newCfg = JSON.parse(JSON.stringify(cfg));
+        if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
+        const nullable = new Set();
+        newCfg.rules.forEach(r => {
+            const rhs = Array.isArray(r.right) ? r.right : (r.right === 'ε' ? [] : (typeof r.right === 'string' ? r.right.split('') : []));
+            if (rhs.length === 0) nullable.add(r.left);
+            r.right = rhs;
+        });
+        let changed = true;
+        while (changed) {
+            changed = false;
+            for (let r of newCfg.rules) {
+                if (r.right.every(sym => nullable.has(sym))) {
+                    if (!nullable.has(r.left)) { nullable.add(r.left); changed = true; }
+                }
+            }
+        }
+        const newRules = [];
+        newCfg.rules.forEach(r => {
+            if (r.right.length === 0) return;
+            const nullableIndices = [];
+            r.right.forEach((sym, i) => { if (nullable.has(sym)) nullableIndices.push(i); });
+            const numCombos = 1 << nullableIndices.length;
+            for (let i = 0; i < numCombos; i++) {
+                const newRhs = [...r.right];
+                for (let j = 0; j < nullableIndices.length; j++) { if ((i >> j) & 1) newRhs[nullableIndices[j]] = null; }
+                const finalRhs = newRhs.filter(sym => sym !== null);
+                if (finalRhs.length > 0) newRules.push({ left: r.left, right: finalRhs });
+            }
+        });
+        newCfg.rules = newRules;
+        return newCfg;
+    };
+
+    const eliminateUnit = (cfg) => {
+        const newCfg = JSON.parse(JSON.stringify(cfg));
+        if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
+        if (!Array.isArray(newCfg.variables)) newCfg.variables = [];
+        const unitPairs = new Set();
+        newCfg.rules.forEach(r => {
+            if (!Array.isArray(r.right)) r.right = (r.right === 'ε' ? [] : (typeof r.right === 'string' ? r.right.split('') : []));
+            if (r.right.length === 1 && newCfg.variables.includes(r.right[0])) unitPairs.add(`${r.left}-${r.right[0]}`);
+        });
+        const closures = {};
+        newCfg.variables.forEach(v => closures[v] = new Set([v]));
+        unitPairs.forEach(pair => { const [a, b] = pair.split('-'); closures[a].add(b); });
+        let changed = true;
+        while (changed) {
+            changed = false;
+            for (let a of newCfg.variables) {
+                for (let b of newCfg.variables) {
+                    if (closures[a].has(b)) {
+                        for (let c of closures[b]) { if (!closures[a].has(c)) { closures[a].add(c); changed = true; } }
+                    }
+                }
+            }
+        }
+        const newRules = [];
+        for (let A of newCfg.variables) {
+            const closureA = closures[A] || new Set([A]);
+            for (let B of closureA) {
+                newCfg.rules.forEach(p => {
+                    if (p.left === B && !(p.right.length === 1 && newCfg.variables.includes(p.right[0]))) newRules.push({ left: A, right: p.right });
+                });
+            }
+        }
+        newCfg.rules = newRules;
+        return newCfg;
+    };
+
+    const separateTerminals = (cfg) => {
+        const newCfg = JSON.parse(JSON.stringify(cfg));
+        const terminalMap = {};
+        newCfg.terminals.forEach(t => {
+            const nt = 'X' + t.toUpperCase();
+            newCfg.variables.push(nt);
+            terminalMap[t] = nt;
+            newCfg.rules.push({ left: nt, right: [t] });
+        });
+        newCfg.rules = newCfg.rules.map(r => {
+            if (r.right.length > 1) return { left: r.left, right: r.right.map(sym => terminalMap[sym] || sym) };
+            return r;
+        });
+        return newCfg;
+    };
+
+    const binarize = (cfg) => {
+        const newCfg = JSON.parse(JSON.stringify(cfg));
+        const newRules = [];
+        const productionsToProcess = [...newCfg.rules];
+        const binarizationVars = ['P', 'Q', 'R', 'T'];
+        let varCounter = 0;
+        while (productionsToProcess.length > 0) {
+            const p = productionsToProcess.shift();
+            if (p.right.length > 2) {
+                let newVar = varCounter < binarizationVars.length ? binarizationVars[varCounter] : 'BIN_' + varCounter;
+                varCounter++;
+                newCfg.variables.push(newVar);
+                newRules.push({ left: p.left, right: [p.right[0], newVar] });
+                productionsToProcess.push({ left: newVar, right: p.right.slice(1) });
+            } else newRules.push(p);
+        }
+        const uniqueRules = [];
+        const seen = new Set();
+        newRules.forEach(r => {
+            const key = `${r.left}-${r.right.join(',')}`;
+            if (!seen.has(key)) { seen.add(key); uniqueRules.push(r); }
+        });
+        newCfg.rules = uniqueRules;
+        return newCfg;
+    };
+
+    const removeDuplicates = (cfg) => {
+        const seen = new Set();
+        cfg.rules = cfg.rules.filter(r => {
+            const key = `${r.left}->${r.right.join(' ')}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+        return cfg;
+    };
+
+    const cykParse = (cnf, input) => {
+        const n = input.length;
+        if (n === 0) return false;
+        const table = Array.from({ length: n }, () => Array.from({ length: n }, () => new Set()));
+        for (let i = 0; i < n; i++) {
+            cnf.rules.forEach(r => { if (r.right.length === 1 && r.right[0] === input[i]) table[i][i].add(r.left); });
+        }
+        for (let len = 2; len <= n; len++) {
+            for (let i = 0; i <= n - len; i++) {
+                const j = i + len - 1;
+                for (let k = i; k < j; k++) {
+                    cnf.rules.forEach(r => {
+                        if (r.right.length === 2) {
+                            const [b, c] = r.right;
+                            if (table[i][k].has(b) && table[k + 1][j].has(c)) table[i][j].add(r.left);
+                        }
+                    });
+                }
+            }
+        }
+        return table[0][n - 1].has(cnf.startVariable);
+    };
+
+    const generateLeftmostDerivation = (cfg, target) => {
+        const maxSteps = 50;
+        const maxLength = target.length * 3;
+        const derive = (current, steps, depth) => {
+            if (current === target) return steps;
+            if (depth >= maxSteps || current.length > maxLength) return null;
+            let variableIndex = -1;
+            let variable = null;
+            for (let i = 0; i < current.length; i++) { if (cfg.variables.includes(current[i])) { variableIndex = i; variable = current[i]; break; } }
+            if (variable === null) return null;
+            const applicableRules = cfg.rules.filter(r => r.left === variable);
+            for (const rule of applicableRules) {
+                const replacement = rule.right === 'ε' ? '' : rule.right;
+                const newString = current.substring(0, variableIndex) + replacement + current.substring(variableIndex + 1);
+                const terminalPrefix = newString.split('').filter((_, idx) => idx < variableIndex || !cfg.variables.includes(newString[idx])).join('').substring(0, variableIndex);
+                if (terminalPrefix && !target.startsWith(terminalPrefix)) continue;
+                const newSteps = [...steps, { step: depth, string: newString, production: rule, highlightIndices: Array.from({ length: replacement.length }, (_, i) => variableIndex + i), description: `Apply ${rule.left} → ${rule.right}` }];
+                const result = derive(newString, newSteps, depth + 1);
+                if (result !== null) return result;
+            }
+            return null;
+        };
+        const initialSteps = [{ step: 0, string: cfg.startVariable, production: null, description: `Start with ${cfg.startVariable}` }];
+        return derive(cfg.startVariable, initialSteps, 1) || [];
+    };
 
     const parseString = () => {
-        // Basic parser implementation for visualization
-        // In a real scenario, this would use CYK or similar
-        setDerivationSteps([{ step: 0, string: cfg.startVariable, description: `Start with ${cfg.startVariable}` }]);
-        setCurrentStep(0);
+        setDerivationSteps([]);
+        setCurrentStep(-1);
         setIsAccepted(null);
+        const steps = generateLeftmostDerivation(cfg, inputString);
+        if (steps.length > 0) {
+            setDerivationSteps(steps);
+            setIsAccepted(true);
+            setCurrentStep(0);
+        } else {
+            const cnfGrammar = toCNF(cfg);
+            const accepted = cykParse(cnfGrammar, inputString);
+            setDerivationSteps([{ step: 1, string: inputString, production: null, description: `No derivation found. CYK Result: ${accepted ? 'ACCEPTED' : 'REJECTED'}` }]);
+            setIsAccepted(accepted);
+            setCurrentStep(0);
+        }
     };
 
     const loadExample = useCallback((exampleName) => {
@@ -151,9 +380,9 @@ const CFGSimulator = ({ challenge }) => {
             setCurrentExampleDescription(example?.description || null);
             cfg.loadCFG(example);
             setInputString('');
-            handleReset();
+            resetDerivation();
         }
-    }, [examples, cfg]);
+    }, [examples, cfg, resetDerivation]);
 
     const handleValidateChallenge = () => {
         if (!challenge || !challenge.challenge || !challenge.challenge.testCases) {
@@ -171,7 +400,6 @@ const CFGSimulator = ({ challenge }) => {
     return (
         <div className="cfg-simulator-new">
             <div className="cfg-container">
-                {/* Compact Challenge Header */}
                 {challenge && challenge.challenge && (
                     <div className="compact-challenge-header">
                         <div className="challenge-info">
@@ -238,7 +466,7 @@ const CFGSimulator = ({ challenge }) => {
                             onRun={() => setIsPlaying(true)}
                             onPause={() => setIsPlaying(false)}
                             onStep={() => { if (currentStep < derivationSteps.length - 1) setCurrentStep(currentStep + 1); }}
-                            onReset={handleReset}
+                            onReset={resetDerivation}
                             onSpeedChange={setPlaybackSpeed}
                         />
 
@@ -259,17 +487,17 @@ const CFGSimulator = ({ challenge }) => {
 
                     <div className="cfg-right-col">
                         <CollapsibleSection title="Variables Editor" defaultOpen={challenge ? true : false}>
-                            <VariablesEditor cfg={cfg} onUpdate={handleReset} />
+                            <VariablesEditor cfg={cfg} onUpdate={resetDerivation} />
                         </CollapsibleSection>
                         <CollapsibleSection title="Terminals Editor" defaultOpen={challenge ? true : false}>
-                            <TerminalsEditor cfg={cfg} onUpdate={handleReset} />
+                            <TerminalsEditor cfg={cfg} onUpdate={resetDerivation} />
                         </CollapsibleSection>
                         <CollapsibleSection title="Production Rules Editor" defaultOpen={challenge ? true : false}>
-                            <ProductionRulesEditor cfg={cfg} onUpdate={handleReset} />
+                            <ProductionRulesEditor cfg={cfg} onUpdate={resetDerivation} />
                         </CollapsibleSection>
                         {!challenge && (
                             <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
-                                <CFGTestCases onLoadTest={(ti) => { setInputString(ti); handleReset(); }} currentExample={currentExampleName} />
+                                <CFGTestCases onLoadTest={(ti) => { setInputString(ti); resetDerivation(); }} currentExample={currentExampleName} />
                             </CollapsibleSection>
                         )}
                         <CollapsibleSection title="Parse Tree" defaultOpen={true}>

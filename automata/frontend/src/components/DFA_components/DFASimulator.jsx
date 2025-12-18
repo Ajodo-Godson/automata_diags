@@ -240,7 +240,7 @@ const DFASimulatorNew = ({ challenge }) => {
         if (challenge) {
             dfa.loadDFA({
                 states: ['q0'],
-                alphabet: ['0', '1'],
+                alphabet: challenge.challenge?.alphabet || ['0', '1'],
                 transitions: {},
                 startState: 'q0',
                 acceptStates: new Set(),

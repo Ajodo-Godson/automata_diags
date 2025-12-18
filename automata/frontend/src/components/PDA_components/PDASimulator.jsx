@@ -258,8 +258,8 @@ const PDASimulator = ({ challenge }) => {
         if (challenge) {
             pda.loadPDA({
                 states: ['q0'],
-                alphabet: ['0', '1'],
-                stackAlphabet: ['Z', 'X'],
+                alphabet: challenge.challenge?.alphabet || ['0', '1'],
+                stackAlphabet: challenge.challenge?.stackAlphabet || ['Z', 'X'],
                 transitions: [],
                 startState: 'q0',
                 startStackSymbol: 'Z',

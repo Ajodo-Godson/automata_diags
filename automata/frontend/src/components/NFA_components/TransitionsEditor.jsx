@@ -80,7 +80,17 @@ export function NFATransitionsEditor({ nfa, onUpdate }) {
                                 onChange={(e) => setNewTransition({ ...newTransition, symbol: e.target.value })}
                                 className="input-small"
                                 list="nfa-alphabet-list"
+                                style={{ width: '60px' }}
                             />
+                            <button 
+                                type="button"
+                                className="btn-epsilon"
+                                onClick={() => setNewTransition({ ...newTransition, symbol: 'ε' })}
+                                title="Insert Epsilon (ε)"
+                                style={{ padding: '2px 8px', fontSize: '18px', cursor: 'pointer' }}
+                            >
+                                ε
+                            </button>
                             <datalist id="nfa-alphabet-list">
                                 {nfa.alphabet.map(symbol => (
                                     <option key={symbol} value={symbol} />

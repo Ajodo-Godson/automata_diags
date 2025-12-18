@@ -530,6 +530,7 @@ Thousands of problems are NP-complete!`,
                     question: 'Build a Turing Machine that accepts the language {0ⁿ1ⁿ0ⁿ | n ≥ 1}',
                     simulatorType: 'TM',
                     challenge: {
+                        alphabet: ['0', '1'],
                         description: 'Create a Turing Machine that accepts strings with three equal groups of 0s, 1s, and 0s. Your TM should accept "010", "001100", "000111000", but reject "", "01", "00110", "0011000".',
                         testCases: [
                             { input: '010', expected: true, description: 'n=1' },

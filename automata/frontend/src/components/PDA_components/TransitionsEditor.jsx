@@ -92,7 +92,14 @@ export function PDATransitionsEditor({ pda, onUpdate }) {
                                     onChange={(e) => setNewTransition({ ...newTransition, input: e.target.value })}
                                     className="input-small"
                                     list="pda-alphabet-list"
+                                    style={{ width: '60px' }}
                                 />
+                                <button 
+                                    type="button"
+                                    onClick={() => setNewTransition({ ...newTransition, input: 'ε' })}
+                                    title="Insert Epsilon (ε)"
+                                    style={{ padding: '2px 4px', cursor: 'pointer' }}
+                                >ε</button>
                                 <span className="separator">,</span>
                                 <input
                                     type="text"
@@ -124,7 +131,14 @@ export function PDATransitionsEditor({ pda, onUpdate }) {
                                     onChange={(e) => setNewTransition({ ...newTransition, push: e.target.value })}
                                     className="input-small"
                                     list="pda-stack-list"
+                                    style={{ width: '60px' }}
                                 />
+                                <button 
+                                    type="button"
+                                    onClick={() => setNewTransition({ ...newTransition, push: 'ε' })}
+                                    title="Insert Epsilon (ε)"
+                                    style={{ padding: '2px 4px', cursor: 'pointer' }}
+                                >ε</button>
                                 <span>)</span>
                             </div>
                         </div>

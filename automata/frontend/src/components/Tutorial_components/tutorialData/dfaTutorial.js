@@ -864,6 +864,7 @@ These operations preserve regularity and are useful in proving closure propertie
                     // image: require('./Images/dfa_ending_with_1.png'),
                     simulatorType: 'DFA',
                     challenge: {
+                        alphabet: ['0', '1'],
                         description: 'Your DFA should accept any string that ends with the symbol "1". Examples: "1", "01", "11", "001", "101" should be accepted. Examples: "", "0", "10", "100" should be rejected.',
                         testCases: [
                             { input: '1', expected: true, description: 'Single 1' },
@@ -893,7 +894,8 @@ These operations preserve regularity and are useful in proving closure propertie
                     // image: require('./Images/dfa_even_zeros.png'),
                     simulatorType: 'DFA',
                     challenge: {
-                        description: 'Your DFA should accept strings like "", "1", "00", "1001" and reject "0", "10", "101", "001". Think about using two states to track whether you\'ve seen an even or odd number of 0s.',
+                        alphabet: ['0', '1'],
+                        description: 'Your DFA should accept strings like "", "1", "00", "1001" and reject "0", "10", "101", "011". Think about using two states to track whether you\'ve seen an even or odd number of 0s.',
                         testCases: [
                             { input: '', expected: true, description: 'Empty string (0 zeros = even)' },
                             { input: '1', expected: true, description: 'Only 1s (0 zeros = even)' },
@@ -920,6 +922,7 @@ These operations preserve regularity and are useful in proving closure propertie
                     question: 'Build a DFA that accepts all strings over {0,1} that end with "01"',
                     simulatorType: 'DFA',
                     challenge: {
+                        alphabet: ['0', '1'],
                         description: 'Your DFA must accept any string that ends with the pattern "01". Examples: "01", "001", "101", "1101" should be accepted. Examples: "0", "1", "10", "100" should be rejected.',
                         testCases: [
                             { input: '01', expected: true, description: 'Exactly "01"' },
@@ -946,6 +949,7 @@ These operations preserve regularity and are useful in proving closure propertie
                     question: 'Build a minimal DFA that accepts strings over {a,b} containing the substring "aba"',
                     simulatorType: 'DFA',
                     challenge: {
+                        alphabet: ['a', 'b'],
                         description: 'Your DFA should accept any string that contains "aba" anywhere within it. Once "aba" is found, the string should be accepted regardless of what follows.',
                         testCases: [
                             { input: 'aba', expected: true, description: 'Exactly "aba"' },

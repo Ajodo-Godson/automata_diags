@@ -256,7 +256,13 @@ const NFASimulator = ({ challenge }) => {
     // Reset to blank when challenge mode is activated
     useEffect(() => {
         if (challenge) {
-            nfa.loadDefinition({ states: ['q0'], alphabet: ['0', '1'], transitions: [], startState: 'q0', acceptStates: [], });
+            nfa.loadDefinition({
+                states: ['q0'],
+                alphabet: challenge.challenge?.alphabet || ['0', '1'],
+                transitions: [],
+                startState: 'q0',
+                acceptStates: [],
+            });
             setInputString('');
             resetSimulation();
             setValidationResults(null);

@@ -94,8 +94,17 @@ export function ProductionRulesEditor({ cfg, onUpdate }) {
                                 value={newRule.right}
                                 onChange={(e) => setNewRule({ ...newRule, right: e.target.value })}
                                 className="input-small"
-                                style={{ width: '150px' }}
+                                style={{ width: '120px' }}
                             />
+                            <button 
+                                type="button"
+                                className="btn-epsilon"
+                                onClick={() => setNewRule({ ...newRule, right: 'ε' })}
+                                title="Insert Epsilon (ε)"
+                                style={{ padding: '2px 8px', fontSize: '18px', cursor: 'pointer' }}
+                            >
+                                ε
+                            </button>
                         </div>
                         <div className="form-actions">
                             <button className="btn-save" onClick={handleAdd}>Save</button>

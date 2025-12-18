@@ -403,6 +403,8 @@ Accepts: (), (()), (())(), etc.`
                     question: 'Build a PDA that accepts the language {0ⁿ1ⁿ | n ≥ 0}',
                     simulatorType: 'PDA',
                     challenge: {
+                        alphabet: ['0', '1'],
+                        stackAlphabet: ['Z', 'X'],
                         description: 'Create a Pushdown Automaton that accepts equal numbers of 0s followed by 1s (including the empty string). Your PDA should accept "", "01", "0011", "000111", but reject "0", "1", "001", "0110".',
                         testCases: [
                             { input: '', expected: true, description: 'Empty string (n=0)' },

@@ -470,6 +470,8 @@ This is optimal for worst-case general CFG parsing.`,
                     question: 'Build a CFG that generates the language {0ⁿ1ⁿ | n ≥ 1}',
                     simulatorType: 'CFG',
                     challenge: {
+                        terminals: ['0', '1'],
+                        variables: ['S'],
                         description: 'Create a Context-Free Grammar that generates equal numbers of 0s followed by 1s (at least one of each). Your grammar should generate strings like "01", "0011", "000111", but NOT "", "0", "1", "001", or "0110".',
                         testCases: [
                             { input: '01', expected: true, description: 'n=1' },

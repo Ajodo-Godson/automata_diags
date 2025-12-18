@@ -658,6 +658,7 @@ Final: ~10 states with ε-transitions`
                     question: 'Build an NFA that accepts all strings over {0,1} ending with "01"',
                     simulatorType: 'NFA',
                     challenge: {
+                        alphabet: ['0', '1'],
                         description: 'Your NFA should accept any string that ends with "01". Use nondeterminism to "guess" when you see the start of "01". Examples: "01", "001", "101" should be accepted. Examples: "0", "1", "10" should be rejected.',
                         testCases: [
                             { input: '01', expected: true, description: 'Exactly "01"' },
@@ -686,6 +687,7 @@ Final: ~10 states with ε-transitions`
                     question: 'Build an NFA that accepts strings over {0,1} containing "010" as a substring',
                     simulatorType: 'NFA',
                     challenge: {
+                        alphabet: ['0', '1'],
                         description: 'Your NFA should accept any string that contains "010" anywhere within it. Once "010" is found, accept regardless of what follows.',
                         testCases: [
                             { input: '010', expected: true, description: 'Exactly "010"' },
@@ -714,6 +716,7 @@ Final: ~10 states with ε-transitions`
                     question: 'Build an NFA with ε-transitions that accepts strings over {a,b} that are either "a", "b", or "ab"',
                     simulatorType: 'NFA',
                     challenge: {
+                        alphabet: ['a', 'b'],
                         description: 'Your NFA should accept exactly three strings: "a", "b", or "ab". Use ε-transitions to create parallel paths from the start state.',
                         testCases: [
                             { input: 'a', expected: true, description: 'Single "a"' },
