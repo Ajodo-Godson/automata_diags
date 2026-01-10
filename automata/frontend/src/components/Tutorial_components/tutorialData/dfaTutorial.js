@@ -185,6 +185,34 @@ Intuition: DFAs can recognize patterns, but not arbitrary counts.`,
                         'Patterns like "equal 0s and 1s", "palindromes", "nested structure" are NOT regular',
                         'Later we\'ll learn formal techniques to prove non-regularity'
                     ]
+                },
+                {
+                    title: 'Practice: Languages and Strings',
+                    content: `In formal language theory, strings of symbols are the fundamental building blocks of all computation.
+
+A **Language** ($L$) is a set of strings over a given alphabet ($\Sigma$). For example, if $\Sigma = \{0, 1\}$, we can define languages like:
+
+• $L_1 = \{w \mid w \text{ is an even binary number}\} = \{0, 10, 110, 1000, \dots\}$
+• $L_2 = \{w \mid w \text{ starts and ends with the same symbol}\} = \{0, 1, 00, 11, 010, 101, \dots\}$
+
+In DFA design, we often use **set-builder notation** to describe these sets precisely. For example:
+$L = \{01^n0 \mid n > 0\}$ means any string that starts with 0, followed by one or more 1s, and ends with 0.
+
+**The Empty String: $\varepsilon$ (Epsilon)**
+The empty string $\varepsilon$ is a unique string of length zero ($|\varepsilon| = 0$). It is a critical edge case in automata theory:
+• A DFA accepts $\varepsilon$ if and only if its **start state** is also an **accept state**.
+• Formally, $\varepsilon \in L(M) \iff q_0 \in F$.`,
+                    keyPoints: [
+                        'An alphabet $\Sigma$ is a finite, non-empty set of symbols',
+                        'A string is a finite sequence of symbols from $\Sigma$',
+                        'A language $L$ is a subset of $\Sigma^*$, the set of all possible strings',
+                        'Acceptance of the empty string depends solely on the start state'
+                    ],
+                    tips: [
+                        'When designing a DFA, always test the empty string first',
+                        'Use set-builder notation to define your target language before building the machine',
+                        'Remember that strings are ordered; "01" is different from "10"'
+                    ]
                 }
             ]
         },
@@ -657,6 +685,52 @@ These operations preserve regularity and are useful in proving closure propertie
         }
     ],
     exercises: [
+        {
+            id: 'dfa-ex-basics',
+            title: 'Foundations: Strings and Languages',
+            description: 'Test your understanding of the mathematical foundations of formal languages',
+            questions: [
+                {
+                    type: 'multiple-choice',
+                    question: 'In formal language theory, what is the relationship between an alphabet Σ and a language L?',
+                    options: [
+                        'L is a subset of Σ',
+                        'Σ is a subset of L',
+                        'L is a subset of Σ* (the set of all possible strings over Σ)',
+                        'Σ and L are the same thing'
+                    ],
+                    correctAnswer: 'L is a subset of Σ* (the set of all possible strings over Σ)',
+                    explanation: 'A language L is defined as any subset of the set of all finite strings that can be formed using symbols from the alphabet Σ.',
+                    hint: 'Consider the definition of Σ*.'
+                },
+                {
+                    type: 'multiple-choice',
+                    question: 'If L = {01ⁿ0 | n > 0}, which of these strings is NOT in L?',
+                    options: [
+                        '010',
+                        '0110',
+                        '00',
+                        '01110'
+                    ],
+                    correctAnswer: '00',
+                    explanation: 'The pattern 01ⁿ0 with n > 0 requires at least one "1" between the zeros. "00" corresponds to n=0, which is excluded by the condition n > 0.',
+                    hint: 'Check the condition on n.'
+                },
+                {
+                    type: 'multiple-choice',
+                    question: 'Under what condition does a DFA M accept the empty string ε?',
+                    options: [
+                        'If M has no states',
+                        'If the start state q₀ is also an element of the set of accept states F',
+                        'If M contains at least one transition',
+                        'If the alphabet Σ is empty'
+                    ],
+                    correctAnswer: 'If the start state q₀ is also an element of the set of accept states F',
+                    explanation: 'By the definition of the extended transition function δ*(q₀, ε) = q₀. Thus, M accepts ε if and only if δ*(q₀, ε) ∈ F, which simplifies to q₀ ∈ F.',
+                    hint: 'Think about the machine state before any input is read.'
+                }
+            ]
+        },
         {
             id: 'dfa-ex-1',
             title: 'Formal Definitions and Basic Theory',

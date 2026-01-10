@@ -401,11 +401,77 @@ This is optimal for worst-case general CFG parsing.`,
                         'Bottom-up dynamic programming',
                         'Can be extended to find all parse trees'
                     ]
+                },
+                {
+                    title: 'Recursive Top-Down Parsing',
+                    content: `When verifying that a string belongs to a context-free language, we can use recursion.
+
+If a grammar is in **Chomsky Normal Form (CNF)**, we can use a very structured recursive approach to check if a string $w$ is in the language:
+
+1. **Base Case (Length ≤ 1)**:
+   • If $w = ε$, check if there is a rule $S → ε$.
+   • If $w = a$ (a single terminal), check if there is a rule $S → a$.
+2. **Recursive Step (Length > 1)**:
+   • For every rule $A → BC$, try splitting the string $w$ into two parts $w_1$ and $w_2$ in all possible ways ($w = w_1w_2$).
+   • Recursively check if $B \Rightarrow^* w_1$ AND $C \Rightarrow^* w_2$.
+
+This structured decomposition is only possible because CNF rules are restricted to exactly two variables on the right-hand side.`,
+                    keyPoints: [
+                        'CNF allows for a clean, recursive split-and-conquer parsing strategy',
+                        'For a string of length $n$, a CNF derivation always takes exactly $2n-1$ steps',
+                        'This predictability is why CNF is so important for computer parsers'
+                    ],
+                    tips: [
+                        'Think of it as trying every possible way to cut the string in half',
+                        'If any cut works, the whole string is valid',
+                        'This is the intuitive version of what the CYK algorithm does more efficiently'
+                    ]
                 }
             ]
         }
     ],
     exercises: [
+        {
+            id: 'cfg-ex-basics',
+            title: 'Basics: Parsing and Normal Forms',
+            description: 'Test your understanding of grammar structure and predictability',
+            questions: [
+                {
+                    type: 'multiple-choice',
+                    question: 'If a context-free grammar is in Chomsky Normal Form, how many steps are in the derivation of a string of length n > 0?',
+                    options: [
+                        'n steps',
+                        '2n steps',
+                        '2n - 1 steps',
+                        'n² steps'
+                    ],
+                    correctAnswer: '2n - 1 steps',
+                    explanation: 'As noted in the instructor guide, if G is a CFG in CNF, exactly 2n-1 steps are required for any derivation of a string of length n ≥ 1. This includes n-1 applications of A → BC and n applications of A → a.',
+                    hint: 'Count the number of variable expansions vs terminal productions.'
+                },
+                {
+                    type: 'multiple-choice',
+                    question: 'In the recursive top-down parsing strategy, what do you do for a rule A → BC?',
+                    options: [
+                        'Replace A with B and ignore C',
+                        'Try all possible ways to split the string into two parts and check them against B and C',
+                        'Wait for more input',
+                        'Only check if the first character matches B'
+                    ],
+                    correctAnswer: 'Try all possible ways to split the string into two parts and check them against B and C',
+                    explanation: 'The strategy involves splitting the string w into w₁ and w₂ and recursively checking if B generates w₁ and C generates w₂.',
+                    hint: 'Think about how you would verify a binary tree structure.'
+                },
+                {
+                    type: 'true-false',
+                    question: 'If n ≤ 1, you can determine if a string is in L(G) by checking only one production rule if G is in CNF.',
+                    options: ['True', 'False'],
+                    correctAnswer: 'True',
+                    explanation: 'True. If n=0 (empty string), you just check S → ε. If n=1 (single terminal), you just check S → a.',
+                    hint: 'How many steps would a derivation of length 1 take in CNF?'
+                }
+            ]
+        },
         {
             id: 'cfg-ex-1',
             title: 'CFG Fundamentals',
@@ -463,7 +529,7 @@ This is optimal for worst-case general CFG parsing.`,
         {
             id: 'cfg-ex-2',
             title: 'Hands-On: Build Context-Free Grammars',
-            description: 'Create CFGs to generate specific languages',
+            description: 'Practice designing grammars that generate complex languages',
             questions: [
                 {
                     type: 'hands-on',
@@ -486,13 +552,71 @@ This is optimal for worst-case general CFG parsing.`,
                             { input: '0110', expected: false, description: 'Wrong order' }
                         ],
                         hints: [
-                            'Start with a single variable S',
-                            'Think recursively: wrap each pair in more 0s and 1s',
+                            'Start with a single variable S.',
+                            'Think recursively: wrap each pair in more 0s and 1s.',
                             'Base case: S → 01',
                             'Recursive case: S → 0S1',
                             'The complete grammar has just two productions: S → 01 | 0S1'
                         ]
-                    }
+                    },
+                    explanation: 'The rule S → 0S1 recursively adds a 0 on the left and a 1 on the right, maintaining perfect balance.'
+                },
+                {
+                    type: 'hands-on',
+                    question: 'Build a CFG for Balanced Parentheses over {(, )}',
+                    simulatorType: 'CFG',
+                    challenge: {
+                        terminals: ['(', ')'],
+                        variables: ['S'],
+                        description: 'Design a grammar that generates correctly balanced parentheses. Examples: "()", "(())", "()()", "((()))". Reject: "(", ")", "()(", "())".',
+                        testCases: [
+                            { input: '', expected: true, description: 'Empty string' },
+                            { input: '()', expected: true, description: 'Simple' },
+                            { input: '(())', expected: true, description: 'Nested' },
+                            { input: '()()', expected: true, description: 'Sequence' },
+                            { input: '((()))', expected: true, description: 'Deep nesting' },
+                            { input: '(()())', expected: true, description: 'Complex' },
+                            { input: '(', expected: false, description: 'Unclosed' },
+                            { input: ')', expected: false, description: 'Unopened' },
+                            { input: '())', expected: false, description: 'Extra closing' }
+                        ],
+                        hints: [
+                            'There are three main ways to build balanced parentheses: nesting, concatenation, and empty.',
+                            'S → (S) handles the nesting (like (()) ).',
+                            'S → SS handles the concatenation (like ()() ).',
+                            'S → ε handles the empty string.',
+                            'Combine these into a single set of rules for S.'
+                        ]
+                    },
+                    explanation: 'This grammar is the classic example of a recursive structure. S → (S) provides depth, while S → SS provides breadth.'
+                },
+                {
+                    type: 'hands-on',
+                    question: 'Build a CFG for Palindromes over {a,b}',
+                    simulatorType: 'CFG',
+                    challenge: {
+                        terminals: ['a', 'b'],
+                        variables: ['S'],
+                        description: 'Design a grammar that generates all palindromes (strings that read the same forwards and backwards) over the alphabet {a,b}. Examples: "a", "b", "aa", "aba", "abba".',
+                        testCases: [
+                            { input: '', expected: true, description: 'Empty string' },
+                            { input: 'a', expected: true, description: 'Single a' },
+                            { input: 'b', expected: true, description: 'Single b' },
+                            { input: 'aa', expected: true, description: 'Even length a' },
+                            { input: 'aba', expected: true, description: 'Odd length' },
+                            { input: 'abba', expected: true, description: 'Even length' },
+                            { input: 'baab', expected: true, description: 'Even length' },
+                            { input: 'ab', expected: false, description: 'Not a palindrome' },
+                            { input: 'aab', expected: false, description: 'Not a palindrome' }
+                        ],
+                        hints: [
+                            'A palindrome either starts and ends with the same symbol, or it\'s a very short base case.',
+                            'Base cases: S → a, S → b, and S → ε (to handle odd and even lengths).',
+                            'Recursive cases: S → aSa and S → bSb.',
+                            'Combine all five productions to generate all possible palindromes.'
+                        ]
+                    },
+                    explanation: 'Palindromes are inherently recursive. If you take a palindrome and add the same symbol to both ends, you get a new palindrome.'
                 }
             ]
         }

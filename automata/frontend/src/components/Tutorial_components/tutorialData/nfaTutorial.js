@@ -515,6 +515,47 @@ Final: ~10 states with ε-transitions`
     ],
     exercises: [
         {
+            id: 'nfa-ex-basics',
+            title: 'Foundations: Nondeterminism and ε-Transitions',
+            description: 'Test your understanding of the fundamental mechanics of NFAs',
+            questions: [
+                {
+                    type: 'multiple-choice',
+                    question: 'How does an NFA decide whether to accept an input string w?',
+                    options: [
+                        'If every possible computation path ends in an accept state',
+                        'If the majority of computation paths end in an accept state',
+                        'If there exists at least one computation path that ends in an accept state',
+                        'If the machine does not enter any ε-transitions'
+                    ],
+                    correctAnswer: 'If there exists at least one computation path that ends in an accept state',
+                    explanation: 'Nondeterminism means that multiple valid computations can exist for the same input. An NFA accepts if ANY of these "parallel universes" reaches an accept state.',
+                    hint: 'Think about the "parallel universes" analogy.'
+                },
+                {
+                    type: 'multiple-choice',
+                    question: 'What is unique about an ε-transition compared to a standard transition?',
+                    options: [
+                        'It allows the machine to read two symbols at once',
+                        'It consumes the next symbol but does not change state',
+                        'It allows the machine to transition to a new state without consuming any input symbol',
+                        'It can only be used in DFAs'
+                    ],
+                    correctAnswer: 'It allows the machine to transition to a new state without consuming any input symbol',
+                    explanation: 'An ε-transition (epsilon-transition) is a "free move" that the NFA can take at any time without reading a character from the input string.',
+                    hint: 'Consider what "consuming input" means.'
+                },
+                {
+                    type: 'true-false',
+                    question: 'In the formal definition of an NFA, the transition function δ(q, a) returns a single state q\'.',
+                    options: ['True', 'False'],
+                    correctAnswer: 'False',
+                    explanation: 'False. In an NFA, δ(q, a) returns a *set* of states (a member of the power set P(Q)), reflecting the multiple possible next steps.',
+                    hint: 'Check the formal definition of δ for NFAs vs DFAs.'
+                }
+            ]
+        },
+        {
             id: 'nfa-ex-1',
             title: 'NFA Fundamentals',
             description: 'Test understanding of NFA definitions and nondeterminism',

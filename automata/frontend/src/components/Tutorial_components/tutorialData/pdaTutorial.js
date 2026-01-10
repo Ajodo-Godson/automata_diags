@@ -152,30 +152,28 @@ This is often more intuitive for matching problems.`,
                     ]
                 },
                 {
-                    title: 'The Big Picture',
-                    content: `PDAs are more powerful than NFAs/DFAs, but they are not all-powerful.
+                    title: 'The Stack and Context',
+                    content: `Adding a stack changes computation fundamentally by providing a form of memory that is not limited by the fixed number of states.
 
-For example, a PDA cannot recognize the language L = {aⁿbⁿcⁿ | n ≥ 0}.
+While a finite automaton (DFA/NFA) can only make decisions based on the current input symbol and state, a PDA can use the stack to store **context**. 
 
-Why? It can use its stack to match the a's and b's. But by the time it gets to the c's, the stack is empty, and it has no memory of how many a's and b's it saw. It can't match all three.
+Key points about the PDA stack:
+• **Non-local decisions**: The stack allows the machine to remember something from the beginning of the string and use it at the very end. This is essential for matching structures like $0^n1^n$ or balanced parentheses.
+• **LIFO structure**: Last-In, First-Out. You can only "see" and interact with the most recent item added to the top of the stack.
+• **Infinite memory**: Unlike the finite set of states ($Q$), which is fixed in number, the stack can grow to any depth needed during computation.
 
-The Chomsky Hierarchy (so far):
-
-| Language Class | Generator | Recognizer |
-| :--- | :--- | :--- |
-| Regular | Regular Grammar | DFA / NFA |
-| Context-Free | CFG | PDA |`,
+**The "$" Symbol**:
+A common convention in PDA design is to push a special symbol (often "$" or $Z_0$) onto the stack at the very beginning. This acts as a **bottom marker**, allowing the machine to detect when the stack has been emptied and it has returned to its initial context.`,
                     keyPoints: [
-                        'PDAs recognize context-free languages',
-                        'More powerful than finite automata',
-                        'But still limited (can\'t do aⁿbⁿcⁿ)',
-                        'Part of the Chomsky hierarchy'
+                        'The stack provides a limited but infinite source of memory',
+                        'It allows the automaton to track recursive and nested structures',
+                        'LIFO access ensures that context is processed in reverse-order of entry',
+                        'The bottom marker is crucial for distinguishing an empty stack from an uninitialized one'
                     ],
                     tips: [
-                        'One stack = one counter',
-                        'aⁿbⁿcⁿ needs two independent counters',
-                        'PDAs can\'t do that',
-                        'We\'ll need Turing Machines for more power'
+                        'Think of the stack as a "to-do list" where you only do the top item',
+                        'If you need to match two parts of a string, push the first part and pop for the second',
+                        'Always start your PDA logic by pushing a bottom marker'
                     ]
                 }
             ]
@@ -340,6 +338,47 @@ Accepts: (), (()), (())(), etc.`
     ],
     exercises: [
         {
+            id: 'pda-ex-basics',
+            title: 'Basics: Stack Behavior',
+            description: 'Test your understanding of how stacks change computation',
+            questions: [
+                {
+                    type: 'multiple-choice',
+                    question: 'What does it mean for a PDA to make "non-local" decisions?',
+                    options: [
+                        'It can jump to any state at any time',
+                        'It can move its head to any position on the input',
+                        'It can use the stack to use information from earlier in the string to decide current transitions',
+                        'It can communicate with other automata'
+                    ],
+                    correctAnswer: 'It can use the stack to use information from earlier in the string to decide current transitions',
+                    explanation: 'The instructor guide explains that the stack allows the PDA to store context, meaning it can make decisions based on contents that were pushed much earlier in the computation.',
+                    hint: 'Think about how a matching parenthesis knows it has a pair.'
+                },
+                {
+                    type: 'multiple-choice',
+                    question: 'What is the primary purpose of pushing a special symbol like "$" onto the stack first?',
+                    options: [
+                        'To make the stack look more complex',
+                        'To allow the machine to detect when the stack is back to its "empty" state',
+                        'To satisfy the formal definition requirements',
+                        'To represent the start state'
+                    ],
+                    correctAnswer: 'To allow the machine to detect when the stack is back to its "empty" state',
+                    explanation: 'The "$" marker serves as a bottom-of-stack indicator. When the machine pops and sees "$", it knows it has matched all the symbols it previously pushed.',
+                    hint: 'How do you know when you\'ve finished matching all your pairs?'
+                },
+                {
+                    type: 'true-false',
+                    question: 'In a LIFO structure, you can access any item in the stack as long as you know its position.',
+                    options: ['True', 'False'],
+                    correctAnswer: 'False',
+                    explanation: 'False. In a LIFO (Last-In, First-Out) structure, only the top element is accessible. You must pop all elements above an item to reach it.',
+                    hint: 'Think about a stack of plates.'
+                }
+            ]
+        },
+        {
             id: 'pda-ex-1',
             title: 'PDA Formal Definitions',
             description: 'Test understanding of PDA formalism',
@@ -395,8 +434,8 @@ Accepts: (), (()), (())(), etc.`
         },
         {
             id: 'pda-ex-2',
-            title: 'Hands-On: Build Your First PDA',
-            description: 'Build PDAs to recognize context-free languages',
+            title: 'Hands-On: Build Your Own PDAs',
+            description: 'Practice building Pushdown Automata in the simulator with guided challenges',
             questions: [
                 {
                     type: 'hands-on',
@@ -411,21 +450,74 @@ Accepts: (), (()), (())(), etc.`
                             { input: '01', expected: true, description: 'n=1' },
                             { input: '0011', expected: true, description: 'n=2' },
                             { input: '000111', expected: true, description: 'n=3' },
-                            { input: '00001111', expected: true, description: 'n=4' },
                             { input: '0', expected: false, description: 'More 0s than 1s' },
                             { input: '1', expected: false, description: 'More 1s than 0s' },
                             { input: '001', expected: false, description: 'Unequal counts' },
-                            { input: '011', expected: false, description: 'Unequal counts' },
                             { input: '0110', expected: false, description: 'Wrong order' }
                         ],
                         hints: [
-                            'Use the stack to count 0s',
-                            'Push a symbol (like X) for each 0 you read',
-                            'Pop a symbol for each 1 you read',
-                            'Accept if the stack returns to just the start symbol Z when input ends',
-                            'You\'ll need three states: start (q0), counting (q1), and accept (q2)'
+                            'Use the stack to count 0s: push a symbol (like X) for each 0.',
+                            'When you see a 1, start popping the symbols from the stack.',
+                            'Accept only if you finish reading the input and the stack is back to its start symbol.',
+                            'You need at least three states: q0 (start), q1 (counting/popping), and q2 (final/accept).'
                         ]
-                    }
+                    },
+                    explanation: 'This PDA uses its stack as a counter. Each 0 adds to the stack, and each 1 removes from it, ensuring they match exactly.'
+                },
+                {
+                    type: 'hands-on',
+                    question: 'Build a PDA for Balanced Parentheses over {(, )}',
+                    simulatorType: 'PDA',
+                    challenge: {
+                        alphabet: ['(', ')'],
+                        stackAlphabet: ['Z', '('],
+                        description: 'Design a PDA that accepts strings of balanced parentheses. It should accept "", "()", "(())", "()()", "(()())", but reject "(", ")", "()(", "())".',
+                        testCases: [
+                            { input: '', expected: true, description: 'Empty string' },
+                            { input: '()', expected: true, description: 'Simple pair' },
+                            { input: '(())', expected: true, description: 'Nested' },
+                            { input: '()()', expected: true, description: 'Sequence' },
+                            { input: '(()())', expected: true, description: 'Complex' },
+                            { input: '(', expected: false, description: 'Unclosed' },
+                            { input: ')', expected: false, description: 'Unopened' },
+                            { input: '())', expected: false, description: 'Extra closing' },
+                            { input: '(()', expected: false, description: 'Extra opening' }
+                        ],
+                        hints: [
+                            'Push an opening parenthesis onto the stack whenever you see one.',
+                            'Pop from the stack whenever you see a closing parenthesis.',
+                            'If you see a closing parenthesis and the stack is empty (or has only the bottom marker), that\'s a rejection.',
+                            'Accept if the stack is empty at the end of the input.'
+                        ]
+                    },
+                    explanation: 'A PDA is the perfect machine for balanced parentheses because its stack naturally mirrors the nesting structure of the language.'
+                },
+                {
+                    type: 'hands-on',
+                    question: 'Build a PDA for the Palindrome Language {w c wᴿ | w ∈ {0,1}*}',
+                    simulatorType: 'PDA',
+                    challenge: {
+                        alphabet: ['0', '1', 'c'],
+                        stackAlphabet: ['Z', '0', '1'],
+                        description: 'Build a PDA that accepts strings with a "c" in the middle, where the second half is the reverse of the first half. Examples: "c", "0c0", "1c1", "01c10", "110c011". Reject: "0c1", "01c01", "01".',
+                        testCases: [
+                            { input: 'c', expected: true, description: 'Empty w' },
+                            { input: '0c0', expected: true, description: 'Single 0' },
+                            { input: '1c1', expected: true, description: 'Single 1' },
+                            { input: '01c10', expected: true, description: 'Binary string' },
+                            { input: '110c011', expected: true, description: 'Binary string' },
+                            { input: '0c1', expected: false, description: 'Mismatch' },
+                            { input: '01c01', expected: false, description: 'Not reversed' },
+                            { input: '01', expected: false, description: 'Missing center' }
+                        ],
+                        hints: [
+                            'Push all symbols (0s and 1s) onto the stack until you reach the center character "c".',
+                            'Ignore the "c" and switch to a new state for the second half of the string.',
+                            'In the second half, pop from the stack and ensure it matches the current input symbol.',
+                            'If at any point the stack top doesn\'t match the input, the string is not a palindrome.'
+                        ]
+                    },
+                    explanation: 'The "c" acts as a marker telling the PDA exactly when to stop pushing and start popping to verify the reverse string.'
                 }
             ]
         }

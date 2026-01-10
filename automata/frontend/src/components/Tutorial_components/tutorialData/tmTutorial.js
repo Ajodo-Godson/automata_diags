@@ -50,6 +50,28 @@ Components:
                     ]
                 },
                 {
+                    title: 'The Tape: Infinite Workspace',
+                    content: `The **Infinite Tape** is the Turing Machine's primary workspace. Unlike a stack, which is restricted to LIFO access, the tape allows the machine to revisit any part of its memory at any time.
+
+Key properties of the TM Tape:
+• **Alphabet (Γ)**: The set of symbols that can be written on the tape. This includes the input symbols (Σ) and a special **Blank symbol (␣)**.
+• **Initial State**: The tape initially contains the input string, surrounded by an infinite sequence of blank symbols on both sides.
+• **Head Movement**: The machine can move the head one cell at a time. This allows it to use the tape as a "scratchpad" to mark symbols, copy data, or perform arithmetic.
+
+The ability to move back and forth and overwrite symbols is what makes the Turing Machine computationally equivalent to any modern computer.`,
+                    keyPoints: [
+                        'The tape is the machine\'s source of unlimited memory',
+                        'The Blank symbol (␣) fills all parts of the tape not containing input',
+                        'Head movement (L/R) is what differentiates TMs from simpler automata',
+                        'A TM can use the tape to "cross off" symbols as they are processed'
+                    ],
+                    tips: [
+                        'Think of the Blank symbol as "empty memory"',
+                        'Use different symbols (like X, Y, Z) to mark items you\'ve already seen',
+                        'Remember that you can always move back to the beginning of the input'
+                    ]
+                },
+                {
                     title: 'How a Turing Machine Computes',
                     content: `A single "step" of a Turing Machine is determined by two things:
 
@@ -431,21 +453,93 @@ Thousands of problems are NP-complete!`,
     ],
     exercises: [
         {
-            id: 'tm-ex-1',
-            title: 'Turing Machine Fundamentals',
-            description: 'Test understanding of TM definitions',
+            id: 'tm-ex-basics',
+            title: 'Tape, Head, and Configurations',
+            description: 'Test your understanding of the TM architecture and computation',
             questions: [
+                {
+                    type: 'multiple-choice',
+                    question: 'How does a Turing Machine tape head differ from a PDA stack?',
+                    options: [
+                        'It is faster than a stack',
+                        'It can move both left and right and revisit any cell',
+                        'It can only read but not write',
+                        'It has a fixed size'
+                    ],
+                    correctAnswer: 'It can move both left and right and revisit any cell',
+                    explanation: 'The fundamental difference between a TM and a PDA is the tape. A PDA is restricted to LIFO access (only the top), whereas a TM head can move freely across the infinite tape.',
+                    hint: 'Think about how you move around a notebook vs a stack of plates.'
+                },
+                {
+                    type: 'multiple-choice',
+                    question: 'What is the role of the Blank symbol (␣)?',
+                    options: [
+                        'It represents the end of the tape',
+                        'It represents unused or empty memory',
+                        'It is a special input character',
+                        'It halts the machine'
+                    ],
+                    correctAnswer: 'It represents unused or empty memory',
+                    explanation: 'The Blank symbol fills the infinite portion of the tape that does not contain the initial input. It allows the machine to "clean" the tape or detect the boundaries of its current work.',
+                    hint: 'What do you see on the tape where you haven\'t written anything?'
+                },
+                {
+                    type: 'multiple-choice',
+                    question: 'A TM configuration is written as "uqv". What does this notation represent?',
+                    options: [
+                        'The tape is empty, and the machine is in state q',
+                        'The tape contains "uv", the head is on the first symbol of v, and the machine is in state q',
+                        'The head is reading the symbol "q" on the tape',
+                        'The machine has produced output "uv" and halted in state q'
+                    ],
+                    correctAnswer: 'The tape contains "uv", the head is on the first symbol of v, and the machine is in state q',
+                    explanation: 'In configuration notation, the state q appears just before the symbol being read. So "uqv" means the tape has "uv" written on it, the machine is in state q, and the head points at the first character of v.',
+                    hint: 'The position of "q" in the string shows you where the head is.'
+                },
+                {
+                    type: 'multiple-choice',
+                    question: 'What are the three possible outcomes for a Turing Machine M on an input w?',
+                    options: [
+                        'Accept, Reject, or Error',
+                        'Accept, Reject, or Loop forever',
+                        'True, False, or Unknown',
+                        'Halt, Pause, or Restart'
+                    ],
+                    correctAnswer: 'Accept, Reject, or Loop forever',
+                    explanation: 'A TM on input w will either: (1) enter q_accept and accept, (2) enter q_reject and reject, or (3) never reach a halting configuration (loop forever).',
+                    hint: 'Think about what happens when a decider vs a recognizer runs.'
+                }
+            ]
+        },
+        {
+            id: 'tm-ex-1',
+            title: 'Decidability and Recognizability',
+            description: 'Test understanding of TM definitions and language classes',
+            questions: [
+                {
+                    type: 'multiple-choice',
+                    question: 'What does it mean for a language L to be Turing-decidable?',
+                    options: [
+                        'There exists a TM that accepts all strings in L (but may loop on others)',
+                        'There exists a TM that halts on all inputs and accepts exactly the strings in L',
+                        'There exists a TM that rejects all strings in L',
+                        'The language can only be recognized by a multi-tape TM'
+                    ],
+                    correctAnswer: 'There exists a TM that halts on all inputs and accepts exactly the strings in L',
+                    explanation: 'A language is decidable if a TM exists that always halts, accepting strings in L and rejecting strings not in L. This is also called recursive.',
+                    hint: 'Decidable means you always get a definitive yes or no answer.'
+                },
                 {
                     type: 'multiple-choice',
                     question: 'What is the key feature that makes Turing Machines more powerful than PDAs?',
                     options: [
                         'Nondeterminism',
-                        'Unlimited read-write memory',
+                        'Unlimited read-write memory with random access',
                         'Multiple tapes',
                         'Faster computation'
                     ],
-                    correctAnswer: 'Unlimited read-write memory',
-                    explanation: 'The infinite tape provides unlimited memory that can be both read and written. This is more powerful than a PDA\'s stack (LIFO access only).',
+                    correctAnswer: 'Unlimited read-write memory with random access',
+                    explanation: 'The infinite tape provides unlimited memory that can be both read and written, with the head able to access any cell. This is more powerful than a PDA\'s stack (LIFO access only).',
                     hint: 'Think about memory access patterns.'
                 },
                 {
@@ -453,7 +547,7 @@ Thousands of problems are NP-complete!`,
                     question: 'The Church-Turing thesis can be mathematically proven.',
                     options: ['True', 'False'],
                     correctAnswer: 'False',
-                    explanation: 'False. It\'s a thesis relating intuitive "algorithm" to formal "Turing Machine". The intuitive notion cannot be formalized, so no proof is possible.',
+                    explanation: 'False. It\'s a thesis relating the intuitive notion of "algorithm" to the formal model of "Turing Machine". Since the intuitive notion cannot be formalized, no proof is possible.',
                     hint: 'Why is it called a thesis rather than a theorem?'
                 },
                 {
@@ -466,7 +560,7 @@ Thousands of problems are NP-complete!`,
                         'No relationship'
                     ],
                     correctAnswer: 'Decidable ⊂ Recognizable',
-                    explanation: 'Every decidable language is recognizable (just halt and reject instead of looping). But some recognizable languages are undecidable.',
+                    explanation: 'Every decidable language is recognizable (just halt and reject instead of looping). But some recognizable languages are undecidable (e.g., the Halting Problem).',
                     hint: 'Can a TM that always halts also recognize?'
                 },
                 {
@@ -474,7 +568,7 @@ Thousands of problems are NP-complete!`,
                     question: 'The Halting Problem is decidable.',
                     options: ['True', 'False'],
                     correctAnswer: 'False',
-                    explanation: 'False! This is Turing\'s famous result. The Halting Problem is undecidable - no algorithm can determine if arbitrary TMs halt.',
+                    explanation: 'False! This is Turing\'s famous 1936 result. The Halting Problem is undecidable - no algorithm can determine if an arbitrary TM halts on a given input.',
                     hint: 'This is one of the most fundamental results in computability theory.'
                 }
             ]
@@ -523,7 +617,7 @@ Thousands of problems are NP-complete!`,
         {
             id: 'tm-ex-3',
             title: 'Hands-On: Build Turing Machines',
-            description: 'Create TMs to recognize and compute specific functions',
+            description: 'Practice programming Turing Machines to solve complex problems',
             questions: [
                 {
                     type: 'hands-on',
@@ -537,19 +631,69 @@ Thousands of problems are NP-complete!`,
                             { input: '00110', expected: false, description: 'Unequal groups' },
                             { input: '001100', expected: true, description: 'n=2' },
                             { input: '000111000', expected: true, description: 'n=3' },
-                            { input: '', expected: false, description: 'Empty string' },
                             { input: '01', expected: false, description: 'Missing final 0s' },
-                            { input: '0011000', expected: false, description: 'Too many final 0s' },
                             { input: '001110', expected: false, description: 'Wrong order' }
                         ],
                         hints: [
-                            'Use the tape to mark symbols you\'ve processed',
-                            'Strategy: Cross off one 0, then one 1, then one 0, repeat',
-                            'Use special symbols like X to mark crossed-off positions',
-                            'After each pass, return to the beginning',
-                            'Accept when all symbols have been crossed off in matching groups'
+                            'Use the tape to mark symbols you\'ve processed. Use X for 0, Y for 1, and Z for the second group of 0s.',
+                            'Strategy: Mark one 0, scan right to find the first 1, mark it, then scan right to find the first 0 of the second group, and mark it.',
+                            'After marking one of each, return to the beginning of the tape and repeat.',
+                            'If you run out of one symbol before the others, reject.',
+                            'Once all symbols are marked, check the rest of the tape for any stray symbols before accepting.'
                         ]
-                    }
+                    },
+                    explanation: 'Turing Machines can match any number of groups by using the tape as a workspace, unlike PDAs which are limited to two groups via a single stack.'
+                },
+                {
+                    type: 'hands-on',
+                    question: 'Build a Binary Incrementer Turing Machine',
+                    simulatorType: 'TM',
+                    challenge: {
+                        alphabet: ['0', '1'],
+                        description: 'Create a TM that treats the input as a binary number and increments it by 1. For this challenge, "Accept" means the machine successfully finishes the increment. Examples: "0" -> "1", "1" -> "10", "101" -> "110", "111" -> "1000".',
+                        testCases: [
+                            { input: '0', expected: true, description: '0 to 1' },
+                            { input: '1', expected: true, description: '1 to 10 (carry)' },
+                            { input: '10', expected: true, description: '2 to 3' },
+                            { input: '11', expected: true, description: '3 to 4 (double carry)' },
+                            { input: '101', expected: true, description: '5 to 6' }
+                        ],
+                        hints: [
+                            'First, move the tape head to the very end of the binary number (the rightmost bit).',
+                            'Start moving left. If you see a 0, change it to 1 and halt (you\'re done!).',
+                            'If you see a 1, change it to 0 and continue moving left (this is the "carry" operation).',
+                            'If you reach the blank symbol (␣) at the beginning while carrying, change it to 1 and halt.',
+                            'You\'ll need a state for "moving to end" and a state for "processing carry".'
+                        ]
+                    },
+                    explanation: 'A Turing Machine isn\'t just a recognizer; it\'s a computer. This example shows how a TM can perform basic arithmetic by manipulating its tape.'
+                },
+                {
+                    type: 'hands-on',
+                    question: 'Build a Palindrome Decider Turing Machine over {0,1}',
+                    simulatorType: 'TM',
+                    challenge: {
+                        alphabet: ['0', '1'],
+                        description: 'Build a TM that decides if a string is a palindrome. It should accept "", "0", "1", "00", "11", "010", "101", "0110". Reject "01", "10", "011".',
+                        testCases: [
+                            { input: '', expected: true, description: 'Empty string' },
+                            { input: '0', expected: true, description: 'Single 0' },
+                            { input: '010', expected: true, description: 'Odd length' },
+                            { input: '11', expected: true, description: 'Even length' },
+                            { input: '0110', expected: true, description: 'Even length' },
+                            { input: '01', expected: false, description: 'Mismatch' },
+                            { input: '10', expected: false, description: 'Mismatch' },
+                            { input: '011', expected: false, description: 'Mismatch' }
+                        ],
+                        hints: [
+                            'Strategy: Read the first symbol, remember it in the state, and replace it with a blank.',
+                            'Move to the end of the string and check if the last symbol matches the one you remembered.',
+                            'If it matches, replace it with a blank, return to the new start of the string, and repeat.',
+                            'If it doesn\'t match, reject.',
+                            'The machine accepts when the tape is completely empty or only one symbol remains.'
+                        ]
+                    },
+                    explanation: 'This TM simulates the "outer-in" matching process. It can go back and forth across the tape, which is exactly what\'s needed for palindromes without a center marker.'
                 }
             ]
         }
