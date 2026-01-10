@@ -1,0 +1,131 @@
+.pda-graph-container {
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    height: 320px;
+    margin: 0;
+}
+
+/* State node - simple circle */
+.pda-state-node {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid #333333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    z-index: 1;
+}
+
+.pda-state-label {
+    color: #000000;
+    user-select: none;
+}
+
+/* Accept state - single outer ring */
+.pda-accept-ring {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    right: -6px;
+    bottom: -6px;
+    border: 2px solid #333333;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* Start state arrow */
+.pda-state-node.start-state::before {
+    content: '';
+    position: absolute;
+    left: -35px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 25px;
+    height: 0;
+    border-top: 2px solid #333333;
+}
+
+.pda-state-node.start-state::after {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 8px solid #333333;
+}
+
+/* Current state highlight */
+.pda-state-node.current-state {
+    background: #e3f2fd;
+    border-color: #1976d2;
+}
+
+.pda-state-node.current-state .pda-accept-ring {
+    border-color: #1976d2;
+}
+
+.pda-state-node.current-state::before {
+    border-top-color: #1976d2;
+}
+
+.pda-state-node.current-state::after {
+    border-left-color: #1976d2;
+}
+
+/* Hide ReactFlow handles */
+.pda-state-node .react-flow__handle {
+    width: 1px;
+    height: 1px;
+    background: transparent;
+    border: none;
+    opacity: 0;
+}
+
+/* Edge labels - ensure they appear above nodes */
+.pda-graph-container .react-flow__edge {
+    z-index: 10 !important;
+}
+
+.pda-graph-container .react-flow__edge-text {
+    font-size: 11px;
+    font-weight: 500;
+    font-family: Arial, sans-serif;
+}
+
+.pda-graph-container .react-flow__edge-textbg {
+    z-index: 10;
+}
+
+/* Move ALL edge labels up so they don't overlap with nodes/edges */
+.pda-graph-container .react-flow__edge-textwrapper {
+    transform: translateY(-25px);
+}
+
+/* Controls */
+.pda-graph-container .react-flow__controls {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+}
+
+.pda-graph-container .react-flow__controls-button {
+    border: none !important;
+    background: #fff !important;
+    width: 24px;
+    height: 24px;
+}
+
+/* Hide attribution */
+.pda-graph-container .react-flow__attribution {
+    display: none;
+}
