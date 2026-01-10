@@ -67,23 +67,18 @@ export const useExamples = () => {
             alphabet: ['a', 'b'],
             stackAlphabet: ['Z', 'A', 'B'],
             transitions: [
-                // Push symbols onto stack
+                // Push symbols onto stack (reading first half)
                 { from: 'q0', input: 'a', pop: 'Z', to: 'q0', push: 'AZ' },
                 { from: 'q0', input: 'a', pop: 'A', to: 'q0', push: 'AA' },
-                { from: 'q0', input: 'a', pop: 'B', to: 'q0', push: 'BA' },
+                { from: 'q0', input: 'a', pop: 'B', to: 'q0', push: 'AB' }, // A on top, B below
                 { from: 'q0', input: 'b', pop: 'Z', to: 'q0', push: 'BZ' },
-                { from: 'q0', input: 'b', pop: 'A', to: 'q0', push: 'AB' },
+                { from: 'q0', input: 'b', pop: 'A', to: 'q0', push: 'BA' }, // B on top, A below
                 { from: 'q0', input: 'b', pop: 'B', to: 'q0', push: 'BB' },
                 
-                // Non-deterministically guess middle point and transition to checking
-                // For even-length palindromes: go directly to checking (keep top symbol)
-                { from: 'q0', input: 'ε', pop: 'Z', to: 'q1', push: 'Z' }, // Empty string
-                { from: 'q0', input: 'ε', pop: 'A', to: 'q1', push: 'A' }, // Even-length: keep A
-                { from: 'q0', input: 'ε', pop: 'B', to: 'q1', push: 'B' }, // Even-length: keep B
-                
-                // For odd-length palindromes: skip middle symbol (pop without reading)
-                { from: 'q0', input: 'ε', pop: 'A', to: 'q1', push: 'ε' }, // Odd-length: skip A
-                { from: 'q0', input: 'ε', pop: 'B', to: 'q1', push: 'ε' }, // Odd-length: skip B
+                // Non-deterministically guess middle point and transition to matching phase
+                { from: 'q0', input: 'ε', pop: 'A', to: 'q1', push: 'A' }, // Even-length: keep stack
+                { from: 'q0', input: 'ε', pop: 'B', to: 'q1', push: 'B' },
+                { from: 'q0', input: 'ε', pop: 'Z', to: 'q1', push: 'Z' }, // Empty first half
                 
                 // Match remaining input with stack (pop matching symbols)
                 { from: 'q1', input: 'a', pop: 'A', to: 'q1', push: 'ε' },
