@@ -424,18 +424,6 @@ const PDASimulator = ({ challenge }) => {
                     </div>
 
                     <div className="pda-right-col">
-                        {/* PDA Graph Visualization - at the top of right column */}
-                        <CollapsibleSection title="State Diagram" defaultOpen={true}>
-                            <div className="pda-graph-card">
-                                <PDAGraph
-                                    states={pda.states}
-                                    transitions={pda.transitions}
-                                    startState={pda.startState}
-                                    acceptStates={pda.acceptStates}
-                                    currentState={simulationSteps.length > 0 && currentStep >= 0 ? simulationSteps[currentStep].state : pda.startState}
-                                />
-                            </div>
-                        </CollapsibleSection>
                         <CollapsibleSection title="States Editor" defaultOpen={challenge ? true : false}>
                             <PDAStatesEditor pda={pda} onUpdate={handleReset} />
                         </CollapsibleSection>
@@ -450,6 +438,18 @@ const PDASimulator = ({ challenge }) => {
                                 <PDATestCases onLoadTest={(ti) => { setInputString(ti); handleReset(); }} currentExample={currentExampleName} />
                             </CollapsibleSection>
                         )}
+                        {/* PDA Graph Visualization - at the top of right column */}
+                        <CollapsibleSection title="State Diagram" defaultOpen={true}>
+                            <div className="pda-graph-card">
+                                <PDAGraph
+                                    states={pda.states}
+                                    transitions={pda.transitions}
+                                    startState={pda.startState}
+                                    acceptStates={pda.acceptStates}
+                                    currentState={simulationSteps.length > 0 && currentStep >= 0 ? simulationSteps[currentStep].state : pda.startState}
+                                />
+                            </div>
+                        </CollapsibleSection>
                         {simulationSteps.length > 0 && (
                             <div className="pda-steps-card">
                                 <h3 className="pda-card-title">Simulation Progress</h3>
