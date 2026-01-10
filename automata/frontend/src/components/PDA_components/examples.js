@@ -1,162 +1,133 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
+
+// 1. Defined outside the hook to prevent memory re-allocation on every render
+const STATIC_EXAMPLES = {
+    balanced_parentheses: {
+        name: 'Balanced Parentheses',
+        states: ['q0', 'q1'],
+        alphabet: ['(', ')'],
+        stackAlphabet: ['Z', '('],
+        transitions: [
+            { from: 'q0', input: '(', pop: 'Z', to: 'q0', push: '(Z' },
+            { from: 'q0', input: '(', pop: '(', to: 'q0', push: '((' },
+            { from: 'q0', input: ')', pop: '(', to: 'q0', push: 'ε' },
+            { from: 'q0', input: 'ε', pop: 'Z', to: 'q1', push: 'Z' }
+        ],
+        startState: 'q0',
+        startStackSymbol: 'Z',
+        acceptStates: ['q1']
+    },
+    equal_as_bs: {
+        name: 'Equal a\'s and b\'s',
+        states: ['q0', 'q1'],
+        alphabet: ['a', 'b'],
+        stackAlphabet: ['Z', 'A', 'B'],
+        transitions: [
+            { from: 'q0', input: 'a', pop: 'Z', to: 'q0', push: 'AZ' },
+            { from: 'q0', input: 'a', pop: 'A', to: 'q0', push: 'AA' },
+            { from: 'q0', input: 'a', pop: 'B', to: 'q0', push: 'ε' },
+            { from: 'q0', input: 'b', pop: 'Z', to: 'q0', push: 'BZ' },
+            { from: 'q0', input: 'b', pop: 'B', to: 'q0', push: 'BB' },
+            { from: 'q0', input: 'b', pop: 'A', to: 'q0', push: 'ε' },
+            { from: 'q0', input: 'ε', pop: 'Z', to: 'q1', push: 'Z' }
+        ],
+        startState: 'q0',
+        startStackSymbol: 'Z',
+        acceptStates: ['q1']
+    },
+    an_bn: {
+        name: 'a^n b^n',
+        description: 'Accepts strings of the form a^n b^n (including empty string where n=0)',
+        states: ['q0', 'q1', 'q2'],
+        alphabet: ['a', 'b'],
+        stackAlphabet: ['Z', 'A'],
+        transitions: [
+            { from: 'q0', input: 'a', pop: 'Z', to: 'q0', push: 'AZ' },
+            { from: 'q0', input: 'a', pop: 'A', to: 'q0', push: 'AA' },
+            { from: 'q0', input: 'b', pop: 'A', to: 'q1', push: 'ε' },
+            { from: 'q1', input: 'b', pop: 'A', to: 'q1', push: 'ε' },
+            { from: 'q1', input: 'ε', pop: 'Z', to: 'q2', push: 'Z' },
+            // FIX: Added transition for n=0 (empty string)
+            { from: 'q0', input: 'ε', pop: 'Z', to: 'q2', push: 'Z' }
+        ],
+        startState: 'q0',
+        startStackSymbol: 'Z',
+        acceptStates: ['q2']
+    },
+    palindrome_ab: {
+        name: 'Palindrome over {a,b}',
+        description: 'Accepts palindromes over alphabet {a,b} (Non-Deterministic)',
+        states: ['q0', 'q1', 'q2'],
+        alphabet: ['a', 'b'],
+        stackAlphabet: ['Z', 'A', 'B'],
+        transitions: [
+            // Push phase
+            { from: 'q0', input: 'a', pop: 'Z', to: 'q0', push: 'AZ' },
+            { from: 'q0', input: 'a', pop: 'A', to: 'q0', push: 'AA' },
+            { from: 'q0', input: 'a', pop: 'B', to: 'q0', push: 'AB' },
+            { from: 'q0', input: 'b', pop: 'Z', to: 'q0', push: 'BZ' },
+            { from: 'q0', input: 'b', pop: 'A', to: 'q0', push: 'BA' },
+            { from: 'q0', input: 'b', pop: 'B', to: 'q0', push: 'BB' },
+            
+            // Guess middle (even length) - epsilon transition
+            { from: 'q0', input: 'ε', pop: 'A', to: 'q1', push: 'A' },
+            { from: 'q0', input: 'ε', pop: 'B', to: 'q1', push: 'B' },
+            { from: 'q0', input: 'ε', pop: 'Z', to: 'q1', push: 'Z' },
+            
+            // Guess middle (odd length) - consume char
+            { from: 'q0', input: 'a', pop: 'A', to: 'q1', push: 'A' },
+            { from: 'q0', input: 'a', pop: 'B', to: 'q1', push: 'B' },
+            { from: 'q0', input: 'a', pop: 'Z', to: 'q1', push: 'Z' },
+            { from: 'q0', input: 'b', pop: 'A', to: 'q1', push: 'A' },
+            { from: 'q0', input: 'b', pop: 'B', to: 'q1', push: 'B' },
+            { from: 'q0', input: 'b', pop: 'Z', to: 'q1', push: 'Z' },
+            
+            // Match phase
+            { from: 'q1', input: 'a', pop: 'A', to: 'q1', push: 'ε' },
+            { from: 'q1', input: 'b', pop: 'B', to: 'q1', push: 'ε' },
+            
+            // Accept
+            { from: 'q1', input: 'ε', pop: 'Z', to: 'q2', push: 'Z' }
+        ],
+        startState: 'q0',
+        startStackSymbol: 'Z',
+        acceptStates: ['q2']
+    },
+    balanced_brackets: {
+        name: 'Balanced Brackets (multiple types)',
+        description: 'Accepts strings with balanced (), [], and {} brackets',
+        states: ['q0', 'q1'],
+        alphabet: ['(', ')', '[', ']', '{', '}'],
+        stackAlphabet: ['Z', '(', '[', '{'],
+        transitions: [
+            { from: 'q0', input: '(', pop: 'Z', to: 'q0', push: '(Z' },
+            { from: 'q0', input: '(', pop: '(', to: 'q0', push: '((' },
+            { from: 'q0', input: '(', pop: '[', to: 'q0', push: '([' },
+            { from: 'q0', input: '(', pop: '{', to: 'q0', push: '({' },
+            { from: 'q0', input: '[', pop: 'Z', to: 'q0', push: '[Z' },
+            { from: 'q0', input: '[', pop: '(', to: 'q0', push: '[(' },
+            { from: 'q0', input: '[', pop: '[', to: 'q0', push: '[[' },
+            { from: 'q0', input: '[', pop: '{', to: 'q0', push: '[{' },
+            { from: 'q0', input: '{', pop: 'Z', to: 'q0', push: '{Z' },
+            { from: 'q0', input: '{', pop: '(', to: 'q0', push: '{(' },
+            { from: 'q0', input: '{', pop: '[', to: 'q0', push: '{[' },
+            { from: 'q0', input: '{', pop: '{', to: 'q0', push: '{{' },
+            { from: 'q0', input: ')', pop: '(', to: 'q0', push: 'ε' },
+            { from: 'q0', input: ']', pop: '[', to: 'q0', push: 'ε' },
+            { from: 'q0', input: '}', pop: '{', to: 'q0', push: 'ε' },
+            { from: 'q0', input: 'ε', pop: 'Z', to: 'q1', push: 'Z' }
+        ],
+        startState: 'q0',
+        startStackSymbol: 'Z',
+        acceptStates: ['q1']
+    }
+};
 
 export const useExamples = () => {
-    const [examples] = useState({
-        balanced_parentheses: {
-            name: 'Balanced Parentheses',
-            states: ['q0', 'q1'],
-            alphabet: ['(', ')'],
-            stackAlphabet: ['Z', '('],
-            transitions: [
-                { from: 'q0', input: '(', pop: 'Z', to: 'q0', push: '(Z' },
-                { from: 'q0', input: '(', pop: '(', to: 'q0', push: '((' },
-                { from: 'q0', input: ')', pop: '(', to: 'q0', push: 'ε' },
-                { from: 'q0', input: 'ε', pop: 'Z', to: 'q1', push: 'Z' }
-            ],
-            startState: 'q0',
-            startStackSymbol: 'Z',
-            acceptStates: ['q1']
-        },
-        equal_as_bs: {
-            name: 'Equal a\'s and b\'s',
-            states: ['q0', 'q1'],
-            alphabet: ['a', 'b'],
-            stackAlphabet: ['Z', 'A', 'B'],
-            transitions: [
-                // Push A when we see 'a' (tracking excess a's)
-                { from: 'q0', input: 'a', pop: 'Z', to: 'q0', push: 'AZ' },
-                { from: 'q0', input: 'a', pop: 'A', to: 'q0', push: 'AA' },
-                { from: 'q0', input: 'a', pop: 'B', to: 'q0', push: 'ε' }, // Cancel out excess b's
-                
-                // Push B when we see 'b' (tracking excess b's)
-                { from: 'q0', input: 'b', pop: 'Z', to: 'q0', push: 'BZ' },
-                { from: 'q0', input: 'b', pop: 'B', to: 'q0', push: 'BB' },
-                { from: 'q0', input: 'b', pop: 'A', to: 'q0', push: 'ε' }, // Cancel out excess a's
-                
-                // Epsilon transition to accept state when stack only has Z
-                { from: 'q0', input: 'ε', pop: 'Z', to: 'q1', push: 'Z' }
-            ],
-            startState: 'q0',
-            startStackSymbol: 'Z',
-            acceptStates: ['q1']
-        },
-        an_bn: {
-            name: 'a^n b^n',
-            description: 'Accepts strings of the form a^n b^n (equal number of a\'s followed by equal number of b\'s)',
-            states: ['q0', 'q1', 'q2'],
-            alphabet: ['a', 'b'],
-            stackAlphabet: ['Z', 'A'],
-            transitions: [
-                // Push A for each 'a'
-                { from: 'q0', input: 'a', pop: 'Z', to: 'q0', push: 'AZ' },
-                { from: 'q0', input: 'a', pop: 'A', to: 'q0', push: 'AA' },
-                // Pop A for each 'b'
-                { from: 'q0', input: 'b', pop: 'A', to: 'q1', push: 'ε' },
-                { from: 'q1', input: 'b', pop: 'A', to: 'q1', push: 'ε' },
-                // Accept when stack only has Z
-                { from: 'q1', input: 'ε', pop: 'Z', to: 'q2', push: 'Z' }
-            ],
-            startState: 'q0',
-            startStackSymbol: 'Z',
-            acceptStates: ['q2']
-        },
-        palindrome_ab: {
-            name: 'Palindrome over {a,b}',
-            description: 'Accepts palindromes over alphabet {a,b}',
-            states: ['q0', 'q1', 'q2'],
-            alphabet: ['a', 'b'],
-            stackAlphabet: ['Z', 'A', 'B'],
-            transitions: [
-                // Push symbols onto stack (reading first half)
-                { from: 'q0', input: 'a', pop: 'Z', to: 'q0', push: 'AZ' },
-                { from: 'q0', input: 'a', pop: 'A', to: 'q0', push: 'AA' },
-                { from: 'q0', input: 'a', pop: 'B', to: 'q0', push: 'AB' }, // A on top, B below
-                { from: 'q0', input: 'b', pop: 'Z', to: 'q0', push: 'BZ' },
-                { from: 'q0', input: 'b', pop: 'A', to: 'q0', push: 'BA' }, // B on top, A below
-                { from: 'q0', input: 'b', pop: 'B', to: 'q0', push: 'BB' },
-                
-                // Non-deterministically guess middle point and transition to matching phase
-                { from: 'q0', input: 'ε', pop: 'A', to: 'q1', push: 'A' }, // Even-length: keep stack
-                { from: 'q0', input: 'ε', pop: 'B', to: 'q1', push: 'B' },
-                { from: 'q0', input: 'ε', pop: 'Z', to: 'q1', push: 'Z' }, // Empty first half
-                
-                // Match remaining input with stack (pop matching symbols)
-                { from: 'q1', input: 'a', pop: 'A', to: 'q1', push: 'ε' },
-                { from: 'q1', input: 'b', pop: 'B', to: 'q1', push: 'ε' },
-                
-                // Accept when stack only has Z (all symbols matched)
-                { from: 'q1', input: 'ε', pop: 'Z', to: 'q2', push: 'Z' }
-            ],
-            startState: 'q0',
-            startStackSymbol: 'Z',
-            acceptStates: ['q2']
-        },
-        balanced_brackets: {
-            name: 'Balanced Brackets (multiple types)',
-            description: 'Accepts strings with balanced (), [], and {} brackets',
-            states: ['q0', 'q1'],
-            alphabet: ['(', ')', '[', ']', '{', '}'],
-            stackAlphabet: ['Z', '(', '[', '{'],
-            transitions: [
-                // Push opening brackets
-                { from: 'q0', input: '(', pop: 'Z', to: 'q0', push: '(Z' },
-                { from: 'q0', input: '(', pop: '(', to: 'q0', push: '((' },
-                { from: 'q0', input: '(', pop: '[', to: 'q0', push: '([' },
-                { from: 'q0', input: '(', pop: '{', to: 'q0', push: '({' },
-                
-                { from: 'q0', input: '[', pop: 'Z', to: 'q0', push: '[Z' },
-                { from: 'q0', input: '[', pop: '(', to: 'q0', push: '([' },
-                { from: 'q0', input: '[', pop: '[', to: 'q0', push: '[[' },
-                { from: 'q0', input: '[', pop: '{', to: 'q0', push: '[{' },
-                
-                { from: 'q0', input: '{', pop: 'Z', to: 'q0', push: '{Z' },
-                { from: 'q0', input: '{', pop: '(', to: 'q0', push: '{(' },
-                { from: 'q0', input: '{', pop: '[', to: 'q0', push: '{[' },
-                { from: 'q0', input: '{', pop: '{', to: 'q0', push: '{{' },
-                
-                // Pop matching closing brackets
-                { from: 'q0', input: ')', pop: '(', to: 'q0', push: 'ε' },
-                { from: 'q0', input: ']', pop: '[', to: 'q0', push: 'ε' },
-                { from: 'q0', input: '}', pop: '{', to: 'q0', push: 'ε' },
-                
-                // Accept when stack only has Z
-                { from: 'q0', input: 'ε', pop: 'Z', to: 'q1', push: 'Z' }
-            ],
-            startState: 'q0',
-            startStackSymbol: 'Z',
-            acceptStates: ['q1']
-        },
-        an_bm_cn_plus_m: {
-            name: 'a^n b^m c^(n+m)',
-            description: 'Accepts strings with n a\'s, m b\'s, and exactly (n+m) c\'s',
-            states: ['q0', 'q1', 'q2', 'q3'],
-            alphabet: ['a', 'b', 'c'],
-            stackAlphabet: ['Z', 'A', 'B'],
-            transitions: [
-                // Push A for each 'a' in q0
-                { from: 'q0', input: 'a', pop: 'Z', to: 'q0', push: 'AZ' },
-                { from: 'q0', input: 'a', pop: 'A', to: 'q0', push: 'AA' },
-                // Transition to q1 when we see first 'b'
-                { from: 'q0', input: 'b', pop: 'A', to: 'q1', push: 'AB' }, // b after a's: push B, keep A
-                { from: 'q0', input: 'b', pop: 'Z', to: 'q1', push: 'BZ' }, // b with no a's
-                // Push B for each 'b' in q1
-                { from: 'q1', input: 'b', pop: 'A', to: 'q1', push: 'AB' }, // b after a's: push B, keep A
-                { from: 'q1', input: 'b', pop: 'B', to: 'q1', push: 'BB' }, // b after b's
-                { from: 'q1', input: 'b', pop: 'Z', to: 'q1', push: 'BZ' }, // b with empty stack
-                // Transition to q2 when we see first 'c' - start popping
-                { from: 'q1', input: 'c', pop: 'A', to: 'q2', push: 'ε' }, // c: pop A (from a's)
-                { from: 'q1', input: 'c', pop: 'B', to: 'q2', push: 'ε' }, // c: pop B (from b's)
-                // Pop A or B for each 'c' in q2
-                { from: 'q2', input: 'c', pop: 'A', to: 'q2', push: 'ε' },
-                { from: 'q2', input: 'c', pop: 'B', to: 'q2', push: 'ε' },
-                // Accept only when stack has Z and no more input (handled by simulation)
-                { from: 'q2', input: 'ε', pop: 'Z', to: 'q3', push: 'Z' }
-            ],
-            startState: 'q0',
-            startStackSymbol: 'Z',
-            acceptStates: ['q3']
-        }
-    });
+    // 2. Returns the static object directly. 
+    // useMemo with empty dependency [] ensures the object reference remains stable 
+    // across re-renders (useful if you pass this object to child components).
+    const examples = useMemo(() => STATIC_EXAMPLES, []);
 
     return { examples };
 };
