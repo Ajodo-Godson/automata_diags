@@ -5,6 +5,7 @@ import { PDATestCases } from './PDATestCases';
 import { PDAStatesEditor } from './StatesEditor';
 import { PDATransitionsEditor } from './TransitionsEditor';
 import { PDAAlphabetEditor } from './AlphabetEditor';
+import PDAGraph from './PDAGraph';
 import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { usePDA } from './usePDA';
@@ -396,6 +397,18 @@ const PDASimulator = ({ challenge }) => {
                     </div>
 
                     <div className="pda-right-col">
+                        {/* PDA Graph Visualization - at the top of right column */}
+                        <CollapsibleSection title="State Diagram" defaultOpen={true}>
+                            <div className="pda-graph-card">
+                                <PDAGraph
+                                    states={pda.states}
+                                    transitions={pda.transitions}
+                                    startState={pda.startState}
+                                    acceptStates={pda.acceptStates}
+                                    currentState={simulationSteps.length > 0 && currentStep >= 0 ? simulationSteps[currentStep].state : pda.startState}
+                                />
+                            </div>
+                        </CollapsibleSection>
                         <CollapsibleSection title="States Editor" defaultOpen={challenge ? true : false}>
                             <PDAStatesEditor pda={pda} onUpdate={handleReset} />
                         </CollapsibleSection>
