@@ -1,131 +1,187 @@
-.pda-graph-container {
+/* ==============================================
+   PDA GRAPH STYLES
+   Clean, professional state diagram visualization
+   ============================================== */
+
+/* Container */
+.pda-graph-wrapper {
+    width: 100%;
+    height: 500px;
     background: #ffffff;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
-    height: 320px;
-    margin: 0;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
 }
 
-/* State node - simple circle */
-.pda-state-node {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: #ffffff;
-    border: 2px solid #333333;
+/* ==============================================
+   NODES
+   ============================================== */
+.pda-node {
+    width: 60px;
+    height: 60px;
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-    position: relative;
-    font-weight: 600;
-    font-size: 14px;
-    font-family: Arial, sans-serif;
-    z-index: 1;
 }
 
-.pda-state-label {
-    color: #000000;
+.pda-node-content {
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    border: 2.5px solid #334155;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pda-label {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: #1e293b;
     user-select: none;
 }
 
-/* Accept state - single outer ring */
-.pda-accept-ring {
+/* Hidden but functional handles */
+.pda-handle {
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+/* ==============================================
+   ACCEPT STATE - Double Ring
+   ============================================== */
+.pda-double-ring {
     position: absolute;
     top: -6px;
     left: -6px;
     right: -6px;
     bottom: -6px;
-    border: 2px solid #333333;
+    border: 2.5px solid #334155;
     border-radius: 50%;
     pointer-events: none;
 }
 
-/* Start state arrow */
-.pda-state-node.start-state::before {
-    content: '';
+/* ==============================================
+   START STATE - Arrow Indicator
+   ============================================== */
+.pda-start-arrow {
     position: absolute;
-    left: -35px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 25px;
-    height: 0;
-    border-top: 2px solid #333333;
-}
-
-.pda-state-node.start-state::after {
-    content: '';
-    position: absolute;
-    left: -12px;
-    top: 50%;
-    transform: translateY(-50%);
+    left: -28px;
     width: 0;
     height: 0;
-    border-top: 5px solid transparent;
-    border-bottom: 5px solid transparent;
-    border-left: 8px solid #333333;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 14px solid #334155;
 }
 
-/* Current state highlight */
-.pda-state-node.current-state {
-    background: #e3f2fd;
-    border-color: #1976d2;
+/* Line before the arrow */
+.pda-start-arrow::before {
+    content: '';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 2.5px;
+    background: #334155;
 }
 
-.pda-state-node.current-state .pda-accept-ring {
-    border-color: #1976d2;
+/* ==============================================
+   ACTIVE STATE (During Simulation)
+   ============================================== */
+.pda-node.active .pda-node-content {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25), 0 4px 12px rgba(59, 130, 246, 0.2);
+    transform: scale(1.08);
 }
 
-.pda-state-node.current-state::before {
-    border-top-color: #1976d2;
+.pda-node.active .pda-double-ring {
+    border-color: #3b82f6;
 }
 
-.pda-state-node.current-state::after {
-    border-left-color: #1976d2;
+.pda-node.active .pda-start-arrow {
+    border-left-color: #3b82f6;
 }
 
-/* Hide ReactFlow handles */
-.pda-state-node .react-flow__handle {
-    width: 1px;
-    height: 1px;
-    background: transparent;
-    border: none;
-    opacity: 0;
+.pda-node.active .pda-start-arrow::before {
+    background: #3b82f6;
 }
 
-/* Edge labels - ensure they appear above nodes */
-.pda-graph-container .react-flow__edge {
-    z-index: 10 !important;
+.pda-node.active .pda-label {
+    color: #1d4ed8;
 }
 
-.pda-graph-container .react-flow__edge-text {
-    font-size: 11px;
-    font-weight: 500;
-    font-family: Arial, sans-serif;
+/* ==============================================
+   EDGES
+   ============================================== */
+.react-flow__edge-path {
+    stroke: #64748b;
+    stroke-width: 2;
 }
 
-.pda-graph-container .react-flow__edge-textbg {
-    z-index: 10;
+/* Custom edge label card styling (applied to PDAEdge component) */
+.pda-edge-label {
+    background: #ffffff !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Move ALL edge labels up so they don't overlap with nodes/edges */
-.pda-graph-container .react-flow__edge-textwrapper {
-    transform: translateY(-25px);
+.pda-edge-label::-webkit-scrollbar {
+    width: 4px;
 }
 
-/* Controls */
-.pda-graph-container .react-flow__controls {
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-    border-radius: 4px;
+.pda-edge-label::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 2px;
 }
 
-.pda-graph-container .react-flow__controls-button {
-    border: none !important;
-    background: #fff !important;
-    width: 24px;
-    height: 24px;
+.pda-edge-label::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
 }
+
+/* ==============================================
+   REACTFLOW OVERRIDES
+   ============================================== */
 
 /* Hide attribution */
-.pda-graph-container .react-flow__attribution {
+.react-flow__attribution {
     display: none;
+}
+
+/* Controls panel */
+.react-flow__controls {
+    box-shadow: none;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.react-flow__controls-button {
+    border-bottom: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #475569;
+    transition: background 0.15s;
+}
+
+.react-flow__controls-button:hover {
+    background: #f8fafc;
+}
+
+.react-flow__controls-button:last-child {
+    border-bottom: none;
+}
+
+/* Background dots */
+.react-flow__background {
+    background-color: #fafbfc;
 }
