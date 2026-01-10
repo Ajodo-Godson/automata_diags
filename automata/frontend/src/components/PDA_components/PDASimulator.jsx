@@ -81,7 +81,8 @@ const PDASimulator = ({ challenge }) => {
     const simulateString = () => {
         setSimulationSteps([]);
         setCurrentStep(-1);
-
+    
+        // Initial Path Construction
         const initialPath = [{
             state: pda.startState,
             stack: [pda.startStackSymbol],
@@ -91,94 +92,120 @@ const PDASimulator = ({ challenge }) => {
             transition: null,
             accepted: false
         }];
-
+    
+        // Queue for BFS
         const configurations = [{
             state: pda.startState,
             stack: [pda.startStackSymbol],
             inputPosition: 0,
             path: initialPath
         }];
-
+    
         const visited = new Set();
-        const maxIterations = 5000;
+        const maxIterations = 10000; // Increased limit
         let iterationCount = 0;
-        let lastKnownPath = initialPath;
-
+        
+        // TRACKER: Keep track of the 'best' failure to show if we reject
+        let longestRejectedPath = initialPath;
+    
         while (configurations.length > 0 && iterationCount < maxIterations) {
             iterationCount++;
-            const config = configurations.shift();
+            const config = configurations.shift(); // Dequeue
             const { state, stack, inputPosition, path } = config;
-            lastKnownPath = path;
+    
+            // Update "best attempt" if this path went further in the input
+            if (path.length > longestRejectedPath.length || inputPosition > longestRejectedPath[longestRejectedPath.length-1].inputPosition) {
+                longestRejectedPath = path;
+            }
+    
+            // 1. Stack Depth Guard (prevent browser crash on infinite push loops)
+            if (stack.length > inputString.length + 50) continue;
+    
+            // 2. Exact State Match for Visited Set
+            // FIX: Removed .slice(-20) to ensure deep stacks are unique configurations
+            const configKey = `${state}|${stack.join(',')}|${inputPosition}`;
             
-            if (stack.length > inputString.length + 20) continue;
-
-            const topOfStack = stack[stack.length - 1] || 'ε';
-            const configKey = `${state}|${stack.slice(-20).join(',')}|${inputPosition}`;
             if (visited.has(configKey)) continue;
             visited.add(configKey);
-
-            // Final state acceptance check (Accept if input exhausted and state is accepting)
+    
+            // 3. Acceptance Check
+            // Standard Definition: Empty Input AND Final State
             if (inputPosition === inputString.length && pda.acceptStates.has(state)) {
-                path[path.length - 1].accepted = true;
-                path[path.length - 1].description += ' → ACCEPTED';
-                setSimulationSteps(path);
+                const successPath = [...path];
+                successPath[successPath.length - 1].accepted = true;
+                successPath[successPath.length - 1].description += ' → ACCEPTED';
+                setSimulationSteps(successPath);
                 setCurrentStep(0);
-                return;
+                return; // Stop searching immediately on first success
             }
-
-            const applicableTransitions = [];
+    
+            // 4. Find Transitions
+            const topOfStack = stack.length > 0 ? stack[stack.length - 1] : 'ε';
             const currentInput = inputPosition < inputString.length ? inputString[inputPosition] : null;
-
-            for (const t of pda.transitions) {
-                // Match State
-                if (t.from !== state) continue;
-
-                // Match Input (Symbol or ε)
-                const inputMatch = (currentInput !== null && t.input === currentInput) || (t.input === 'ε' || t.input === 'epsilon' || t.input === '');
-                if (!inputMatch) continue;
-
-                // Match Pop (Symbol or ε)
-                // If t.pop is not epsilon, it MUST match the top of the stack.
-                const popMatch = (t.pop === 'ε' || t.pop === 'epsilon' || t.pop === '') || (t.pop === topOfStack);
-                if (!popMatch) continue;
-
-                applicableTransitions.push(t);
-            }
-
+    
+            const applicableTransitions = pda.transitions.filter(t => {
+                if (t.from !== state) return false;
+                
+                // Input Match: Specific char OR Epsilon
+                const inputMatches = (t.input === currentInput) || (t.input === 'ε' || t.input === '');
+                if (!inputMatches) return false;
+    
+                // Stack Match: Specific char OR Epsilon (Stack ignored if pop is ε)
+                const popMatches = (t.pop === 'ε' || t.pop === '') || (t.pop === topOfStack);
+                
+                return popMatches;
+            });
+    
+            // 5. Generate Next Configurations
             for (const transition of applicableTransitions) {
                 const newState = transition.to;
                 const newStack = [...stack];
-                
-                // Perform Pop if required
-                if (transition.pop && transition.pop !== 'ε' && transition.pop !== 'epsilon') {
-                    newStack.pop();
+    
+                // POP logic
+                if (transition.pop && transition.pop !== 'ε') {
+                    newStack.pop(); 
                 }
-                
-                // Perform Push if required
-                if (transition.push && transition.push !== 'ε' && transition.push !== 'epsilon') {
-                    // Standard PDA: left-most symbol in push string becomes the new top
+    
+                // PUSH logic 
+                // We reverse the string so the first char becomes the new Top of Stack
+                if (transition.push && transition.push !== 'ε') {
                     const pushSymbols = transition.push.split('').reverse();
                     newStack.push(...pushSymbols);
                 }
-                
-                const consumesInput = transition.input && transition.input !== 'ε' && transition.input !== 'epsilon';
+    
+                const consumesInput = (transition.input && transition.input !== 'ε');
                 const newInputPosition = consumesInput ? inputPosition + 1 : inputPosition;
-                
+                const remaining = inputString.slice(newInputPosition);
+    
                 const newPath = [...path, {
                     state: newState,
                     stack: [...newStack],
-                    remainingInput: inputString.slice(newInputPosition),
+                    remainingInput: remaining === '' ? '(empty)' : remaining,
                     inputPosition: newInputPosition,
-                    description: `Read '${transition.input || 'ε'}', popped '${transition.pop || 'ε'}', pushed '${transition.push || 'ε'}', moved to ${newState}`,
+                    description: `Read '${transition.input || 'ε'}', popped '${transition.pop || 'ε'}', pushed '${transition.push || 'ε'}', -> ${newState}`,
                     transition: transition,
                     accepted: false
                 }];
-                configurations.push({ state: newState, stack: newStack, inputPosition: newInputPosition, path: newPath });
+    
+                configurations.push({
+                    state: newState,
+                    stack: newStack,
+                    inputPosition: newInputPosition,
+                    path: newPath
+                });
             }
         }
-
-        let finalPath = [...lastKnownPath];
-        finalPath[finalPath.length-1].description += iterationCount >= maxIterations ? ' (Timeout/Complex)' : ' → REJECTED';
+    
+        // If we exit the loop, no accepting path was found
+        let finalPath = [...longestRejectedPath];
+        const lastStep = finalPath[finalPath.length - 1];
+        
+        if (iterationCount >= maxIterations) {
+            lastStep.description += ' (Simulation Halted: Too many steps)';
+        } else {
+            lastStep.description += ' → REJECTED (No valid transitions remaining)';
+        }
+        
         setSimulationSteps(finalPath);
         setCurrentStep(0);
     };
