@@ -792,6 +792,14 @@
   50% { opacity: 0.7; }
 }
 
+/* Graph Card */
+.pda-graph-card {
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 12px;
+  padding: 0;
+  overflow: hidden;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .pda-grid {
