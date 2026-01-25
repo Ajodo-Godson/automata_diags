@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './stylings/TutorialHub.css';
 import LessonViewer from './LessonViewer';
 import ExerciseViewer from './ExerciseViewer';
@@ -121,6 +123,11 @@ const TutorialHub = () => {
                         <div className="content-tabs">
                             <div className="tab-header">
                                 <h3> Learning Materials</h3>
+                                {/* <div className="tutorial-description">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                        {currentData?.description || ''}
+                                    </ReactMarkdown>
+                                </div> */}
                                 <span className="topic-badge">{selectedAutomaton}</span>
                             </div>
                         </div>
@@ -189,7 +196,11 @@ const TutorialHub = () => {
                     <div className="welcome-screen">
                         <BookOpen size={64} />
                         <h2>Welcome to {selectedAutomaton} Tutorials</h2>
-                        <p>{currentData?.description || 'Learn about this automaton type.'}</p>
+                        <div className="tutorial-description-content">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {currentData?.description || 'Learn about this automaton type.'}
+                            </ReactMarkdown>
+                        </div>
                         <div className="quick-start">
                             <h3>Quick Start</h3>
                             <ul>

@@ -1,4 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import './stylings/LessonViewer.css';
 import { CheckCircle, ChevronRight, ChevronLeft } from 'lucide-react';
 
@@ -47,7 +52,9 @@ const LessonViewer = ({ lesson, automatonType, onComplete, isCompleted }) => {
             <div className="lesson-header">
                 <div>
                     <h1>{lesson.title}</h1>
-                    <p className="lesson-description">{lesson.description}</p>
+                    <div className="lesson-description">
+                        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{lesson.description}</ReactMarkdown>
+                    </div>
                 </div>
                 {isCompleted && (
                     <div className="completion-badge">
@@ -72,14 +79,20 @@ const LessonViewer = ({ lesson, automatonType, onComplete, isCompleted }) => {
             <div className="lesson-content">
                 <h2>{step?.title || 'Lesson Step'}</h2>
                 <div className="step-text">
-                    {step?.content || 'Loading content...'}
+                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+                        {step?.content || 'Loading content...'}
+                    </ReactMarkdown>
                 </div>
 
                 {step?.example && (
                     <div className="example-box">
                         <h3>Example:</h3>
                         <div className="example-content">
-                            {step.example?.description && <p>{step.example.description}</p>}
+                            {step.example?.description && (
+                                <div className="example-description">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{step.example.description}</ReactMarkdown>
+                                </div>
+                            )}
                             {step.example?.visual && (
                                 <div className="visual-example">
                                     <img src={step.example.visual} alt="Example visualization" />
@@ -99,7 +112,9 @@ const LessonViewer = ({ lesson, automatonType, onComplete, isCompleted }) => {
                         <h3>Key Points:</h3>
                         <ul>
                             {step.keyPoints.map((point, idx) => (
-                                <li key={idx}>{point}</li>
+                                <li key={idx}>
+                                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{point}</ReactMarkdown>
+                                </li>
                             ))}
                         </ul>
                     </div>
@@ -110,7 +125,9 @@ const LessonViewer = ({ lesson, automatonType, onComplete, isCompleted }) => {
                         <h3>💡 Tips:</h3>
                         <ul>
                             {step.tips.map((tip, idx) => (
-                                <li key={idx}>{tip}</li>
+                                <li key={idx}>
+                                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{tip}</ReactMarkdown>
+                                </li>
                             ))}
                         </ul>
                     </div>

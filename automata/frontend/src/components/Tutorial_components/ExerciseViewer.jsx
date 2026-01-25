@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './stylings/ExerciseViewer.css';
 import { CheckCircle, XCircle, AlertCircle, Lightbulb, ExternalLink, Play } from 'lucide-react';
 
@@ -132,7 +134,9 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
             <div className="exercise-header">
                 <div>
                     <h1>{exercise.title}</h1>
-                    <p className="exercise-description">{exercise.description}</p>
+                    <div className="exercise-description">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{exercise.description}</ReactMarkdown>
+                    </div>
                 </div>
                 {isCompleted && (
                     <div className="completion-badge">
@@ -154,7 +158,11 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
             <div className="exercise-content">
                 <div className="question-box">
                     <h2>Question {currentQuestion + 1}</h2>
-                    <p className="question-text">{question?.question || 'Loading question...'}</p>
+                    <div className="question-text">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {question?.question || 'Loading question...'}
+                        </ReactMarkdown>
+                    </div>
 
                     {question?.image && (
                         <div className="question-image">

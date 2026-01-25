@@ -333,7 +333,6 @@ Pumping Lemma (for CFLs): Uses parse tree height to prove non-context-freeness.`
                 {
                     title: 'Chomsky Normal Form (CNF)',
                     content: `A CFG is in Chomsky Normal Form if every production has one of these forms:
-
 1. A → BC (two variables)
 2. A → a (single terminal)
 3. S → ε (only if ε ∈ L(G))
@@ -385,14 +384,15 @@ C → a`
                     content: `The Cocke-Younger-Kasami algorithm parses strings using CNF grammars.
 
 Time complexity: O(n³|G|) where n = |w|, |G| = grammar size
-
 Idea: Dynamic programming
 • Build table T[i,j,A]: true iff A ⇒* w[i...j]
 • Base case: T[i,i,A] = true if A → w[i]
 • Recursive: T[i,j,A] = true if ∃ k, B, C:
   A → BC ∈ P and T[i,k,B] and T[k+1,j,C]
-
 Result: w ∈ L(G) ⟺ T[1,n,S] = true
+
+
+
 
 This is optimal for worst-case general CFG parsing.`,
                     keyPoints: [
@@ -413,7 +413,7 @@ If a grammar is in **Chomsky Normal Form (CNF)**, we can use a very structured r
    • If $w = a$ (a single terminal), check if there is a rule $S → a$.
 2. **Recursive Step (Length > 1)**:
    • For every rule $A → BC$, try splitting the string $w$ into two parts $w_1$ and $w_2$ in all possible ways ($w = w_1w_2$).
-   • Recursively check if $B \Rightarrow^* w_1$ AND $C \Rightarrow^* w_2$.
+   • Recursively check if $B \\Rightarrow^* w_1$ AND $C \\Rightarrow^* w_2$.
 
 This structured decomposition is only possible because CNF rules are restricted to exactly two variables on the right-hand side.`,
                     keyPoints: [

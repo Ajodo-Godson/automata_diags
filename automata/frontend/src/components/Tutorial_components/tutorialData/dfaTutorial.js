@@ -190,22 +190,22 @@ Intuition: DFAs can recognize patterns, but not arbitrary counts.`,
                     title: 'Practice: Languages and Strings',
                     content: `In formal language theory, strings of symbols are the fundamental building blocks of all computation.
 
-A **Language** ($L$) is a set of strings over a given alphabet ($\Sigma$). For example, if $\Sigma = \{0, 1\}$, we can define languages like:
+A **Language** ($L$) is a set of strings over a given alphabet ($\\Sigma$). For example, if $\\Sigma = \\{0, 1\\}$, we can define languages like:
 
-• $L_1 = \{w \mid w \text{ is an even binary number}\} = \{0, 10, 110, 1000, \dots\}$
-• $L_2 = \{w \mid w \text{ starts and ends with the same symbol}\} = \{0, 1, 00, 11, 010, 101, \dots\}$
+• $L_1 = \\{w \\mid w \\text{ is an even binary number}\\} = \\{0, 10, 110, 1000, \\dots\\}$
+• $L_2 = \\{w \\mid w \\text{ starts and ends with the same symbol}\\} = \\{0, 1, 00, 11, 010, 101, \\dots\\}$
 
 In DFA design, we often use **set-builder notation** to describe these sets precisely. For example:
-$L = \{01^n0 \mid n > 0\}$ means any string that starts with 0, followed by one or more 1s, and ends with 0.
+$L = \\{01^n0 \\mid n > 0\\}$ means any string that starts with 0, followed by one or more 1s, and ends with 0.
 
-**The Empty String: $\varepsilon$ (Epsilon)**
-The empty string $\varepsilon$ is a unique string of length zero ($|\varepsilon| = 0$). It is a critical edge case in automata theory:
-• A DFA accepts $\varepsilon$ if and only if its **start state** is also an **accept state**.
-• Formally, $\varepsilon \in L(M) \iff q_0 \in F$.`,
+**The Empty String: $\\varepsilon$ (Epsilon)**
+The empty string $\\varepsilon$ is a unique string of length zero ($|\\varepsilon| = 0$). It is a critical edge case in automata theory:
+• A DFA accepts $\\varepsilon$ if and only if its **start state** is also an **accept state**.
+• Formally, $\\varepsilon \\in L(M) \\iff q_0 \\in F$.`,
                     keyPoints: [
-                        'An alphabet $\Sigma$ is a finite, non-empty set of symbols',
-                        'A string is a finite sequence of symbols from $\Sigma$',
-                        'A language $L$ is a subset of $\Sigma^*$, the set of all possible strings',
+                        'An alphabet $\\Sigma$ is a finite, non-empty set of symbols',
+                        'A string is a finite sequence of symbols from $\\Sigma$',
+                        'A language $L$ is a subset of $\\Sigma^*$, the set of all possible strings',
                         'Acceptance of the empty string depends solely on the start state'
                     ],
                     tips: [

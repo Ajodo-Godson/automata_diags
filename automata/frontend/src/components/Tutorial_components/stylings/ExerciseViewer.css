@@ -79,7 +79,19 @@
     color: #444;
     margin: 0 0 1.5rem 0;
     font-weight: 500;
-    white-space: pre-line;
+    white-space: normal;
+}
+
+.question-text p {
+    margin: 0 0 1rem 0;
+}
+
+.question-text p:last-child {
+    margin-bottom: 0;
+}
+
+.exercise-description p {
+    margin: 0;
 }
 
 .question-image {

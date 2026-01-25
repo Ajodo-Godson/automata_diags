@@ -134,6 +134,7 @@
     padding: 1.5rem;
 }
 
+
 /* Automaton Selector - Grid Layout */
 .automaton-selector {
     margin-bottom: 1.5rem;
@@ -559,4 +560,43 @@
     .quick-start h3 {
         font-size: 1.25rem;
     }
+}
+
+/* Markdown Content Styles */
+.tutorial-description p,
+.tutorial-description-content p {
+    margin: 0 0 1rem 0;
+}
+
+.tutorial-description p:last-child,
+.tutorial-description-content p:last-child {
+    margin-bottom: 0;
+}
+
+.tutorial-description-content {
+    font-size: 1.15rem;
+    color: #666;
+    line-height: 1.8;
+    margin-bottom: 3rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Markdown List Spacing Fixes */
+.tutorial-description ul, .tutorial-description ol,
+.tutorial-description-content ul, .tutorial-description-content ol {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.tutorial-description li,
+.tutorial-description-content li {
+    margin-bottom: 0.25rem;
+}
+
+.tutorial-description li p,
+.tutorial-description-content li p {
+    margin: 0;
 }

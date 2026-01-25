@@ -93,11 +93,41 @@
     line-height: 1.8;
     color: #444;
     margin-bottom: 2rem;
-    white-space: pre-line;
 }
 
 .step-text p {
-    margin: 0 0 1rem 0;
+    margin: 0 0 0.75rem 0;
+    white-space: pre-line;
+}
+
+.step-text p:last-child {
+    margin-bottom: 0;
+}
+
+.step-text ul, .step-text ol {
+    margin: 0 0 0.75rem 0;
+    padding-left: 2rem;
+}
+
+.step-text li {
+    margin-bottom: 0.25rem;
+}
+
+.step-text pre {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.lesson-description p {
+    margin: 0;
+}
+
+.example-description p {
+    margin: 0 0 0.5rem 0;
 }
 
 .example-box {
@@ -176,6 +206,11 @@
     line-height: 1.6;
 }
 
+.key-points li p {
+    margin: 0;
+    display: inline;
+}
+
 .tips-box {
     background: #e3f2fd;
     border-left: 4px solid #2196F3;
@@ -199,6 +234,11 @@
     margin-bottom: 0.75rem;
     color: #555;
     line-height: 1.6;
+}
+
+.tips-box li p {
+    margin: 0;
+    display: inline;
 }
 
 .lesson-navigation {
