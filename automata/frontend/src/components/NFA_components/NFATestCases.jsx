@@ -82,12 +82,12 @@ export const NFATestCases = ({ nfa, onTestString, currentExample }) => {
       return [
         { input: 'aba', expected: 'Accept', shouldAccept: true },
         { input: 'bba', expected: 'Accept', shouldAccept: true },
-        { input: 'aab', expected: 'Accept', shouldAccept: true },
+        { input: 'aaa', expected: 'Accept', shouldAccept: true },
         { input: 'baa', expected: 'Accept', shouldAccept: true },
+        { input: 'aab', expected: 'Reject', shouldAccept: false },
+        { input: 'abb', expected: 'Reject', shouldAccept: false },
         { input: 'ab', expected: 'Reject', shouldAccept: false },
-        { input: 'bb', expected: 'Reject', shouldAccept: false },
         { input: 'a', expected: 'Reject', shouldAccept: false },
-        { input: 'b', expected: 'Reject', shouldAccept: false },
       ];
     }
 
