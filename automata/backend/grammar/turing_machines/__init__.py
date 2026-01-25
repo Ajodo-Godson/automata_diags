@@ -1,1 +1,6 @@
-from .tm_mod import TuringMachine, MultiTapeTuringMachine, MultiHeadTuringMachine
+from .tape import Tape
+from .base import TuringMachineBase
+from .standard import TuringMachine
+from .multitape import MultiTapeTuringMachine
+from .multihead import MultiHeadTuringMachine
+
