@@ -1,4 +1,4 @@
-# 🤖 Automata Diags
+#  Automata Diags
 
 [![PyPI version](https://badge.fury.io/py/automata-diags.svg)](https://pypi.org/project/automata-diags/)
 [![Python versions](https://img.shields.io/pypi/pyversions/automata-diags.svg)](https://pypi.org/project/automata-diags/)

@@ -5,9 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2025-10-10 to 2026-01-26
+
+### Added
+- Turing machine modules (single-tape, multi-tape, multi-head) with shared base and tape implementation.
+- Turing machine test coverage and centralized backend test folders.
+
+### Changed
+- Turing machine backend now accepts raw iterable alphabets and normalizes alphabet types internally.
+
+### Fixed
+- Turing machine backend validation and alphabet registration behaviors.
+
+### Removed
+- Legacy “Turing Machine Simulator UI” duplicate source tree.
+
 ## [0.2.4] - 2025-10-09
 
-### 🎉 Major Regular Expression Enhancements
+### Major Regular Expression Enhancements
 
 #### **Enhanced Regex Preprocessing**
 - **Added**: Character class expansion support (e.g., `[a-z]`, `[A-Z]`, `[0-9]`)
@@ -33,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Enhanced**: State generation and management for complex regex patterns
 - **Added**: Better handling of epsilon transitions in regex-generated NFAs
 
-### 🔧 Algorithm Improvements
+### Algorithm Improvements
 
 #### **Regex Processing Pipeline**
 - **Enhanced**: Multi-stage preprocessing (character classes → plus expansion → escaping)
@@ -47,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Enhanced**: State counter management for unique state generation
 - **Added**: Better epsilon transition handling in complex regex patterns
 
-### 🧪 Testing & Validation
+### Testing & Validation
 
 #### **Comprehensive Regex Testing**
 - **Added**: Test suite for character class expansion
@@ -61,7 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Enhanced**: Special character and operator precedence validation
 - **Added**: Character range boundary testing
 
-### 📚 Documentation & Examples
+### Documentation & Examples
 
 #### **Regex Usage Examples**
 - **Enhanced**: Comprehensive regex pattern demonstrations
@@ -79,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0] - 2024-12-19
 
-### 🎉 Major New Features
+### Major New Features
 
 #### **Non-deterministic Finite Automata (NFA)**
 - **Added**: Complete NFA implementation with ε-transitions support
@@ -116,7 +131,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Added**: Improved state ordering and layout in graph visualizations
 - **Added**: Multiple output format support for all automata types
 
-### 🔧 Algorithm Improvements
+### Algorithm Improvements
 
 #### **String Algorithms**
 - **Enhanced**: KMP algorithm with better type safety
@@ -129,7 +144,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Added**: Unit production elimination using transitive closure
 - **Added**: Terminal separation and production binarization
 
-### 🏗️ Architecture & Design
+### Architecture & Design
 
 #### **Type System**
 - **Enhanced**: Comprehensive custom type definitions (State, Symbol, NonTerminal, Terminal)
@@ -141,7 +156,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Enhanced**: Clean separation between core logic and visualization
 - **Added**: Comprehensive example scripts organized in dedicated directory
 
-### 📚 Documentation & Examples
+### Documentation & Examples
 
 #### **Comprehensive Examples**
 - **Added**: `dfa_minimization_example.py` - Complete minimization algorithm comparison
@@ -156,7 +171,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Added**: Comprehensive test cases demonstrating edge cases
 - **Added**: Visual outputs for better understanding
 
-### 🧪 Testing & Quality
+### Testing & Quality
 
 #### **Test Coverage**
 - **Added**: Comprehensive test suites for all new algorithms
@@ -170,7 +185,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Enhanced**: Documentation strings for all public methods
 - **Added**: Input validation and sanitization
 
-### 📦 Package Management
+### Package Management
 
 #### **Dependencies**
 - **Updated**: Graphviz integration for enhanced visualizations
@@ -182,7 +197,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Added**: Proper package exclusions for clean distributions
 - **Enhanced**: Development and documentation dependency groups
 
-### 🐛 Bug Fixes
+### Bug Fixes
 
 #### **Algorithm Fixes**
 - **Fixed**: State ordering in DFA visualizations
@@ -195,7 +210,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fixed**: State labeling consistency across different automata types
 - **Fixed**: Graph layout optimization for complex automata
 
-### 🔄 API Changes
+### API Changes
 
 #### **Breaking Changes**
 - **Changed**: NFA constructor now uses protected members for consistency
