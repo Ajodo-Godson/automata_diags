@@ -582,21 +582,3 @@
     margin-left: auto;
     margin-right: auto;
 }
-
-/* Markdown List Spacing Fixes */
-.tutorial-description ul, .tutorial-description ol,
-.tutorial-description-content ul, .tutorial-description-content ol {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    padding-left: 1.5rem;
-}
-
-.tutorial-description li,
-.tutorial-description-content li {
-    margin-bottom: 0.25rem;
-}
-
-.tutorial-description li p,
-.tutorial-description-content li p {
-    margin: 0;
-}
