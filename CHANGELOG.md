@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Turing machine modules (single-tape, multi-tape, multi-head) with shared base and tape implementation.
 - Turing machine test coverage and centralized backend test folders.
+- Context-free grammar (CFG) functionality: CFG parsing from string, CNF conversion (start elimination, epsilon removal, unit removal, terminal separation, binarization), CYK membership testing, BFS-based acceptance, string generation, and derivation tracing, plus CFG tests.
 
 ### Changed
 - Turing machine backend now accepts raw iterable alphabets and normalizes alphabet types internally.
