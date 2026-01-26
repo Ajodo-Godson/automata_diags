@@ -1,6 +1,7 @@
 from typing import NewType, Set, Iterable, Union, Sequence
 
 Symbol = NewType("Symbol", str)
+TapeSymbol = NewType("TapeSymbol", str)
 State = NewType("State", str)
 Word = Sequence[Symbol]
 NonTerminal = NewType("NonTerminal", str)
@@ -49,6 +50,19 @@ class Alphabet:
         Return a copy of the internal set of symbols.
         """
         return set(self._symbols)
+
+
+class TapeAlphabet(Alphabet):
+    """
+    Represents a finite set of tape symbols for a Turing machine.
+    Inherits from Alphabet to reuse the same underlying logic.
+    """
+    def __init__(self, symbols: Iterable[str]):
+        self._symbols: Set[TapeSymbol] = {TapeSymbol(s) for s in symbols}
+
+    def __contains__(self, item: Union[str, Symbol, TapeSymbol]) -> bool:
+        """Check if 'item' is a symbol in this alphabet."""
+        return item in self._symbols
 
 
 class OutputAlphabet(Alphabet):
