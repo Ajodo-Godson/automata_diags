@@ -292,7 +292,7 @@ const DFASimulatorNew = ({ challenge }) => {
                 )}
 
                 {!challenge && (
-                    <div className="dfa-example-selector">
+                    <div className="dfa-example-selector" data-tour="dfa-example-selector">
                         <label className="dfa-selector-label">Load Example:</label>
                         <div className="dfa-selector-buttons">
                             {Object.entries(examples).map(([key, example]) => (
@@ -309,7 +309,7 @@ const DFASimulatorNew = ({ challenge }) => {
 
                 <div className="dfa-grid">
                     <div className="dfa-left-col">
-                        <div className="dfa-input-card-compact">
+                        <div className="dfa-input-card-compact" data-tour="dfa-input-controls">
                             <h3 className="dfa-card-title-compact">Test Input String</h3>
                             <div className="dfa-input-group">
                                 <input type="text" value={inputString} onChange={(e) => setInputString(e.target.value)} placeholder="e.g., aab" className="dfa-input" />
@@ -343,7 +343,7 @@ const DFASimulatorNew = ({ challenge }) => {
                         </div>
                     </div>
 
-                    <div className="dfa-right-col">
+                    <div className="dfa-right-col" data-tour="dfa-editors">
                         <CollapsibleSection title="States Editor" defaultOpen={challenge ? true : false}>
                             <StatesEditor dfa={dfa} onUpdate={handleReset} />
                         </CollapsibleSection>

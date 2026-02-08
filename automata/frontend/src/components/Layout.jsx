@@ -13,7 +13,7 @@ const getToolboxButtons = (automatonType) => {
     return commonTools;
 };
 
-const Layout = ({ children, currentAutomaton, setCurrentAutomaton }) => {
+const Layout = ({ children, currentAutomaton, setCurrentAutomaton, onOpenGuide }) => {
     return (
         <div className="layout">
             <header className="header">
@@ -22,10 +22,11 @@ const Layout = ({ children, currentAutomaton, setCurrentAutomaton }) => {
                 </div>
                 
                 {/* Horizontal Automata Type Selector */}
-                <nav className="automata-types-horizontal">
+                <nav className="automata-types-horizontal" data-tour="automata-nav">
                     <button 
                         className={`type-btn-horizontal ${currentAutomaton === 'DFA' ? 'active' : ''}`}
                         onClick={() => setCurrentAutomaton('DFA')}
+                        data-tour="nav-dfa"
                     >
                         DFA
                     </button>
@@ -56,15 +57,23 @@ const Layout = ({ children, currentAutomaton, setCurrentAutomaton }) => {
                     <button 
                         className={`type-btn-horizontal tutorial-btn ${currentAutomaton === 'Tutorial' ? 'active' : ''}`}
                         onClick={() => setCurrentAutomaton('Tutorial')}
+                        data-tour="nav-tutorial"
                     >
                         Tutorial
                     </button>
                 </nav>
 
                 {/* Tool buttons in header */}
+                <div className="header-tools" data-tour="header-tools">
+                    <button
+                        onClick={onOpenGuide}
+                        className="header-tool-btn guide-tool-btn"
+                        title="Start interactive walkthrough"
+                    >
+                        Walkthrough
+                    </button>
                 {currentAutomaton !== 'Tutorial' && (
-                <div className="header-tools">
-                    {getToolboxButtons(currentAutomaton).map((tool, index) => (
+                    getToolboxButtons(currentAutomaton).map((tool, index) => (
                         <button 
                             key={index}
                             onClick={() => window.dispatchEvent(new CustomEvent(tool.event, { detail: tool.data }))}
@@ -73,9 +82,9 @@ const Layout = ({ children, currentAutomaton, setCurrentAutomaton }) => {
                         >
                             {tool.label}
                         </button>
-                    ))}
-                </div>
+                    ))
                 )}
+                </div>
             </header>
 
             <div className="main-content">

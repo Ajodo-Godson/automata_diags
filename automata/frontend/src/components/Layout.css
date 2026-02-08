@@ -95,6 +95,15 @@
     transform: translateY(-1px);
 }
 
+.guide-tool-btn {
+    background: rgba(37, 99, 235, 0.9);
+    border-color: rgba(147, 197, 253, 0.8);
+}
+
+.guide-tool-btn:hover {
+    background: rgba(29, 78, 216, 1);
+}
+
 .header-tool-btn:active {
     transform: translateY(0);
 }

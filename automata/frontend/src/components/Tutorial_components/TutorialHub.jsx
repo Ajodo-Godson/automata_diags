@@ -97,7 +97,7 @@ const TutorialHub = () => {
             {/* Main Container with Sidebar and Content */}
             <div className="tutorial-main">
                 {/* Sidebar Navigation */}
-                <div className="tutorial-sidebar">
+                <div className="tutorial-sidebar" data-tour="tutorial-sidebar">
                     {/* Automaton Type Selector - Card Grid */}
                     <div className="automaton-selector">
                         <h3>Choose Your Topic</h3>
@@ -191,7 +191,7 @@ const TutorialHub = () => {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="tutorial-content">
+                <div className="tutorial-content" data-tour="tutorial-content">
                 {!selectedLesson && !selectedExercise && (
                     <div className="welcome-screen">
                         <BookOpen size={64} />
@@ -236,4 +236,3 @@ const TutorialHub = () => {
 };
 
 export default TutorialHub;
-
