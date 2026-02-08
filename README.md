@@ -8,7 +8,7 @@
 A powerful, modern, and educational Python toolkit for automata theory. Visualize DFAs, NFAs, CFGs, minimize automata, and more with an elegant, type-safe API.
 
 **For the full, comprehensive documentation including tutorials and the API reference, please visit our [Documentation Website](https://automata-diags.readthedocs.io/).**
-
+<!-- 
 ##  Why Automata Diags?
 
 | Feature                 | Why It Matters                                                                                                             |
@@ -17,7 +17,7 @@ A powerful, modern, and educational Python toolkit for automata theory. Visualiz
 | **Educational Focus**   | The API is designed to be intuitive and map closely to textbook concepts, making it an excellent companion for students.      |
 | **Advanced Algorithms** | Includes research-grade implementations like Hopcroft's minimization, setting it apart from simpler libraries.                |
 | **Instant Visualization**| Don't just build automata—see them. Instant visual feedback helps solidify complex concepts and makes debugging intuitive.    |
-| **Modern & Maintained** | Built with modern Python (type hints, clean architecture) and actively maintained for correctness and new features.           |
+| **Modern & Maintained** | Built with modern Python (type hints, clean architecture) and actively maintained for correctness and new features.           | -->
 
 ##  Installation
 
