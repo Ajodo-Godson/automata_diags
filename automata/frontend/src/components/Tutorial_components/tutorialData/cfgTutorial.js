@@ -446,7 +446,7 @@ This structured decomposition is only possible because CNF rules are restricted 
                         'n² steps'
                     ],
                     correctAnswer: '2n - 1 steps',
-                    explanation: 'As noted in the instructor guide, if G is a CFG in CNF, exactly 2n-1 steps are required for any derivation of a string of length n ≥ 1. This includes n-1 applications of A → BC and n applications of A → a.',
+                    explanation: 'If G is a CFG in CNF, exactly 2n-1 steps are required for any derivation of a string of length n ≥ 1. This includes n-1 applications of A → BC and n applications of A → a.',
                     hint: 'Count the number of variable expansions vs terminal productions.'
                 },
                 {

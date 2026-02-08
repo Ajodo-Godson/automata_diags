@@ -352,7 +352,7 @@ Accepts: (), (()), (())(), etc.`
                         'It can communicate with other automata'
                     ],
                     correctAnswer: 'It can use the stack to use information from earlier in the string to decide current transitions',
-                    explanation: 'The instructor guide explains that the stack allows the PDA to store context, meaning it can make decisions based on contents that were pushed much earlier in the computation.',
+                    explanation: 'The stack allows the PDA to store context, meaning it can make decisions based on contents that were pushed much earlier in the computation.',
                     hint: 'Think about how a matching parenthesis knows it has a pair.'
                 },
                 {
