@@ -8,7 +8,7 @@ version = "0.2.6"
 authors = [
   { name="Godson Ajodo", email="godson@uni.minerva.edu" },
 ]
-description = "🤖 A powerful, modern, and educational Python toolkit for automata theory. Visualize DFAs, NFAs, CFGs, PDAs, and Turing machines (single/multi-tape/multi-head); minimize automata; CYK and CFG algorithms; and more with an elegant, type-safe API."
+description = " A powerful, modern, and educational Python toolkit for automata theory. Visualize DFAs, NFAs, CFGs, PDAs, and Turing machines (single/multi-tape/multi-head); minimize automata; CYK and CFG algorithms; and more with an elegant, type-safe API."
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
