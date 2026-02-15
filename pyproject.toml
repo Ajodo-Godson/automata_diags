@@ -55,6 +55,7 @@ docs = [
 "Homepage" = "https://github.com/Ajodo-Godson/automata_diags"
 "Bug Tracker" = "https://github.com/Ajodo-Godson/automata_diags/issues"
 "Documentation" = "https://automata-diags.readthedocs.io/"
+"Portfolio" = "https://ajoson.netlify.app"
 
 [tool.pytest]
 pythonpath = ["."]
