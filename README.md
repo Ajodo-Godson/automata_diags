@@ -46,6 +46,9 @@ drawer.draw_dfa_from_object(dfa, "my_first_dfa")
 ```
 **For more examples and detailed guides, please visit the [Full Documentation Site](https://automata-diags.readthedocs.io/).**
 
+## Web App
+https://ajodo-godson.github.io/automata_diags/
+
 ##  Contributing
 
 Contributions are welcome! Please feel free to open a pull request or submit an issue on our [GitHub repository](https://github.com/Ajodo-Godson/automata_diags).
