@@ -1,7 +1,7 @@
 import React from 'react';
 import './stylings/ParseTree.css';
 
-export function ParseTree({ derivationSteps, currentStep }) {
+export function ParseTree({ derivationSteps, currentStep, tokenMode, variables }) {
     if (!derivationSteps || derivationSteps.length === 0 || currentStep < 0) {
         return (
             <div className="parse-tree-empty">
@@ -10,60 +10,32 @@ export function ParseTree({ derivationSteps, currentStep }) {
         );
     }
 
-    // Build tree structure from derivation steps
-    const buildTreeNode = (step, index) => {
-        if (!step || !step.string) return null;
-        
-        // Get the production rule used at this step
-        const production = step.production;
-        const string = step.string;
-        
-        return {
-            id: index,
-            value: string,
-            production: production,
-            description: step.description
-        };
+    const splitSymbols = (str) => {
+        if (!str) return [];
+        return tokenMode ? str.split(' ').filter(Boolean) : str.split('');
     };
 
-    // Render a simple text-based tree
-    const renderTextTree = () => {
-        const steps = derivationSteps.slice(0, currentStep + 1);
-        
-        return (
-            <div className="text-tree">
-                {steps.map((step, index) => (
-                    <div key={index} className="tree-level">
-                        <div className="tree-level-number">{index}</div>
-                        <div className="tree-level-content">
-                            <div className="tree-string">
-                                {step.string.split('').map((char, charIdx) => (
-                                    <span
-                                        key={charIdx}
-                                        className={`tree-char ${
-                                            step.highlightIndices?.includes(charIdx) ? 'tree-char-highlight' : ''
-                                        }`}
-                                    >
-                                        {char}
-                                    </span>
-                                ))}
-                            </div>
-                            {step.production && (
-                                <div className="tree-production">
-                                    {step.production.left} → {step.production.right}
-                                </div>
-                            )}
-                        </div>
-                        {index < steps.length - 1 && (
-                            <div className="tree-arrow">↓</div>
-                        )}
-                    </div>
-                ))}
-            </div>
-        );
+    const isVariable = (sym) => {
+        if (variables && variables.length > 0) return variables.includes(sym);
+        return /^[A-Z]/.test(sym);
     };
 
-    // Render a hierarchical tree visualization
+    const renderSymbols = (step) => {
+        const syms = splitSymbols(step.string);
+        return syms.map((sym, idx) => (
+            <React.Fragment key={idx}>
+                {tokenMode && idx > 0 && <span className="token-space"> </span>}
+                <span
+                    className={`node-char ${isVariable(sym) ? 'node-var' : 'node-term'} ${
+                        step.highlightIndices?.includes(idx) ? 'tree-char-highlight' : ''
+                    }`}
+                >
+                    {sym}
+                </span>
+            </React.Fragment>
+        ));
+    };
+
     const renderHierarchicalTree = () => {
         const steps = derivationSteps.slice(0, currentStep + 1);
         const finalStep = steps[steps.length - 1];
@@ -78,16 +50,7 @@ export function ParseTree({ derivationSteps, currentStep }) {
                         <React.Fragment key={index}>
                             <div className={`tree-node ${index === currentStep ? 'tree-node-current' : ''}`}>
                                 <div className="tree-node-value">
-                                    {step.string.split('').map((char, charIdx) => (
-                                        <span
-                                            key={charIdx}
-                                            className={`node-char ${
-                                                /[A-Z]/.test(char) ? 'node-var' : 'node-term'
-                                            }`}
-                                        >
-                                            {char}
-                                        </span>
-                                    ))}
+                                    {renderSymbols(step)}
                                 </div>
                                 {step.production && (
                                     <div className="tree-node-rule">

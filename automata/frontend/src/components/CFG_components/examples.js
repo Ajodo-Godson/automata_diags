@@ -95,11 +95,11 @@ export const useExamples = () => {
         },
         if_then_else: {
             name: 'Simple If-Then-Else',
-            description: 'Generates simple if-then-else statements',
-            variables: ['S', 'C', 'E'],
+            description: 'Generates simple if-then-else statements (use spaces between tokens)',
+            variables: ['S', 'C'],
             terminals: ['if', 'then', 'else', 'a', 'b'],
             rules: [
-                { left: 'S', right: 'ifCthenSelseS' },
+                { left: 'S', right: 'if C then S else S' },
                 { left: 'S', right: 'a' },
                 { left: 'S', right: 'b' },
                 { left: 'C', right: 'a' },

@@ -143,19 +143,33 @@ const CFGSimulator = ({ challenge }) => {
         return () => clearTimeout(timer);
     }, [isPlaying, currentStep, derivationSteps.length, playbackSpeed]);
 
+    // Dual-mode: token mode activates when any terminal is multi-character (e.g. "if", "then")
+    const detectTokenMode = (cfg) => cfg.terminals.some(t => t.length > 1);
+
+    const tokenizeRHS = (rhs, tokenMode) => {
+        if (rhs === 'ε' || rhs === 'epsilon' || rhs === '') return [];
+        return tokenMode ? rhs.trim().split(/\s+/) : rhs.split('');
+    };
+
+    const tokenizeInput = (input, tokenMode) => {
+        if (!input || input === '') return [];
+        return tokenMode ? input.trim().split(/\s+/) : input.split('');
+    };
+
     // Helper functions for CNF conversion and CYK parsing
-    const normalizeCFG = (cfg) => {
+    const normalizeCFG = (cfg, tokenMode) => {
         const newCfg = JSON.parse(JSON.stringify(cfg));
         if (!Array.isArray(newCfg.rules)) newCfg.rules = [];
         newCfg.rules = newCfg.rules.map(r => ({
             left: r.left,
-            right: (r.right === 'ε' || r.right === 'epsilon' || r.right === '') ? [] : r.right.split('')
+            right: Array.isArray(r.right) ? r.right
+                : ((r.right === 'ε' || r.right === 'epsilon' || r.right === '') ? [] : tokenizeRHS(r.right, tokenMode))
         }));
         return newCfg;
     };
 
-    const toCNF = (cfg) => {
-        let cnf = normalizeCFG(cfg);
+    const toCNF = (cfg, tokenMode) => {
+        let cnf = normalizeCFG(cfg, tokenMode);
         cnf = eliminateStart(cnf);
         cnf = eliminateNull(cnf);
         cnf = eliminateUnit(cnf);
@@ -317,12 +331,12 @@ const CFGSimulator = ({ challenge }) => {
         return cfg;
     };
 
-    const cykParse = (cnf, input) => {
-        const n = input.length;
+    const cykParse = (cnf, symbols) => {
+        const n = symbols.length;
         if (n === 0) return false;
         const table = Array.from({ length: n }, () => Array.from({ length: n }, () => new Set()));
         for (let i = 0; i < n; i++) {
-            cnf.rules.forEach(r => { if (r.right.length === 1 && r.right[0] === input[i]) table[i][i].add(r.left); });
+            cnf.rules.forEach(r => { if (r.right.length === 1 && r.right[0] === symbols[i]) table[i][i].add(r.left); });
         }
         for (let len = 2; len <= n; len++) {
             for (let i = 0; i <= n - len; i++) {
@@ -395,14 +409,70 @@ const CFGSimulator = ({ challenge }) => {
         return null;
     };
 
+    const generateTokenDerivation = (cfg, targetTokens) => {
+        const targetStr = targetTokens.join(' ');
+        const varsSet = new Set(cfg.variables);
+        const queue = [{
+            current: [cfg.startVariable],
+            steps: [{ step: 0, string: cfg.startVariable, production: null, description: `Start with ${cfg.startVariable}` }],
+            depth: 1
+        }];
+        const visited = new Set([cfg.startVariable]);
+        const maxIter = 1000;
+        let count = 0;
+
+        while (queue.length > 0 && count < maxIter) {
+            count++;
+            const { current, steps, depth } = queue.shift();
+            const currentStr = current.join(' ');
+
+            if (currentStr === targetStr) return steps;
+            if (current.length > targetTokens.length * 2 + 2) continue;
+
+            let varIdx = -1;
+            for (let i = 0; i < current.length; i++) {
+                if (varsSet.has(current[i])) { varIdx = i; break; }
+            }
+            if (varIdx === -1) continue;
+
+            const variable = current[varIdx];
+            const applicableRules = cfg.rules.filter(r => r.left === variable);
+
+            for (const rule of applicableRules) {
+                const rhs = tokenizeRHS(rule.right, true);
+                const newForm = [...current.slice(0, varIdx), ...rhs, ...current.slice(varIdx + 1)];
+                const newStr = newForm.join(' ');
+
+                const termCount = newForm.filter(s => !varsSet.has(s)).length;
+                if (termCount > targetTokens.length) continue;
+
+                if (!visited.has(newStr)) {
+                    visited.add(newStr);
+                    const ruleDisplay = rhs.length === 0 ? 'ε' : rule.right;
+                    const newSteps = [...steps, {
+                        step: depth,
+                        string: newStr,
+                        production: rule,
+                        highlightIndices: Array.from({ length: rhs.length }, (_, i) => varIdx + i),
+                        description: `Apply ${rule.left} → ${ruleDisplay}`
+                    }];
+                    queue.push({ current: newForm, steps: newSteps, depth: depth + 1 });
+                }
+            }
+        }
+        return null;
+    };
+
     const parseString = () => {
         setDerivationSteps([]);
         setCurrentStep(-1);
         setIsAccepted(null);
 
-        // Run CYK first - it's O(n^3) and safer for rejection
-        const cnfGrammar = toCNF(cfg);
-        const accepted = cykParse(cnfGrammar, inputString);
+        const tokenMode = detectTokenMode(cfg);
+        const symbols = tokenizeInput(inputString, tokenMode);
+
+        const cnfGrammar = toCNF(cfg, tokenMode);
+        const accepted = cykParse(cnfGrammar, symbols);
         
         if (!accepted) {
             setIsAccepted(false);
@@ -411,14 +481,14 @@ const CFGSimulator = ({ challenge }) => {
             return;
         }
 
-        // If accepted, try to find a derivation for visualization
-        const steps = generateLeftmostDerivation(cfg, inputString);
+        const steps = tokenMode
+            ? generateTokenDerivation(cfg, symbols)
+            : generateLeftmostDerivation(cfg, inputString);
         if (steps) {
             setDerivationSteps(steps);
             setIsAccepted(true);
             setCurrentStep(0);
         } else {
-            // Should not happen if CYK accepted, but as fallback
             setIsAccepted(true);
             setDerivationSteps([{ step: 0, string: inputString, production: null, description: `ACCEPTED (CYK Result)` }]);
             setCurrentStep(0);
@@ -554,7 +624,7 @@ const CFGSimulator = ({ challenge }) => {
                         )}
                         <CollapsibleSection title="Parse Tree" defaultOpen={true}>
                             <div className="cfg-tree-card">
-                                <ParseTree derivationSteps={derivationSteps} currentStep={currentStep} />
+                                <ParseTree derivationSteps={derivationSteps} currentStep={currentStep} tokenMode={detectTokenMode(cfg)} variables={cfg.variables} />
                             </div>
                         </CollapsibleSection>
                     </div>
