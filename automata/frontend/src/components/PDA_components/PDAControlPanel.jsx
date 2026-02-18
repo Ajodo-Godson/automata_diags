@@ -1,4 +1,5 @@
 import React from 'react';
+import { RotateCcw } from 'lucide-react';
 
 export const PDAControlPanel = ({
     currentState,
@@ -69,7 +70,7 @@ export const PDAControlPanel = ({
                         onClick={onReset}
                         className="pda-btn pda-btn-outline pda-control-btn"
                     >
-                        🔄 Reset
+                        <RotateCcw size={14} /> Reset
                     </button>
                 </div>
 

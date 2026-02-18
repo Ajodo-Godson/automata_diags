@@ -1,4 +1,5 @@
 import React from 'react';
+import { RotateCcw } from 'lucide-react';
 
 export const CFGControlPanel = ({
     currentStep,
@@ -67,7 +68,7 @@ export const CFGControlPanel = ({
                         onClick={onReset}
                         className="cfg-btn cfg-btn-outline cfg-control-btn"
                     >
-                        🔄 Reset
+                        <RotateCcw size={14} /> Reset
                     </button>
                 </div>
 
