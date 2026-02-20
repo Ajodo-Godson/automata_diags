@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Any, Iterable, Union
+from typing import Dict, Set, Tuple, Any, Iterable, Union
 
 from .base import TuringMachineBase
 from .tape import Tape
@@ -107,3 +107,79 @@ class TuringMachine(TuringMachineBase):
             "current_state": self.current_state,
             "tape": repr(self.tape),
         }
+
+    @classmethod
+    def from_string(
+        cls,
+        tm_string: str,
+        start_state: str,
+        accept_states: Set[str],
+        blank_symbol: str = "_",
+    ) -> "TuringMachine":
+        """
+        Create a TuringMachine from a string representation.
+
+        Format: transitions separated by semicolons. Each transition is:
+            current_state, read_symbol, next_state, write_symbol, direction
+
+        Direction is R (right), L (left), or N (no move).
+
+        Example:
+            "q0,0,q0,0,R; q0,1,q1,1,R; q1,0,q1,0,R; q1,1,q0,1,R; q0,_,qa,_,N"
+        """
+        all_states: Set[State] = set()
+        input_symbols: Set[str] = set()
+        tape_symbols: Set[str] = set()
+        transitions: Dict[State, Dict[TapeSymbol, Tuple[State, TapeSymbol, str]]] = {}
+
+        tape_symbols.add(blank_symbol)
+
+        for transition_str in tm_string.strip().split(";"):
+            transition_str = transition_str.strip()
+            if not transition_str:
+                continue
+
+            parts = [p.strip() for p in transition_str.split(",")]
+            if len(parts) != 5:
+                raise ValueError(
+                    f"Expected 5 comma-separated values, got {len(parts)}: '{transition_str}'"
+                )
+
+            src_str, read_str, dst_str, write_str, direction = parts
+
+            src = State(src_str)
+            dst = State(dst_str)
+            read_sym = TapeSymbol(read_str)
+            write_sym = TapeSymbol(write_str)
+
+            all_states.add(src)
+            all_states.add(dst)
+            tape_symbols.add(read_str)
+            tape_symbols.add(write_str)
+
+            if read_str != blank_symbol:
+                input_symbols.add(read_str)
+            if write_str != blank_symbol:
+                input_symbols.add(write_str)
+
+            if direction not in ("R", "L", "N"):
+                raise ValueError(f"Direction must be R, L, or N, got '{direction}'")
+
+            if src not in transitions:
+                transitions[src] = {}
+            transitions[src][read_sym] = (dst, write_sym, direction)
+
+        start_s = State(start_state)
+        all_states.add(start_s)
+        for a in accept_states:
+            all_states.add(State(a))
+
+        return cls(
+            states=StateSet.from_states(list(all_states)),
+            input_alphabet=Alphabet(list(input_symbols)),
+            tape_alphabet=TapeAlphabet(list(tape_symbols)),
+            transitions=transitions,
+            start_state=start_s,
+            blank_symbol=TapeSymbol(blank_symbol),
+            final_states=StateSet.from_states([State(a) for a in accept_states]),
+        )
