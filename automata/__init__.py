@@ -15,6 +15,7 @@ from automata.backend.grammar.context_free.cfg_algo import (
     get_derivation,
     get_all_productions_used,
 )
+from automata.backend.grammar.context_free.pda.pda_mod import PDA
 from automata.backend.grammar.turing_machines import (
     TuringMachine,
     MultiTapeTuringMachine,
@@ -32,6 +33,7 @@ __all__ = [
     "generate_strings",
     "get_derivation",
     "get_all_productions_used",
+    "PDA",
     "TuringMachine",
     "MultiTapeTuringMachine",
     "MultiHeadTuringMachine",
