@@ -310,3 +310,62 @@ class AutomataDrawer:
             filename=filename,
             format=format,
         )
+
+    def draw_pda(
+        self,
+        pda,
+        filename: str = "pda",
+        format: str = "png",
+    ) -> str:
+        """
+        Draw a Pushdown Automaton using graphviz.
+
+        Edge labels use the format: input, stack_top → push_symbols
+        where ε represents epsilon and ε for push means pop (push nothing).
+        """
+        if not shutil.which("dot"):
+            raise RuntimeError("Graphviz is not installed.")
+
+        dot = graphviz.Digraph(comment="PDA Visualization")
+        dot.attr(rankdir="LR")
+        dot.attr("graph", pad="0.5", nodesep="0.5", ranksep="0.8")
+        dot.attr("node", shape="circle", height="0.5", width="0.5", fontsize="12", margin="0.05")
+        dot.attr("edge", fontsize="10", arrowsize="0.7")
+
+        for state in pda._states:
+            if state in pda._accept_states:
+                dot.node(str(state), str(state), shape="doublecircle")
+            else:
+                dot.node(str(state), str(state), shape="circle")
+
+        dot.node("", "", shape="none")
+        dot.edge("", str(pda._start_state))
+
+        edges: Dict[tuple, list] = {}
+        for from_state, trans_map in pda.transitions.items():
+            for (input_sym, stack_top), destinations in trans_map.items():
+                for next_state, push_syms in destinations:
+                    inp = "ε" if str(input_sym) == "" else str(input_sym)
+                    stop = "ε" if stack_top == "" else stack_top
+                    if push_syms:
+                        push_str = "".join(push_syms)
+                    else:
+                        push_str = "ε"
+                    label = f"{inp}, {stop} → {push_str}"
+
+                    key = (str(from_state), str(next_state))
+                    if key not in edges:
+                        edges[key] = []
+                    edges[key].append(label)
+
+        for (src, dst), labels in edges.items():
+            dot.edge(src, dst, label="\n".join(labels))
+
+        try:
+            output_path = self.output_dir / filename
+            dot.render(str(output_path), format=format, cleanup=True)
+            return str(output_path) + f".{format}"
+        except graphviz.ExecutableNotFound as e:
+            raise RuntimeError(
+                "Failed to generate graph. Please ensure Graphviz is properly installed."
+            ) from e
