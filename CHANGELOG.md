@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-02-19
+
+### Added
+- Pushdown Automaton (PDA) implementation with BFS-based acceptance, `from_string` factory method, and `from_cfg` conversion from any context-free grammar.
+- PDA support for acceptance by final state and acceptance by empty stack.
+- `PDA.get_configuration_trace()` for step-by-step execution traces.
+- PDA visualization in `AutomataDrawer.draw_pda()` with edge labels in `input, stack_top -> push` format.
+- `TuringMachine.from_string()` factory method for concise TM definition from a semicolon-separated string.
+- PDA and Turing Machine sections in the ReadTheDocs tutorial with worked examples.
+- PDA, TM, and CFG algorithm entries in the API reference documentation.
+- 23 PDA tests covering a^n b^n, balanced parentheses, CFG-to-PDA, empty stack acceptance, configuration traces, and direct construction.
+
+### Fixed
+- `get_all_productions_used()` now returns actual `Production` objects instead of derivation strings.
+
+### Changed
+- `automata/__init__.py` now exports `PDA` alongside existing DFA, NFA, CFG, and TM classes.
+- `context_free/__init__.py` exports CFG, PDA, and all CFG algorithm functions.
+
+---
+
 ## [Unreleased] - 2025-10-10 to 2026-01-26
 
 ### Added
