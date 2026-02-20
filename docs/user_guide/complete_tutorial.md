@@ -8,10 +8,12 @@
 4. [Regular Expressions](#regular-expressions)
 5. [DFA Minimization](#dfa-minimization)
 6. [Context-Free Grammars](#context-free-grammars)
-7. [Finite-State Transducers](#finite-state-transducers)
-8. [Visualization Techniques](#visualization-techniques)
-9. [Advanced Examples](#advanced-examples)
-10. [Best Practices](#best-practices)
+7. [Pushdown Automata](#pushdown-automata)
+8. [Turing Machines](#turing-machines)
+9. [Finite-State Transducers](#finite-state-transducers)
+10. [Visualization Techniques](#visualization-techniques)
+11. [Advanced Examples](#advanced-examples)
+12. [Best Practices](#best-practices)
 
 ---
 
@@ -35,8 +37,15 @@ from automata.backend.grammar.dist import State, Symbol, Alphabet, StateSet
 from automata.backend.grammar.regular_languages.dfa.dfa_mod import DFA
 from automata.backend.grammar.regular_languages.nfa.nfa_mod import NFA
 
+# Context-free languages
+from automata import CFG, PDA
+from automata import cyk_accept, accept_string, generate_strings, get_derivation
+
+# Turing machines
+from automata import TuringMachine, MultiTapeTuringMachine, MultiHeadTuringMachine
+
 # Visualization
-from automata.backend.drawings.automata_drawer import AutomataDrawer
+from automata import AutomataDrawer, TMDrawer
 
 # Algorithms
 from automata.backend.grammar.regular_languages.dfa.minimization.hopcroft import hopcroft_minimize
@@ -426,6 +435,359 @@ def cnf_conversion_demo():
         print("  ✓ All productions are in valid CNF format")
 
 cnf_conversion_demo()
+```
+
+### CYK Algorithm and Grammar Algorithms
+
+```python
+from automata import CFG, cyk_accept, accept_string, generate_strings, get_derivation, get_all_productions_used
+
+# Simple grammar: S -> a S b | a b
+cfg = CFG.from_string("S -> a S b | a b")
+cnf = cfg.to_cnf()
+
+# CYK membership test (requires CNF)
+print("CYK acceptance:")
+print(f"  'ab':     {cyk_accept(cnf, 'ab')}")      # True
+print(f"  'aabb':   {cyk_accept(cnf, 'aabb')}")    # True
+print(f"  'aaabbb': {cyk_accept(cnf, 'aaabbb')}")  # True
+print(f"  'aab':    {cyk_accept(cnf, 'aab')}")     # False
+
+# BFS-based acceptance (works on any CFG, not just CNF)
+print(f"\nBFS acceptance of 'aabb': {accept_string(cfg, 'aabb')}")
+
+# Get the derivation steps
+derivation = get_derivation(cfg, "aabb")
+print(f"\nDerivation of 'aabb': {derivation}")
+# Output: ['S', 'aSb', 'aabb']
+
+# Get actual Production objects used
+productions = get_all_productions_used(cfg, "aabb")
+print(f"Productions used: {productions}")
+# Output: [S -> a S b, S -> a b]
+
+# Generate all strings up to length 6
+print(f"\nAll strings up to length 6:")
+for s in generate_strings(cfg, 6):
+    print(f"  '{s}'")
+```
+
+---
+
+## Pushdown Automata
+
+### What is a PDA?
+
+A Pushdown Automaton (PDA) is a finite automaton equipped with a stack, making it
+more powerful than DFAs and NFAs. PDAs can recognize context-free languages,
+such as balanced parentheses and `{a^n b^n | n >= 1}`.
+
+### Creating a PDA from String
+
+The `from_string` method provides a concise way to define a PDA.
+Each transition has five parts: `from_state, input, stack_top, to_state, push_symbols`.
+
+```python
+from automata import PDA
+from automata.backend.grammar.dist import Symbol
+
+# PDA for { a^n b^n | n >= 1 }
+# Push 'a' onto the stack for each input 'a', pop for each 'b'.
+pda = PDA.from_string(
+    "q0,a,Z,q0,aZ; q0,a,a,q0,aa; q0,b,a,q1,e; q1,b,a,q1,e; q1,e,Z,q2,Z",
+    start_state="q0",
+    accept_states={"q2"},
+    start_stack_symbol="Z",
+)
+
+# Test strings
+test_cases = [("ab", True), ("aabb", True), ("aaabbb", True),
+              ("", False), ("a", False), ("aab", False), ("ba", False)]
+
+print("PDA for a^n b^n:")
+for s, expected in test_cases:
+    word = [Symbol(c) for c in s]
+    result = pda.accepts(word)
+    status = "PASS" if result == expected else "FAIL"
+    print(f"  '{s}': {'accepted' if result else 'rejected'} [{status}]")
+```
+
+**Output:**
+```
+PDA for a^n b^n:
+  'ab': accepted [PASS]
+  'aabb': accepted [PASS]
+  'aaabbb': accepted [PASS]
+  '': rejected [PASS]
+  'a': rejected [PASS]
+  'aab': rejected [PASS]
+  'ba': rejected [PASS]
+```
+
+### Balanced Parentheses PDA
+
+```python
+# PDA for balanced parentheses
+pda_parens = PDA.from_string(
+    "q0,(,Z,q0,(Z; q0,(,(,q0,((; q0,),(,q0,e; q0,e,Z,q1,Z",
+    start_state="q0",
+    accept_states={"q1"},
+    start_stack_symbol="Z",
+)
+
+test_parens = ["()", "(())", "()()", "((())())", "(", ")", "(()"]
+print("\nBalanced Parentheses PDA:")
+for s in test_parens:
+    word = [Symbol(c) for c in s]
+    result = pda_parens.accepts(word)
+    print(f"  '{s}': {'accepted' if result else 'rejected'}")
+```
+
+### Converting a CFG to a PDA
+
+Any context-free grammar can be converted to an equivalent PDA:
+
+```python
+from automata import CFG, PDA
+
+# Grammar for palindromes over {a, b}
+cfg = CFG.from_string("S -> a S a | b S b | a | b | ε")
+pda = PDA.from_cfg(cfg)
+
+test_palindromes = ["a", "aba", "abba", "abcba", "ab", "abc"]
+print("\nPDA from CFG (palindromes):")
+for s in test_palindromes:
+    word = [Symbol(c) for c in s]
+    result = pda.accepts(word)
+    print(f"  '{s}': {'accepted' if result else 'rejected'}")
+```
+
+### Acceptance by Empty Stack
+
+PDAs can accept in two modes: by final state (default) or by empty stack.
+
+```python
+# Same language, but accept when the stack is empty instead of reaching a final state
+pda_empty_stack = PDA.from_string(
+    "q0,a,Z,q0,aZ; q0,a,a,q0,aa; q0,b,a,q1,e; q1,b,a,q1,e; q1,e,Z,q1,e",
+    start_state="q0",
+    accept_states=set(),          # No final states needed
+    start_stack_symbol="Z",
+    accept_by_empty_stack=True,   # Accept when stack is empty
+)
+
+print("\nAcceptance by empty stack (a^n b^n):")
+for s in ["ab", "aabb", "aaabbb"]:
+    word = [Symbol(c) for c in s]
+    print(f"  '{s}': {'accepted' if pda_empty_stack.accepts(word) else 'rejected'}")
+```
+
+### Configuration Trace
+
+You can inspect the step-by-step configurations the PDA passes through:
+
+```python
+pda = PDA.from_string(
+    "q0,a,Z,q0,aZ; q0,a,a,q0,aa; q0,b,a,q1,e; q1,b,a,q1,e; q1,e,Z,q2,Z",
+    start_state="q0",
+    accept_states={"q2"},
+    start_stack_symbol="Z",
+)
+
+trace = pda.get_configuration_trace([Symbol(c) for c in "aabb"])
+if trace:
+    print("\nConfiguration trace for 'aabb':")
+    for state, pos, stack in trace:
+        print(f"  State: {state}, Input pos: {pos}, Stack: {list(stack)}")
+```
+
+### Visualizing a PDA
+
+```python
+from automata import AutomataDrawer
+
+drawer = AutomataDrawer()
+path = drawer.draw_pda(pda, "anbn_pda")
+print(f"PDA diagram saved to: {path}")
+```
+
+---
+
+## Turing Machines
+
+### What is a Turing Machine?
+
+A Turing Machine (TM) is the most powerful computational model in the Chomsky
+hierarchy. It has an infinite tape, a read/write head, and a finite control.
+The library supports three variants: single-tape, multi-tape, and multi-head.
+
+### Creating a Turing Machine from String
+
+```python
+from automata import TuringMachine
+from automata.backend.grammar.dist import Symbol
+
+# TM that accepts binary strings with equal number of 0s and 1s
+# Strategy: mark 0s and 1s in pairs by replacing with X/Y
+tm = TuringMachine.from_string(
+    # Scan right for a 0, replace with X
+    "q0,0,q1,X,R; "
+    # Skip over 1s and Ys already marked, find a 1
+    "q1,0,q1,0,R; q1,Y,q1,Y,R; q1,1,q2,Y,L; "
+    # Go back left to the start
+    "q2,0,q2,0,L; q2,Y,q2,Y,L; q2,X,q0,X,R; "
+    # Check if all 0s are marked: skip Ys, accept on blank
+    "q0,Y,q3,Y,R; q3,Y,q3,Y,R; q3,_,qa,_,N",
+    start_state="q0",
+    accept_states={"qa"},
+    blank_symbol="_",
+)
+
+test_cases = [("01", True), ("0011", True), ("0101", True),
+              ("0", False), ("1", False), ("001", False)]
+
+print("TM for equal 0s and 1s:")
+for s, expected in test_cases:
+    result = tm.accepts(list(s))
+    status = "PASS" if result == expected else "FAIL"
+    print(f"  '{s}': {'accepted' if result else 'rejected'} [{status}]")
+```
+
+### Creating a Turing Machine with the Constructor
+
+```python
+from automata import TuringMachine
+from automata.backend.grammar.dist import State, StateSet, Alphabet, TapeAlphabet, TapeSymbol
+
+# TM that accepts { 0^n 1^n | n >= 1 }
+# Strategy: cross off one 0 and one 1 in each pass
+states = StateSet.from_states([
+    State("q0"), State("q1"), State("q2"), State("q3"), State("qa")
+])
+
+transitions = {
+    State("q0"): {
+        TapeSymbol("0"): (State("q1"), TapeSymbol("X"), "R"),
+        TapeSymbol("Y"): (State("q3"), TapeSymbol("Y"), "R"),
+    },
+    State("q1"): {
+        TapeSymbol("0"): (State("q1"), TapeSymbol("0"), "R"),
+        TapeSymbol("Y"): (State("q1"), TapeSymbol("Y"), "R"),
+        TapeSymbol("1"): (State("q2"), TapeSymbol("Y"), "L"),
+    },
+    State("q2"): {
+        TapeSymbol("0"): (State("q2"), TapeSymbol("0"), "L"),
+        TapeSymbol("Y"): (State("q2"), TapeSymbol("Y"), "L"),
+        TapeSymbol("X"): (State("q0"), TapeSymbol("X"), "R"),
+    },
+    State("q3"): {
+        TapeSymbol("Y"): (State("q3"), TapeSymbol("Y"), "R"),
+        TapeSymbol("_"): (State("qa"), TapeSymbol("_"), "N"),
+    },
+}
+
+tm = TuringMachine(
+    states=states,
+    input_alphabet=Alphabet(["0", "1"]),
+    tape_alphabet=TapeAlphabet(["0", "1", "X", "Y", "_"]),
+    transitions=transitions,
+    start_state=State("q0"),
+    blank_symbol=TapeSymbol("_"),
+    final_states=StateSet.from_states([State("qa")]),
+)
+
+# Test
+for s in ["01", "0011", "000111", "0", "001"]:
+    result = tm.accepts(list(s))
+    print(f"  '{s}': {'accepted' if result else 'rejected'}")
+```
+
+### Multi-Tape Turing Machine
+
+Multi-tape TMs use multiple tapes, each with its own head. The input starts
+on the first tape; all other tapes begin blank.
+
+```python
+from automata import MultiTapeTuringMachine
+from automata.backend.grammar.dist import State, StateSet, TapeAlphabet, TapeSymbol, Alphabet
+
+# 2-tape TM that copies input from tape 1 to tape 2
+states = StateSet.from_states([State("q0"), State("q1"), State("qa")])
+
+transitions = {
+    State("q0"): {
+        (TapeSymbol("a"), TapeSymbol("_")): (
+            State("q0"),
+            [(TapeSymbol("a"), "R"), (TapeSymbol("a"), "R")]
+        ),
+        (TapeSymbol("b"), TapeSymbol("_")): (
+            State("q0"),
+            [(TapeSymbol("b"), "R"), (TapeSymbol("b"), "R")]
+        ),
+        (TapeSymbol("_"), TapeSymbol("_")): (
+            State("qa"),
+            [(TapeSymbol("_"), "N"), (TapeSymbol("_"), "N")]
+        ),
+    },
+}
+
+mt_tm = MultiTapeTuringMachine(
+    states=states,
+    input_alphabet=Alphabet(["a", "b"]),
+    tape_alphabet=TapeAlphabet(["a", "b", "_"]),
+    transitions=transitions,
+    start_state=State("q0"),
+    blank_symbol=TapeSymbol("_"),
+    final_states=StateSet.from_states([State("qa")]),
+    num_tapes=2,
+)
+
+print(f"Multi-tape TM accepts 'ab': {mt_tm.accepts(list('ab'))}")
+print(f"Configuration: {mt_tm.get_configuration()}")
+```
+
+### Step-by-Step Execution and Configuration
+
+```python
+from automata import TuringMachine
+
+# Simple incrementer: adds 1 to a unary number (string of 1s)
+tm = TuringMachine.from_string(
+    "q0,1,q0,1,R; q0,_,qa,1,N",
+    start_state="q0",
+    accept_states={"qa"},
+    blank_symbol="_",
+)
+
+# Run step-by-step
+tm.tape = __import__('automata.backend.grammar.turing_machines.tape', fromlist=['Tape']).Tape(list("111"), tm.blank_symbol)
+tm.current_state = State("q0")
+
+print("Step-by-step execution on '111':")
+print(f"  Initial: {tm.get_configuration()}")
+
+for i in range(4):
+    try:
+        tm.step()
+        print(f"  Step {i+1}: {tm.get_configuration()}")
+    except Exception:
+        break
+```
+
+### Visualizing Turing Machines
+
+```python
+from automata import TMDrawer
+
+drawer = TMDrawer()
+
+# Visualize a single-tape TM
+path = drawer.draw_turing_machine(tm, "simple_tm")
+print(f"TM diagram saved to: {path}")
+
+# Visualize a multi-tape TM
+path = drawer.draw_multitape_turing_machine(mt_tm, "multitape_tm")
+print(f"Multi-tape TM diagram saved to: {path}")
 ```
 
 ---
@@ -998,14 +1360,16 @@ This tutorial covered the comprehensive features of the Automata Diags package:
 
 - **Finite Automata**: DFA and NFA creation, conversion, and minimization
 - **Regular Expressions**: Thompson's construction and pattern matching
-- **Context-Free Grammars**: CNF conversion and grammar analysis
+- **Context-Free Grammars**: CNF conversion, CYK algorithm, derivation tracking
+- **Pushdown Automata**: PDA creation, CFG-to-PDA conversion, two acceptance modes
+- **Turing Machines**: Single-tape, multi-tape, and multi-head TMs with step-by-step execution
 - **Transducers**: Mealy machines for input-output mapping
-- **Visualization**: Professional diagram generation
+- **Visualization**: Diagram generation for all automaton types
 - **Best Practices**: Performance, testing, and error handling
 
 ### Next Steps
 
-1. **Explore Advanced Topics**: Look into pushdown automata and context-sensitive grammars
+1. **Explore the Chomsky Hierarchy**: Regular (DFA/NFA) -> Context-Free (PDA/CFG) -> Context-Sensitive (LBA) -> Recursively Enumerable (TM)
 2. **Contribute**: Add new algorithms or improve existing implementations
 3. **Integrate**: Use the package in your own projects or educational materials
 4. **Extend**: Build custom visualizations or analysis tools
@@ -1016,5 +1380,3 @@ This tutorial covered the comprehensive features of the Automata Diags package:
 - **Examples**: Additional examples in the `examples/` directory
 - **Source Code**: Full implementation available on GitHub
 - **Community**: Join discussions and contribute improvements
-
-Happy automata building! 🤖✨
