@@ -154,6 +154,218 @@ Convert the grammar to Chomsky Normal Form.
 
 ---
 
+### PDA (Pushdown Automaton)
+
+```python
+from automata.backend.grammar.context_free.pda.pda_mod import PDA
+# or
+from automata import PDA
+```
+
+#### Constructor
+```python
+PDA(states, input_alphabet, stack_alphabet, transitions, start_state,
+    start_stack_symbol, accept_states, accept_by_empty_stack=False)
+```
+
+**Parameters:**
+- `states` (StateSet): Set of all states
+- `input_alphabet` (Alphabet): Input alphabet symbols
+- `stack_alphabet` (Set[str]): Set of stack symbols
+- `transitions` (Dict): Transition function mapping `(State, (Symbol, StackSymbol))` to sets of `(State, Tuple[StackSymbol, ...])`
+- `start_state` (State): Initial state
+- `start_stack_symbol` (str): Initial symbol on the stack
+- `accept_states` (StateSet): Set of accepting states
+- `accept_by_empty_stack` (bool): If True, accept when stack is empty after consuming all input
+
+**Transition semantics:**
+- Key `(input_symbol, stack_top)` with `stack_top != ""`: pops the top, pushes push_symbols
+- Key `(input_symbol, "")`: does NOT pop, pushes on top
+- `input_symbol == ""` means epsilon (no input consumed)
+- `push_symbols` tuple is in textbook order: first element = new top
+- Empty tuple `()` means push nothing (pure pop)
+
+#### Methods
+
+##### `accepts(word: Word, max_steps: int = 50000) -> bool`
+Test if the PDA accepts a given word using BFS over configurations.
+
+**Parameters:**
+- `word` (Word): List of symbols to process
+- `max_steps` (int): Maximum BFS steps before giving up
+
+**Returns:**
+- `bool`: True if the word is accepted
+
+**Example:**
+```python
+pda = PDA.from_string(
+    "q0,a,Z,q0,aZ; q0,a,a,q0,aa; q0,b,a,q1,e; q1,b,a,q1,e; q1,e,Z,q2,Z",
+    start_state="q0",
+    accept_states={"q2"},
+    start_stack_symbol="Z",
+)
+result = pda.accepts([Symbol("a"), Symbol("b")])  # True
+```
+
+##### `get_configuration_trace(word: Word) -> Optional[List[Tuple]]`
+Return the sequence of configurations from start to acceptance.
+
+**Returns:**
+- `List[Tuple[State, int, Tuple[str, ...]]]`: List of (state, input_position, stack) tuples, or None if not accepted
+
+##### `from_string(pda_string, start_state, accept_states, ...) -> PDA`
+Class method to create a PDA from a string representation.
+
+**Format:** Transitions separated by semicolons. Each transition:
+`from_state, input_symbol, stack_top, to_state, push_symbols`
+
+Use `e` for epsilon. Push symbols are in textbook order (first char = new top).
+
+**Example:**
+```python
+# PDA for balanced parentheses
+pda = PDA.from_string(
+    "q0,(,Z,q0,(Z; q0,(,(,q0,((; q0,),(,q0,e; q0,e,Z,q1,Z",
+    start_state="q0",
+    accept_states={"q1"},
+    start_stack_symbol="Z",
+)
+```
+
+##### `from_cfg(cfg: CFG) -> PDA`
+Convert a Context-Free Grammar to an equivalent PDA using the standard top-down construction.
+
+**Parameters:**
+- `cfg` (CFG): A context-free grammar
+
+**Returns:**
+- `PDA`: Equivalent pushdown automaton
+
+**Example:**
+```python
+cfg = CFG.from_string("S -> a S b | a b")
+pda = PDA.from_cfg(cfg)
+pda.accepts([Symbol("a"), Symbol("a"), Symbol("b"), Symbol("b")])  # True
+```
+
+---
+
+### TuringMachine (Single-Tape)
+
+```python
+from automata.backend.grammar.turing_machines.standard import TuringMachine
+# or
+from automata import TuringMachine
+```
+
+#### Constructor
+```python
+TuringMachine(states, input_alphabet, tape_alphabet, transitions,
+              start_state, blank_symbol, final_states)
+```
+
+**Parameters:**
+- `states` (StateSet): Set of all states
+- `input_alphabet` (Alphabet | Iterable[str]): Input alphabet
+- `tape_alphabet` (TapeAlphabet | Iterable[str]): Tape alphabet (superset of input alphabet)
+- `transitions` (Dict[State, Dict[TapeSymbol, Tuple[State, TapeSymbol, str]]]): Transition function
+- `start_state` (State): Initial state
+- `blank_symbol` (TapeSymbol): Blank symbol on the tape
+- `final_states` (StateSet): Set of accepting/halting states
+
+**Transition format:** `{state: {read_symbol: (next_state, write_symbol, direction)}}`
+Direction is `'R'` (right), `'L'` (left), or `'N'` (no move).
+
+#### Methods
+
+##### `accepts(word: Word, max_steps: int = 1000) -> bool`
+Run the TM on the given word and return whether it accepts.
+
+##### `step() -> None`
+Perform a single computation step.
+
+##### `get_configuration() -> Dict`
+Return the current state and tape contents.
+
+##### `from_string(tm_string, start_state, accept_states, blank_symbol="_") -> TuringMachine`
+Class method to create a TM from a string representation.
+
+**Format:** Transitions separated by semicolons:
+`current_state, read_symbol, next_state, write_symbol, direction`
+
+**Example:**
+```python
+# TM that accepts strings of the form 0^n 1^n
+tm = TuringMachine.from_string(
+    "q0,0,q1,X,R; q1,0,q1,0,R; q1,Y,q1,Y,R; q1,1,q2,Y,L; "
+    "q2,0,q2,0,L; q2,Y,q2,Y,L; q2,X,q0,X,R; "
+    "q0,Y,q3,Y,R; q3,Y,q3,Y,R; q3,_,qa,_,N",
+    start_state="q0",
+    accept_states={"qa"},
+    blank_symbol="_",
+)
+tm.accepts(list("0011"))  # True
+```
+
+---
+
+### MultiTapeTuringMachine
+
+```python
+from automata import MultiTapeTuringMachine
+```
+
+#### Constructor
+```python
+MultiTapeTuringMachine(states, input_alphabet, tape_alphabet, transitions,
+                       start_state, blank_symbol, final_states, num_tapes=2)
+```
+
+**Transition format:**
+```python
+{state: {(read_sym_1, read_sym_2, ...): (next_state, [(write_sym_1, dir_1), ...])}}
+```
+
+Input is placed on the first tape; others start blank.
+
+---
+
+### MultiHeadTuringMachine
+
+```python
+from automata import MultiHeadTuringMachine
+```
+
+Single tape with multiple read/write heads. Same transition format as multi-tape.
+
+---
+
+## CFG Algorithms
+
+```python
+from automata import cyk_accept, accept_string, generate_strings, get_derivation, get_all_productions_used
+```
+
+### Functions
+
+#### `cyk_accept(cfg: CFG, string: str) -> bool`
+CYK membership test. Grammar **must** be in CNF (`cfg.to_cnf()`). O(n^3) time.
+
+#### `accept_string(cfg: CFG, string: str, max_steps=None) -> bool`
+BFS-based acceptance. Works on any CFG (not just CNF).
+
+#### `generate_strings(cfg: CFG, max_length: int) -> Generator[str]`
+Generate all strings derivable from the CFG up to the given length.
+
+#### `get_derivation(cfg: CFG, string: str) -> Optional[List[str]]`
+Get the derivation sequence as a list of sentential forms.
+
+#### `get_all_productions_used(cfg: CFG, string: str) -> Optional[List[Production]]`
+Get the list of `Production` objects applied in the derivation.
+
+---
+
 ## Minimization Algorithms
 
 ### Hopcroft's Algorithm
@@ -248,6 +460,38 @@ Generate visualization for an NFA with ε-transitions.
 ##### `draw_mealy_machine_from_object(mealy: MealyMachine, filename: str) -> str`
 Generate visualization for a Mealy machine.
 
+##### `draw_pda(pda: PDA, filename: str, format: str = "png") -> str`
+Generate visualization for a PDA. Edge labels use the format `input, stack_top -> push_symbols`.
+
+**Example:**
+```python
+drawer = AutomataDrawer()
+path = drawer.draw_pda(pda, "my_pda")
+```
+
+### TMDrawer
+
+```python
+from automata import TMDrawer
+```
+
+### Methods
+
+#### `draw_turing_machine(tm: TuringMachine, filename: str) -> str`
+Generate visualization for a single-tape Turing machine.
+
+#### `draw_multitape_turing_machine(tm: MultiTapeTuringMachine, filename: str) -> str`
+Generate visualization for a multi-tape Turing machine.
+
+#### `draw_multihead_turing_machine(tm: MultiHeadTuringMachine, filename: str) -> str`
+Generate visualization for a multi-head Turing machine.
+
+**Example:**
+```python
+drawer = TMDrawer()
+path = drawer.draw_turing_machine(tm, "my_tm")
+```
+
 ---
 
 ## Utility Types
@@ -336,11 +580,16 @@ positions = kmp_search("abc", "abcabcabc")
 - **NFA to DFA**: O(2^n) worst case, often much better in practice
 - **Hopcroft Minimization**: O(n log n)
 - **Myhill-Nerode Minimization**: O(n²)
+- **PDA Acceptance**: Exponential in worst case (BFS over configurations); practical for typical inputs
+- **CYK Algorithm**: O(n³ × |G|) where n is string length, |G| is grammar size
+- **TM Acceptance**: Depends on the machine; bounded by `max_steps` parameter
 
 ### Memory Usage
 
 - **DFA**: O(|states| × |alphabet|) for transition table
 - **NFA**: O(|states| × |alphabet| × |states|) for transition sets
+- **PDA**: O(|configurations visited|) for BFS; bounded by `max_steps`
+- **TM**: O(tape cells used) for tape storage
 - **Minimization**: Additional O(|states|²) for analysis tables
 
 ---
@@ -360,6 +609,41 @@ drawer = AutomataDrawer()
 drawer.draw_nfa_from_object(nfa, "step1_nfa")
 drawer.draw_dfa_from_object(dfa, "step2_dfa") 
 drawer.draw_dfa_from_object(minimized, "step3_minimized")
+```
+
+### CFG to PDA Pipeline
+
+```python
+from automata import CFG, PDA, AutomataDrawer
+from automata.backend.grammar.dist import Symbol
+
+# Define a grammar and convert to PDA
+cfg = CFG.from_string("S -> a S b | a b")
+pda = PDA.from_cfg(cfg)
+
+# Test acceptance
+print(pda.accepts([Symbol(c) for c in "aabb"]))  # True
+
+# Visualize
+drawer = AutomataDrawer()
+drawer.draw_pda(pda, "cfg_to_pda")
+```
+
+### Turing Machine Workflow
+
+```python
+from automata import TuringMachine, TMDrawer
+
+# Create, test, and visualize a TM
+tm = TuringMachine.from_string(
+    "q0,0,q0,0,R; q0,1,q1,1,R; q1,0,q1,0,R; q1,1,q0,1,R; q0,_,qa,_,N",
+    start_state="q0", accept_states={"qa"}, blank_symbol="_",
+)
+
+print(tm.accepts(list("0100")))  # True (even number of 1s)
+
+drawer = TMDrawer()
+drawer.draw_turing_machine(tm, "even_ones_tm")
 ```
 
 ### Educational Analysis
