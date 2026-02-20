@@ -320,6 +320,9 @@ def get_all_productions_used(cfg: CFG, string: str) -> Optional[List[Production]
     """
     Get the list of productions used to derive a string.
     
+    Uses BFS with production tracking to find which productions are applied
+    at each derivation step.
+
     Args:
         cfg (CFG): The context-free grammar.
         string (str): The string to derive.
@@ -327,10 +330,60 @@ def get_all_productions_used(cfg: CFG, string: str) -> Optional[List[Production]
     Returns:
         List[Production]: Productions used in the derivation, or None if not derivable.
     """
-    derivation = get_derivation(cfg, string)
-    if derivation is None:
-        return None
-    
-    # This would require more sophisticated tracking
-    # For now, return the derivation steps as a placeholder
-    return derivation
+    max_steps = 3 * len(string) + 10
+    target_len = len(string)
+
+    prod_dict: Dict[NonTerminal, List[Tuple]] = defaultdict(list)
+    for prod in cfg.productions:
+        prod_dict[prod.lhs].append(prod)
+
+    nt_strs = {str(nt) for nt in cfg.non_terminals}
+
+    def sentential_form_to_str(form: Tuple) -> str:
+        return ''.join(str(s) for s in form)
+
+    def get_terminal_count(form: Tuple) -> int:
+        return sum(1 for s in form if str(s) not in nt_strs)
+
+    def has_non_terminal(form: Tuple) -> bool:
+        return any(str(s) in nt_strs for s in form)
+
+    visited: Set[Tuple] = set()
+    parent: Dict[Tuple, Tuple[Tuple, Production]] = {}
+    current_forms: Set[Tuple] = {(cfg.start_symbol,)}
+
+    for step in range(max_steps):
+        next_forms: Set[Tuple] = set()
+
+        for form in current_forms:
+            form_str = sentential_form_to_str(form)
+
+            if form_str == string and not has_non_terminal(form):
+                productions_used = []
+                current = form
+                while current in parent:
+                    current, prod = parent[current]
+                    productions_used.append(prod)
+                return list(reversed(productions_used))
+
+            if form in visited:
+                continue
+            visited.add(form)
+
+            if get_terminal_count(form) > target_len:
+                continue
+
+            for i, symbol in enumerate(form):
+                if symbol in cfg.non_terminals:
+                    for prod in prod_dict.get(symbol, []):
+                        new_form = form[:i] + prod.rhs + form[i+1:]
+                        if new_form not in visited and get_terminal_count(new_form) <= target_len:
+                            if new_form not in parent:
+                                parent[new_form] = (form, prod)
+                            next_forms.add(new_form)
+
+        if not next_forms:
+            break
+        current_forms = next_forms
+
+    return None
