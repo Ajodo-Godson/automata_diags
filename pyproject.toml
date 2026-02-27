@@ -70,3 +70,12 @@ exclude = [
     "**/.pytest_cache",
     "**/node_modules",
 ] 
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "automata/frontend",
+  "automata/frontend/**",
+  "**/node_modules",
+  "**/__pycache__",
+  "**/.pytest_cache",
+]
