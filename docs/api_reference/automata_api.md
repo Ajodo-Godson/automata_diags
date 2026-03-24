@@ -38,6 +38,22 @@ word = [Symbol("a"), Symbol("b")]
 result = dfa.accepts(word)
 ```
 
+##### `from_string(dfa_string, start_state, accept_states) -> DFA`
+Class method to create a DFA from a string representation.
+
+**Parameters:**
+- `dfa_string` (str): Transitions separated by semicolons. Each transition: `from_state,symbol,to_state`. Example: `"q0,a,q1;q1,b,q2"`
+- `start_state` (str): The name of the start state
+- `accept_states` (Set[str]): A set of names for the accept states
+
+**Returns:**
+- `DFA`: A new DFA instance
+
+**Example:**
+```python
+dfa = DFA.from_string("q0,a,q1;q1,b,q2;q2,a,q1", start_state="q0", accept_states={"q2"})
+```
+
 ##### `add_transition(from_state: State, symbol: Symbol, to_state: State) -> None`
 Add a single transition to the DFA.
 
@@ -60,7 +76,7 @@ NFA(states, alphabet, transitions, start_state, accept_states, epsilon_symbol="�
 ```
 
 **Parameters:**
-- `states` (StateSet): Set of all states
+- `states` (StateSet): Set of all states in the automaton
 - `alphabet` (Alphabet): Input alphabet symbols
 - `transitions` (Dict[State, Dict[Symbol, StateSet]]): Non-deterministic transition function
 - `start_state` (State): Initial state
@@ -70,7 +86,13 @@ NFA(states, alphabet, transitions, start_state, accept_states, epsilon_symbol="�
 #### Methods
 
 ##### `accepts(word: Word) -> bool`
-Test if the NFA accepts a word using breadth-first search.
+Test if the NFA accepts a given word using breadth-first search.
+
+**Parameters:**
+- `word` (Word): List of symbols to process
+
+**Returns:**
+- `bool`: True if the word is accepted, False otherwise
 
 ##### `to_dfa() -> DFA`
 Convert the NFA to an equivalent DFA using subset construction.
@@ -85,7 +107,18 @@ print(f"NFA states: {len(nfa._states.states())}")
 print(f"DFA states: {len(dfa._states.states())}")
 ```
 
-##### `from_regex(regex: str) -> "NFA"`
+##### `from_string(nfa_string, start_state, accept_states) -> NFA`
+Class method to create an NFA from a string representation.
+
+**Parameters:**
+- `nfa_string` (str): Transitions separated by semicolons. Each transition: `from_state,symbol,to_state1,to_state2,...`. Example: `"q0,a,q0,q1;q1,b,q2"`
+- `start_state` (str): The name of the start state
+- `accept_states` (Set[str]): A set of names for the accept states
+
+**Returns:**
+- `NFA`: A new NFA instance
+
+##### `from_regex(regex: str) -> NFA`
 Class method to create an NFA from a regular expression using Thompson's construction.
 
 **Parameters:**
@@ -120,11 +153,11 @@ CFG(non_terminals, terminals, productions, start_symbol)
 
 #### Methods
 
-##### `from_string(grammar_str: str) -> "CFG"`
+##### `from_string(grammar_str: str) -> CFG`
 Class method to parse a CFG from string representation.
 
 **Parameters:**
-- `grammar_str` (str): Multi-line string with production rules
+- `grammar_str` (str): Multi-line string with production rules. Use `|` for alternatives and `ε` or `epsilon` for the empty string.
 
 **Returns:**
 - `CFG`: Parsed context-free grammar
@@ -139,18 +172,11 @@ B -> b B | b
 cfg = CFG.from_string(grammar_str)
 ```
 
-##### `to_cnf() -> "CFG"`
+##### `to_cnf() -> CFG`
 Convert the grammar to Chomsky Normal Form.
 
 **Returns:**
 - `CFG`: Equivalent grammar in CNF
-
-**Algorithm Steps:**
-1. Eliminate start symbol from RHS
-2. Eliminate ε-productions
-3. Eliminate unit productions
-4. Separate terminals
-5. Binarize productions
 
 ---
 
@@ -158,8 +184,6 @@ Convert the grammar to Chomsky Normal Form.
 
 ```python
 from automata.backend.grammar.context_free.pda.pda_mod import PDA
-# or
-from automata import PDA
 ```
 
 #### Constructor
@@ -169,7 +193,7 @@ PDA(states, input_alphabet, stack_alphabet, transitions, start_state,
 ```
 
 **Parameters:**
-- `states` (StateSet): Set of all states
+- `states` (StateSet): Set of all states in the automaton
 - `input_alphabet` (Alphabet): Input alphabet symbols
 - `stack_alphabet` (Set[str]): Set of stack symbols
 - `transitions` (Dict): Transition function mapping `(State, (Symbol, StackSymbol))` to sets of `(State, Tuple[StackSymbol, ...])`
@@ -177,13 +201,6 @@ PDA(states, input_alphabet, stack_alphabet, transitions, start_state,
 - `start_stack_symbol` (str): Initial symbol on the stack
 - `accept_states` (StateSet): Set of accepting states
 - `accept_by_empty_stack` (bool): If True, accept when stack is empty after consuming all input
-
-**Transition semantics:**
-- Key `(input_symbol, stack_top)` with `stack_top != ""`: pops the top, pushes push_symbols
-- Key `(input_symbol, "")`: does NOT pop, pushes on top
-- `input_symbol == ""` means epsilon (no input consumed)
-- `push_symbols` tuple is in textbook order: first element = new top
-- Empty tuple `()` means push nothing (pure pop)
 
 #### Methods
 
@@ -195,7 +212,7 @@ Test if the PDA accepts a given word using BFS over configurations.
 - `max_steps` (int): Maximum BFS steps before giving up
 
 **Returns:**
-- `bool`: True if the word is accepted
+- `bool`: True if the word is accepted, False otherwise
 
 **Example:**
 ```python
@@ -217,14 +234,16 @@ Return the sequence of configurations from start to acceptance.
 ##### `from_string(pda_string, start_state, accept_states, ...) -> PDA`
 Class method to create a PDA from a string representation.
 
-**Format:** Transitions separated by semicolons. Each transition:
-`from_state, input_symbol, stack_top, to_state, push_symbols`
+**Parameters:**
+- `pda_string` (str): Transitions separated by semicolons. Each transition: `from_state, input_symbol, stack_top, to_state, push_symbols`. Use `e` for epsilon.
+- `start_state` (str): The name of the start state
+- `accept_states` (Set[str]): A set of names for the accept states
 
-Use `e` for epsilon. Push symbols are in textbook order (first char = new top).
+**Returns:**
+- `PDA`: A new PDA instance
 
 **Example:**
 ```python
-# PDA for balanced parentheses
 pda = PDA.from_string(
     "q0,(,Z,q0,(Z; q0,(,(,q0,((; q0,),(,q0,e; q0,e,Z,q1,Z",
     start_state="q0",
@@ -255,8 +274,6 @@ pda.accepts([Symbol("a"), Symbol("a"), Symbol("b"), Symbol("b")])  # True
 
 ```python
 from automata.backend.grammar.turing_machines.standard import TuringMachine
-# or
-from automata import TuringMachine
 ```
 
 #### Constructor
@@ -266,21 +283,25 @@ TuringMachine(states, input_alphabet, tape_alphabet, transitions,
 ```
 
 **Parameters:**
-- `states` (StateSet): Set of all states
-- `input_alphabet` (Alphabet | Iterable[str]): Input alphabet
+- `states` (StateSet): Set of all states in the automaton
+- `input_alphabet` (Alphabet | Iterable[str]): Input alphabet symbols
 - `tape_alphabet` (TapeAlphabet | Iterable[str]): Tape alphabet (superset of input alphabet)
 - `transitions` (Dict[State, Dict[TapeSymbol, Tuple[State, TapeSymbol, str]]]): Transition function
 - `start_state` (State): Initial state
 - `blank_symbol` (TapeSymbol): Blank symbol on the tape
 - `final_states` (StateSet): Set of accepting/halting states
 
-**Transition format:** `{state: {read_symbol: (next_state, write_symbol, direction)}}`
-Direction is `'R'` (right), `'L'` (left), or `'N'` (no move).
-
 #### Methods
 
 ##### `accepts(word: Word, max_steps: int = 1000) -> bool`
-Run the TM on the given word and return whether it accepts.
+Test if the TM accepts a given word.
+
+**Parameters:**
+- `word` (Word): List of symbols to process
+- `max_steps` (int): Maximum computation steps before halting
+
+**Returns:**
+- `bool`: True if the word is accepted, False otherwise
 
 ##### `step() -> None`
 Perform a single computation step.
@@ -291,12 +312,16 @@ Return the current state and tape contents.
 ##### `from_string(tm_string, start_state, accept_states, blank_symbol="_") -> TuringMachine`
 Class method to create a TM from a string representation.
 
-**Format:** Transitions separated by semicolons:
-`current_state, read_symbol, next_state, write_symbol, direction`
+**Parameters:**
+- `tm_string` (str): Transitions separated by semicolons. Each transition: `current_state, read_symbol, next_state, write_symbol, direction`. Direction is `R`, `L`, or `N`.
+- `start_state` (str): The name of the start state
+- `accept_states` (Set[str]): A set of names for the accept states
+
+**Returns:**
+- `TuringMachine`: A new TuringMachine instance
 
 **Example:**
 ```python
-# TM that accepts strings of the form 0^n 1^n
 tm = TuringMachine.from_string(
     "q0,0,q1,X,R; q1,0,q1,0,R; q1,Y,q1,Y,R; q1,1,q2,Y,L; "
     "q2,0,q2,0,L; q2,Y,q2,Y,L; q2,X,q0,X,R; "
@@ -313,7 +338,7 @@ tm.accepts(list("0011"))  # True
 ### MultiTapeTuringMachine
 
 ```python
-from automata import MultiTapeTuringMachine
+from automata.backend.grammar.turing_machines.multitape import MultiTapeTuringMachine
 ```
 
 #### Constructor
@@ -322,47 +347,138 @@ MultiTapeTuringMachine(states, input_alphabet, tape_alphabet, transitions,
                        start_state, blank_symbol, final_states, num_tapes=2)
 ```
 
-**Transition format:**
-```python
-{state: {(read_sym_1, read_sym_2, ...): (next_state, [(write_sym_1, dir_1), ...])}}
-```
+**Parameters:**
+- `states` (StateSet): Set of all states in the automaton
+- `input_alphabet` (Alphabet | Iterable[str]): Input alphabet symbols
+- `tape_alphabet` (TapeAlphabet | Iterable[str]): Tape alphabet (superset of input alphabet)
+- `transitions` (Dict): Transition function mapping state and read-symbol tuples to next state and write/direction actions
+- `start_state` (State): Initial state
+- `blank_symbol` (TapeSymbol): Blank symbol on the tapes
+- `final_states` (StateSet): Set of accepting states
+- `num_tapes` (int): Number of tapes (default 2)
 
-Input is placed on the first tape; others start blank.
+#### Methods
+
+##### `accepts(word: Word, max_steps: int = 1000) -> bool`
+Test if the multi-tape TM accepts a given word. Input is placed on the first tape; others start blank.
+
+**Parameters:**
+- `word` (Word): List of symbols to process
+- `max_steps` (int): Maximum computation steps before halting
+
+**Returns:**
+- `bool`: True if the word is accepted, False otherwise
+
+##### `step() -> None`
+Perform a single computation step across all tapes.
+
+##### `get_configuration() -> Dict`
+Return the current state and all tape contents.
 
 ---
 
 ### MultiHeadTuringMachine
 
 ```python
-from automata import MultiHeadTuringMachine
+from automata.backend.grammar.turing_machines.multihead import MultiHeadTuringMachine
 ```
 
-Single tape with multiple read/write heads. Same transition format as multi-tape.
+#### Constructor
+```python
+MultiHeadTuringMachine(states, input_alphabet, tape_alphabet, transitions,
+                       start_state, blank_symbol, final_states, num_heads=2)
+```
+
+**Parameters:**
+- `states` (StateSet): Set of all states in the automaton
+- `input_alphabet` (Alphabet | Iterable[str]): Input alphabet symbols
+- `tape_alphabet` (TapeAlphabet | Iterable[str]): Tape alphabet (superset of input alphabet)
+- `transitions` (Dict): Transition function mapping state and read-symbol tuples to next state and write/direction actions
+- `start_state` (State): Initial state
+- `blank_symbol` (TapeSymbol): Blank symbol on the tape
+- `final_states` (StateSet): Set of accepting states
+- `num_heads` (int): Number of read/write heads (default 2)
+
+#### Methods
+
+##### `accepts(word: Word, max_steps: int = 1000) -> bool`
+Test if the multi-head TM accepts a given word. Single tape with multiple read/write heads.
+
+**Parameters:**
+- `word` (Word): List of symbols to process
+- `max_steps` (int): Maximum computation steps before halting
+
+**Returns:**
+- `bool`: True if the word is accepted, False otherwise
+
+##### `step() -> None`
+Perform a single computation step across all heads.
+
+##### `get_configuration() -> Dict`
+Return the current state, tape contents, and head positions.
 
 ---
 
 ## CFG Algorithms
 
+These functions provide ways to test membership, generate strings, and trace derivations for context-free grammars. The CYK algorithm is the standard O(n^3) dynamic-programming approach that fills a triangular table to decide whether a string belongs to the language. It requires the grammar to be in Chomsky Normal Form (CNF), where every production is either `A -> BC` (two non-terminals) or `A -> a` (one terminal). Use `cfg.to_cnf()` to convert any CFG before passing it to CYK.
+
 ```python
-from automata import cyk_accept, accept_string, generate_strings, get_derivation, get_all_productions_used
+from automata.backend.grammar.context_free.cfg_algo import cyk_accept, accept_string, generate_strings, get_derivation, get_all_productions_used
 ```
 
 ### Functions
 
 #### `cyk_accept(cfg: CFG, string: str) -> bool`
-CYK membership test. Grammar **must** be in CNF (`cfg.to_cnf()`). O(n^3) time.
+Check if a string can be generated from a CFG using the CYK algorithm. The grammar must be in Chomsky Normal Form.
+
+**Parameters:**
+- `cfg` (CFG): The context-free grammar in CNF
+- `string` (str): The string to check
+
+**Returns:**
+- `bool`: True if the string can be generated, False otherwise
 
 #### `accept_string(cfg: CFG, string: str, max_steps=None) -> bool`
-BFS-based acceptance. Works on any CFG (not just CNF).
+Check if a string can be generated from a CFG using BFS with pruning. Works on any CFG, not just CNF.
+
+**Parameters:**
+- `cfg` (CFG): The context-free grammar
+- `string` (str): The string to check
+- `max_steps` (int, optional): Maximum derivation steps
+
+**Returns:**
+- `bool`: True if the string can be generated, False otherwise
 
 #### `generate_strings(cfg: CFG, max_length: int) -> Generator[str]`
-Generate all strings derivable from the CFG up to the given length.
+Generate all strings that can be derived from the CFG up to a given length.
+
+**Parameters:**
+- `cfg` (CFG): The context-free grammar
+- `max_length` (int): Maximum length of strings to generate
+
+**Returns:**
+- `Generator[str]`: Strings that can be generated from the CFG
 
 #### `get_derivation(cfg: CFG, string: str) -> Optional[List[str]]`
-Get the derivation sequence as a list of sentential forms.
+Get a derivation sequence for a string from the CFG.
+
+**Parameters:**
+- `cfg` (CFG): The context-free grammar
+- `string` (str): The string to derive
+
+**Returns:**
+- `List[str]`: A list of sentential forms showing the derivation, or None if the string cannot be derived
 
 #### `get_all_productions_used(cfg: CFG, string: str) -> Optional[List[Production]]`
-Get the list of `Production` objects applied in the derivation.
+Get the list of productions used to derive a string.
+
+**Parameters:**
+- `cfg` (CFG): The context-free grammar
+- `string` (str): The string to derive
+
+**Returns:**
+- `List[Production]`: Production objects used in the derivation, or None if the string cannot be derived
 
 ---
 
@@ -371,7 +487,7 @@ Get the list of `Production` objects applied in the derivation.
 ### Hopcroft's Algorithm
 
 ```python
-from automata.backend.grammar.regular_languages.dfa.minimization.hopcroft import hopcroft_minimize
+from automata.backend.grammar.regular_languages.dfa.minimization.hopcroft import hopcroft_minimize, analyze_equivalence_classes
 ```
 
 #### `hopcroft_minimize(dfa: DFA) -> DFA`
@@ -386,6 +502,9 @@ Minimize a DFA using Hopcroft's O(n log n) algorithm.
 #### `analyze_equivalence_classes(dfa: DFA) -> Dict[str, List[State]]`
 Analyze equivalence classes found during minimization.
 
+**Parameters:**
+- `dfa` (DFA): DFA to analyze
+
 **Returns:**
 - `Dict[str, List[State]]`: Mapping of class names to equivalent states
 
@@ -394,14 +513,23 @@ Analyze equivalence classes found during minimization.
 ### Myhill-Nerode Algorithm
 
 ```python
-from automata.backend.grammar.regular_languages.dfa.minimization.myhill_nerode import myhill_nerode_minimize
+from automata.backend.grammar.regular_languages.dfa.minimization.myhill_nerode import myhill_nerode_minimize, get_distinguishability_table
 ```
 
 #### `myhill_nerode_minimize(dfa: DFA) -> DFA`
 Minimize a DFA using the Myhill-Nerode theorem approach.
 
+**Parameters:**
+- `dfa` (DFA): DFA to minimize
+
+**Returns:**
+- `DFA`: Minimized DFA with equivalent language
+
 #### `get_distinguishability_table(dfa: DFA) -> Dict[Tuple[State, State], bool]`
 Generate the distinguishability table for analysis.
+
+**Parameters:**
+- `dfa` (DFA): DFA to analyze
 
 **Returns:**
 - `Dict[Tuple[State, State], bool]`: State pair distinguishability mapping
@@ -420,6 +548,14 @@ from automata.backend.grammar.transducers.mealy_machine import MealyMachine
 ```python
 MealyMachine(states, input_alphabet, output_alphabet, transitions, output_function, start_state)
 ```
+
+**Parameters:**
+- `states` (StateSet): Set of all states in the automaton
+- `input_alphabet` (Alphabet): Input alphabet symbols
+- `output_alphabet` (OutputAlphabet): Output alphabet symbols
+- `transitions` (Dict[State, Dict[Symbol, State]]): Transition function
+- `output_function` (Dict[Tuple[State, Symbol], str]): Output function mapping (state, input) to output
+- `start_state` (State): Initial state
 
 #### Methods
 
@@ -444,53 +580,89 @@ from automata.backend.drawings.automata_drawer import AutomataDrawer
 
 #### Methods
 
-##### `draw_dfa_from_object(dfa: DFA, filename: str) -> str`
+##### `draw_dfa_from_object(dfa: DFA, filename: str, format: str = "png") -> str`
 Generate visualization for a DFA.
 
 **Parameters:**
 - `dfa` (DFA): DFA to visualize
 - `filename` (str): Output filename (without extension)
+- `format` (str): Output format (png, pdf, svg)
 
 **Returns:**
-- `str`: Path to generated PNG file
+- `str`: Path to generated file
 
-##### `draw_nfa_from_object(nfa: NFA, filename: str) -> str`
-Generate visualization for an NFA with ε-transitions.
+##### `draw_nfa_from_object(nfa: NFA, filename: str, format: str = "png") -> str`
+Generate visualization for an NFA with epsilon-transitions.
 
-##### `draw_mealy_machine_from_object(mealy: MealyMachine, filename: str) -> str`
+**Parameters:**
+- `nfa` (NFA): NFA to visualize
+- `filename` (str): Output filename (without extension)
+- `format` (str): Output format (png, pdf, svg)
+
+**Returns:**
+- `str`: Path to generated file
+
+##### `draw_mealy_machine_from_object(mealy: MealyMachine, filename: str, format: str = "png") -> str`
 Generate visualization for a Mealy machine.
+
+**Parameters:**
+- `mealy` (MealyMachine): Mealy machine to visualize
+- `filename` (str): Output filename (without extension)
+- `format` (str): Output format (png, pdf, svg)
+
+**Returns:**
+- `str`: Path to generated file
 
 ##### `draw_pda(pda: PDA, filename: str, format: str = "png") -> str`
 Generate visualization for a PDA. Edge labels use the format `input, stack_top -> push_symbols`.
 
-**Example:**
-```python
-drawer = AutomataDrawer()
-path = drawer.draw_pda(pda, "my_pda")
-```
+**Parameters:**
+- `pda` (PDA): PDA to visualize
+- `filename` (str): Output filename (without extension)
+- `format` (str): Output format (png, pdf, svg)
+
+**Returns:**
+- `str`: Path to generated file
+
+---
 
 ### TMDrawer
 
 ```python
-from automata import TMDrawer
+from automata.backend.drawings.tm_drawer import TMDrawer
 ```
 
-### Methods
+#### Methods
 
-#### `draw_turing_machine(tm: TuringMachine, filename: str) -> str`
+##### `draw_turing_machine(tm: TuringMachine, filename: str) -> str`
 Generate visualization for a single-tape Turing machine.
 
-#### `draw_multitape_turing_machine(tm: MultiTapeTuringMachine, filename: str) -> str`
+**Parameters:**
+- `tm` (TuringMachine): Turing machine to visualize
+- `filename` (str): Output filename (without extension)
+
+**Returns:**
+- `str`: Path to generated PNG file
+
+##### `draw_multitape_turing_machine(tm: MultiTapeTuringMachine, filename: str) -> str`
 Generate visualization for a multi-tape Turing machine.
 
-#### `draw_multihead_turing_machine(tm: MultiHeadTuringMachine, filename: str) -> str`
+**Parameters:**
+- `tm` (MultiTapeTuringMachine): Multi-tape TM to visualize
+- `filename` (str): Output filename (without extension)
+
+**Returns:**
+- `str`: Path to generated PNG file
+
+##### `draw_multihead_turing_machine(tm: MultiHeadTuringMachine, filename: str) -> str`
 Generate visualization for a multi-head Turing machine.
 
-**Example:**
-```python
-drawer = TMDrawer()
-path = drawer.draw_turing_machine(tm, "my_tm")
-```
+**Parameters:**
+- `tm` (MultiHeadTuringMachine): Multi-head TM to visualize
+- `filename` (str): Output filename (without extension)
+
+**Returns:**
+- `str`: Path to generated PNG file
 
 ---
 
@@ -537,7 +709,7 @@ from automata.backend.grammar.regular_languages.dfa.algo.kmp import kmp_search
 ```
 
 #### `kmp_search(pattern: str, text: str) -> List[int]`
-Find all occurrences of pattern in text using Knuth-Morris-Pratt algorithm.
+Find all occurrences of pattern in text using the Knuth-Morris-Pratt algorithm.
 
 **Parameters:**
 - `pattern` (str): Pattern to search for
@@ -576,21 +748,21 @@ positions = kmp_search("abc", "abcabcabc")
 ### Algorithm Complexities
 
 - **DFA Acceptance**: O(n) where n is word length
-- **NFA Acceptance**: O(n × 2^m) where m is number of states
+- **NFA Acceptance**: O(n x 2^m) where m is number of states
 - **NFA to DFA**: O(2^n) worst case, often much better in practice
 - **Hopcroft Minimization**: O(n log n)
-- **Myhill-Nerode Minimization**: O(n²)
+- **Myhill-Nerode Minimization**: O(n^2)
 - **PDA Acceptance**: Exponential in worst case (BFS over configurations); practical for typical inputs
-- **CYK Algorithm**: O(n³ × |G|) where n is string length, |G| is grammar size
+- **CYK Algorithm**: O(n^3 x |G|) where n is string length, |G| is grammar size
 - **TM Acceptance**: Depends on the machine; bounded by `max_steps` parameter
 
 ### Memory Usage
 
-- **DFA**: O(|states| × |alphabet|) for transition table
-- **NFA**: O(|states| × |alphabet| × |states|) for transition sets
+- **DFA**: O(|states| x |alphabet|) for transition table
+- **NFA**: O(|states| x |alphabet| x |states|) for transition sets
 - **PDA**: O(|configurations visited|) for BFS; bounded by `max_steps`
 - **TM**: O(tape cells used) for tape storage
-- **Minimization**: Additional O(|states|²) for analysis tables
+- **Minimization**: Additional O(|states|^2) for analysis tables
 
 ---
 
@@ -599,7 +771,7 @@ positions = kmp_search("abc", "abcabcabc")
 ### Combining Multiple Algorithms
 
 ```python
-# Complete workflow: Regex → NFA → DFA → Minimized DFA
+# Complete workflow: Regex -> NFA -> DFA -> Minimized DFA
 nfa = NFA.from_regex("(a|b)*ab")
 dfa = nfa.to_dfa()
 minimized = hopcroft_minimize(dfa)
@@ -640,7 +812,7 @@ tm = TuringMachine.from_string(
     start_state="q0", accept_states={"qa"}, blank_symbol="_",
 )
 
-print(tm.accepts(list("0100")))  # True (even number of 1s)
+print(tm.accepts(list("0110")))  # True (even number of 1s)
 
 drawer = TMDrawer()
 drawer.draw_turing_machine(tm, "even_ones_tm")
