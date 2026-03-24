@@ -4,6 +4,8 @@
 
 ### DFA (Deterministic Finite Automaton)
 
+A DFA is the simplest model of computation that reads an input string one symbol at a time, moving between states according to a fixed set of rules. "Deterministic" means that in every state there is exactly one transition for each possible input symbol, so the machine's behavior is fully predictable. After reading the entire input, the DFA accepts if it ends in one of its designated accept states, and rejects otherwise. DFAs recognize exactly the class of **regular languages**.
+
 ```python
 from automata.backend.grammar.regular_languages.dfa.dfa_mod import DFA
 ```
@@ -66,6 +68,8 @@ Add a single transition to the DFA.
 
 ### NFA (Non-deterministic Finite Automaton)
 
+An NFA works like a DFA but with two key relaxations: (1) from any state, there can be zero, one, or many transitions on the same input symbol (the machine "guesses" which path to take), and (2) it may have **epsilon (ε) transitions** that let it change state without consuming any input. An NFA accepts a string if **at least one** possible path through the machine leads to an accept state. NFAs recognize exactly the same languages as DFAs (regular languages), but they are often more compact and easier to construct.
+
 ```python
 from automata.backend.grammar.regular_languages.nfa.nfa_mod import NFA
 ```
@@ -95,7 +99,7 @@ Test if the NFA accepts a given word using breadth-first search.
 - `bool`: True if the word is accepted, False otherwise
 
 ##### `to_dfa() -> DFA`
-Convert the NFA to an equivalent DFA using subset construction.
+Convert the NFA to an equivalent DFA using the **subset construction** (also called the powerset construction). The idea is that each state in the new DFA represents a *set* of NFA states that the machine could be in simultaneously. The algorithm tracks all possible NFA states in parallel, so the resulting DFA can have up to 2^n states (where n is the number of NFA states), though in practice it is usually much smaller.
 
 **Returns:**
 - `DFA`: Equivalent deterministic finite automaton
@@ -119,7 +123,7 @@ Class method to create an NFA from a string representation.
 - `NFA`: A new NFA instance
 
 ##### `from_regex(regex: str) -> NFA`
-Class method to create an NFA from a regular expression using Thompson's construction.
+Class method to create an NFA from a regular expression using **Thompson's construction**. This algorithm recursively breaks a regex into its sub-expressions (concatenation, union `|`, and Kleene star `*`) and builds a small NFA fragment for each one, then wires the fragments together with epsilon transitions. The result is an NFA with at most 2× the number of characters in the regex.
 
 **Parameters:**
 - `regex` (str): Regular expression string
@@ -135,6 +139,8 @@ nfa = NFA.from_regex("(a|b)*ab")
 ---
 
 ### CFG (Context-Free Grammar)
+
+A context-free grammar is a set of recursive rewriting rules used to generate strings in a language. It consists of **non-terminal** symbols (variables like S, A, B), **terminal** symbols (actual characters like a, b), and **production rules** that describe how non-terminals can be replaced (e.g., `S -> a S b | ε`). Starting from the start symbol, you repeatedly apply productions until only terminals remain. CFGs can describe languages that regular expressions cannot, such as balanced parentheses or `a^n b^n`. They are the foundation of most programming language parsers.
 
 ```python
 from automata.backend.grammar.context_free.cfg_mod import CFG
@@ -173,7 +179,7 @@ cfg = CFG.from_string(grammar_str)
 ```
 
 ##### `to_cnf() -> CFG`
-Convert the grammar to Chomsky Normal Form.
+Convert the grammar to **Chomsky Normal Form (CNF)**. In CNF, every production is either `A -> BC` (exactly two non-terminals) or `A -> a` (exactly one terminal). Any CFG can be converted to CNF, and the CYK parsing algorithm requires the grammar to be in this form.
 
 **Returns:**
 - `CFG`: Equivalent grammar in CNF
@@ -181,6 +187,8 @@ Convert the grammar to Chomsky Normal Form.
 ---
 
 ### PDA (Pushdown Automaton)
+
+A pushdown automaton is like an NFA with the addition of a **stack** - an unlimited last-in-first-out memory. On each step, the PDA reads an input symbol (or makes an epsilon move), looks at the top of the stack, and based on both, decides which state to go to and what to push onto the stack. This extra memory lets PDAs recognize context-free languages like `a^n b^n` (equal numbers of a's and b's) that finite automata cannot handle. Every context-free grammar has an equivalent PDA and vice versa.
 
 ```python
 from automata.backend.grammar.context_free.pda.pda_mod import PDA
@@ -253,7 +261,7 @@ pda = PDA.from_string(
 ```
 
 ##### `from_cfg(cfg: CFG) -> PDA`
-Convert a Context-Free Grammar to an equivalent PDA using the standard top-down construction.
+Convert a Context-Free Grammar to an equivalent PDA using the standard **top-down construction**. The resulting PDA simulates leftmost derivations: it pushes the start symbol onto the stack, then repeatedly replaces the top non-terminal with the right-hand side of a matching production, or pops a terminal that matches the next input symbol.
 
 **Parameters:**
 - `cfg` (CFG): A context-free grammar
@@ -271,6 +279,8 @@ pda.accepts([Symbol("a"), Symbol("a"), Symbol("b"), Symbol("b")])  # True
 ---
 
 ### TuringMachine (Single-Tape)
+
+A Turing machine is the most powerful standard model of computation. It has an infinite tape (initially filled with blanks except for the input) and a read/write head that can move left or right. On each step, the machine reads the symbol under the head, and based on its current state and that symbol, it writes a new symbol, moves the head one cell left or right, and transitions to a new state. If the machine reaches an accept state it accepts; if it loops forever, it never halts. Turing machines can recognize **recursively enumerable** languages and are equivalent in power to any general-purpose computer.
 
 ```python
 from automata.backend.grammar.turing_machines.standard import TuringMachine
@@ -337,6 +347,8 @@ tm.accepts(list("0011"))  # True
 
 ### MultiTapeTuringMachine
 
+A multi-tape Turing machine has several independent tapes, each with its own read/write head. On each step, it reads all heads simultaneously, then writes and moves each head independently. Multi-tape TMs are strictly equivalent in power to single-tape TMs (any multi-tape machine can be simulated on one tape), but they can be exponentially faster for some problems and are often easier to design.
+
 ```python
 from automata.backend.grammar.turing_machines.multitape import MultiTapeTuringMachine
 ```
@@ -378,6 +390,8 @@ Return the current state and all tape contents.
 ---
 
 ### MultiHeadTuringMachine
+
+A multi-head Turing machine has a single tape but multiple read/write heads that can each move independently. Like the multi-tape variant, it does not add computational power beyond a standard TM, but it can be more convenient for certain algorithms where you need to compare or copy data at different positions on the same tape.
 
 ```python
 from automata.backend.grammar.turing_machines.multihead import MultiHeadTuringMachine
@@ -484,7 +498,11 @@ Get the list of productions used to derive a string.
 
 ## Minimization Algorithms
 
+DFA minimization finds the smallest DFA that recognizes the same language as the original. Two states are "equivalent" if no input string can distinguish them (i.e., both lead to acceptance or both lead to rejection for every possible continuation). Minimization merges all equivalent states into one representative state. This package provides two classical approaches.
+
 ### Hopcroft's Algorithm
+
+Hopcroft's algorithm is a partition-refinement method. It starts by splitting states into two groups (accepting vs. non-accepting), then repeatedly refines the partition: if two states in the same group transition to different groups on some symbol, they are split apart. The process runs in O(n log n) time, making it the fastest known DFA minimization algorithm.
 
 ```python
 from automata.backend.grammar.regular_languages.dfa.minimization.hopcroft import hopcroft_minimize, analyze_equivalence_classes
@@ -500,7 +518,7 @@ Minimize a DFA using Hopcroft's O(n log n) algorithm.
 - `DFA`: Minimized DFA with equivalent language
 
 #### `analyze_equivalence_classes(dfa: DFA) -> Dict[str, List[State]]`
-Analyze equivalence classes found during minimization.
+Analyze equivalence classes found during minimization. Returns which original states were merged together.
 
 **Parameters:**
 - `dfa` (DFA): DFA to analyze
@@ -511,6 +529,8 @@ Analyze equivalence classes found during minimization.
 ---
 
 ### Myhill-Nerode Algorithm
+
+The Myhill-Nerode approach uses a table-filling method. It builds an n-by-n table of all state pairs and marks pairs as "distinguishable" if one is accepting and the other is not. It then iterates: if states (p, q) transition to an already-distinguished pair on some symbol, (p, q) is also marked distinguishable. When no more pairs can be marked, the unmarked pairs are equivalent and can be merged. This runs in O(n^2) time and produces a distinguishability table useful for educational analysis.
 
 ```python
 from automata.backend.grammar.regular_languages.dfa.minimization.myhill_nerode import myhill_nerode_minimize, get_distinguishability_table
@@ -526,19 +546,23 @@ Minimize a DFA using the Myhill-Nerode theorem approach.
 - `DFA`: Minimized DFA with equivalent language
 
 #### `get_distinguishability_table(dfa: DFA) -> Dict[Tuple[State, State], bool]`
-Generate the distinguishability table for analysis.
+Generate the distinguishability table for analysis. Each entry tells you whether two states can be told apart by some input string.
 
 **Parameters:**
 - `dfa` (DFA): DFA to analyze
 
 **Returns:**
-- `Dict[Tuple[State, State], bool]`: State pair distinguishability mapping
+- `Dict[Tuple[State, State], bool]`: State pair distinguishability mapping (True = distinguishable, False = equivalent)
 
 ---
 
 ## Transducers
 
+Transducers are automata that produce output, not just accept/reject decisions. While a DFA answers "yes or no" for an input string, a transducer reads input symbols and emits output symbols along the way.
+
 ### Mealy Machine
+
+A Mealy machine is a finite-state transducer where the output depends on both the current state **and** the input symbol being read. For every (state, input) pair, the machine produces an output symbol and transitions to a new state. Common uses include protocol encoders, digital circuit design, and any process that transforms one stream of symbols into another.
 
 ```python
 from automata.backend.grammar.transducers.mealy_machine import MealyMachine
@@ -571,6 +595,8 @@ Process input string and produce output.
 ---
 
 ## Visualization Tools
+
+These tools use [Graphviz](https://graphviz.org/) to generate state-diagram images (PNG, PDF, or SVG) from automaton objects. States are drawn as circles (double circles for accept states), transitions as labeled arrows, and an unlabeled arrow points to the start state.
 
 ### AutomataDrawer
 
@@ -703,6 +729,8 @@ Alphabet(symbols: List[Symbol]) -> Alphabet
 ## Pattern Matching
 
 ### KMP Algorithm
+
+The **Knuth-Morris-Pratt (KMP)** algorithm finds all occurrences of a pattern in a text in O(n + m) time, where n is the text length and m is the pattern length. Unlike naive search (which can re-scan characters after a mismatch), KMP preprocesses the pattern into a "failure function" that tells the algorithm how far to shift when a mismatch occurs, so it never backtracks on the text. This makes it particularly efficient for long texts or patterns with repeated prefixes.
 
 ```python
 from automata.backend.grammar.regular_languages.dfa.algo.kmp import kmp_search
