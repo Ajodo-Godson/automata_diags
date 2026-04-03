@@ -14,8 +14,8 @@ api_reference/automata_api.md
 
 ## Key Features
 
--   **Complete Toolset**: DFAs, NFAs, CFGs, Pushdown Automata, and more.
--   **Advanced Algorithms**: Hopcroft's minimization, NFA-to-DFA conversion, and CNF transformation.
+-   **Complete Toolset**: DFAs, NFAs, CFGs, PDAs, Turing machines (single-, multi-tape, multi-head), Mealy transducers, stochastic CFGs, and more.
+-   **Advanced Algorithms**: Hopcroft's minimization, NFA-to-DFA conversion, CNF transformation, CYK and probabilistic CYK, KMP and KMP-DFA construction.
 -   **Instant Visualization**: See your automata with beautiful diagrams powered by Graphviz.
 -   **Educational Focus**: An intuitive API that maps directly to textbook concepts.
 

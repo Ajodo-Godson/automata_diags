@@ -594,6 +594,58 @@ Process input string and produce output.
 
 ---
 
+### Stochastic CFG (SCFG) and probabilistic CYK
+
+A **stochastic context-free grammar (SCFG)** assigns a **probability** to each production. The grammar defines a distribution over strings; **probabilistic CYK** computes the total probability that the start symbol derives a given string (summing over all parse trees). Productions must be in **Chomsky Normal Form** for `parse()`; use `to_cnf()` first.
+
+```python
+from automata.backend.grammar.transducers.scfg_parser import SCFG
+```
+
+#### Constructor and parsing from string
+
+```python
+SCFG(non_terminals, terminals, productions, start_symbol)
+```
+
+Use the class method `SCFG.from_string(grammar_str)` where each line looks like:
+
+`LHS -> RHS [probability]`
+
+For example: `S -> A B [0.7]` or `S -> a [0.3]`. Epsilon may appear as an empty RHS with a probability.
+
+#### Methods
+
+##### `to_cnf() -> SCFG`
+Convert the SCFG to Chomsky Normal Form, preserving the stochastic structure (probabilities are adjusted through the transformation pipeline).
+
+##### `parse(sentence: List[Terminal]) -> float`
+Run **probabilistic CYK** on a sentence (list of `Terminal` symbols). **Requires** the grammar to already be in CNF. Returns a **float** in `[0, 1]`: the probability of the string under the grammar (sum of probabilities of all derivations). For empty input, returns `1.0` if the start symbol can derive ε, else `0.0`.
+
+**Example:**
+
+```python
+grammar_str = """
+S -> A B [0.7]
+S -> a [0.3]
+A -> a [1.0]
+B -> b [1.0]
+"""
+scfg = SCFG.from_string(grammar_str)
+cnf = scfg.to_cnf()
+from automata.backend.grammar.dist import Terminal
+prob = cnf.parse([Terminal("a"), Terminal("b")])
+print(prob)  # probability of "ab"
+```
+
+**See also:** `examples/scfg_cnf_conversion_example.py` and `automata/backend/grammar/transducers/tests/test_scfg_parser.py`.
+
+#### `FiniteTransducer` (abstract base)
+
+`MealyMachine` subclasses `FiniteTransducer` from `automata.backend.grammar.transducers.finite_transducer`. Subclasses implement `transduce`. Use `MealyMachine` for concrete applications.
+
+---
+
 ## Visualization Tools
 
 These tools use [Graphviz](https://graphviz.org/) to generate state-diagram images (PNG, PDF, or SVG) from automaton objects. States are drawn as circles (double circles for accept states), transitions as labeled arrows, and an unlabeled arrow points to the start state.
@@ -712,6 +764,19 @@ Represents a non-terminal symbol in a grammar.
 #### Terminal
 Represents a terminal symbol in a grammar.
 
+#### TapeSymbol
+A `NewType` wrapper for symbols on a Turing machine tape (often a superset of the input alphabet).
+
+#### Word
+Type alias: `Sequence[Symbol]` — sequences accepted by `accepts()` methods.
+
+#### TapeAlphabet
+Subclass of `Alphabet` for tape symbols used by Turing machines.
+
+```python
+from automata.backend.grammar.dist import TapeSymbol, TapeAlphabet, Word
+```
+
 ### Collection Types
 
 #### StateSet
@@ -751,6 +816,41 @@ Find all occurrences of pattern in text using the Knuth-Morris-Pratt algorithm.
 positions = kmp_search("abc", "abcabcabc")
 # Returns: [0, 3, 6]
 ```
+
+#### `build_prefix_function(pattern: str) -> List[int]`
+Build the **prefix function** (LPS array: longest proper prefix of `pattern[:i+1]` that is also a suffix). Used internally by `build_kmp_dfa` and `kmp_search`.
+
+#### `build_kmp_dfa(pattern: str, alphabet: Set[str]) -> Tuple[...]`
+Build a **DFA** (as transition tables and accept information) that recognizes strings whose **last** `len(pattern)` characters equal `pattern`. This connects KMP pattern matching to finite-state automata.
+
+```python
+from automata.backend.grammar.regular_languages.dfa.algo.kmp import (
+    build_prefix_function,
+    build_kmp_dfa,
+    kmp_search,
+)
+```
+
+**Parameters:**
+- `pattern` (str): Pattern string
+- `alphabet` (Set[str]): Set of symbols that may appear (must include all characters in `pattern`)
+
+**Returns:**
+- `Tuple[Dict[int, Dict[str, int]], int, Set[int]]`: `(transitions, start_state, accept_states)` where states are `0..m` for pattern length `m`, `start_state == 0`, and accept states are `{m}`.
+
+#### Helpers in `dfa_mod_algo`
+
+```python
+from automata.backend.grammar.regular_languages.dfa.dfa_mod_algo import (
+    create_dfa_from_pattern,
+    create_dfa_from_table,
+    find_pattern_in_text,
+)
+```
+
+- **`create_dfa_from_pattern(pattern, alphabet)`** — Builds a `DFA` instance from `build_kmp_dfa` (integer state names, `KMP`-style semantics).
+- **`create_dfa_from_table(table, start_state, accept_states, ...)`** — Builds a `DFA` from a string-keyed transition table (used by the public `automata.create_dfa_from_table` export).
+- **`find_pattern_in_text(pattern, text)`** — Thin wrapper around `kmp_search`.
 
 ---
 
@@ -861,3 +961,33 @@ equiv_classes = analyze_equivalence_classes(dfa)
 for class_name, states in equiv_classes.items():
     print(f"{class_name}: {states}")
 ```
+
+### SCFG: CNF conversion and probabilistic parsing
+
+```python
+from automata.backend.grammar.transducers.scfg_parser import SCFG
+from automata.backend.grammar.dist import Terminal
+
+scfg = SCFG.from_string("""
+S -> A B [0.5]
+S -> a [0.5]
+A -> a [1.0]
+B -> b [1.0]
+""")
+cnf = scfg.to_cnf()
+p = cnf.parse([Terminal("a"), Terminal("b")])
+print("P(ab) =", p)
+```
+
+---
+
+## Runtime benchmarks (optional)
+
+The package includes a small **benchmarking** toolkit under `automata.backend.analysis` for measuring algorithm runtimes (e.g., CYK vs input length). This is intended for developers and reproducibility, not for end-user API use.
+
+- `automata.backend.analysis.benchmark` — orchestrates benchmark runs
+- `automata.backend.analysis.runtime_benchmarks` — timing helpers
+- `automata.backend.analysis.plots` — plotting utilities for benchmark results
+- `automata.backend.analysis.generators` — generators for test inputs
+
+See the `analysis` package and `outputs/benchmarks/` if present locally.
