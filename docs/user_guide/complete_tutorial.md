@@ -11,9 +11,11 @@
 7. [Pushdown Automata](#pushdown-automata)
 8. [Turing Machines](#turing-machines)
 9. [Finite-State Transducers](#finite-state-transducers)
-10. [Visualization Techniques](#visualization-techniques)
-11. [Advanced Examples](#advanced-examples)
-12. [Best Practices](#best-practices)
+10. [Stochastic CFG and probabilistic CYK](#stochastic-cfg-and-probabilistic-cyk)
+11. [KMP pattern matching and KMP DFA](#kmp-pattern-matching-and-kmp-dfa)
+12. [Visualization Techniques](#visualization-techniques)
+13. [Advanced Examples](#advanced-examples)
+14. [Best Practices](#best-practices)
 
 ---
 
@@ -841,6 +843,47 @@ def mealy_machine_demo():
         print(f"  {binary} → '{unary}' (decimal: {decimal})")
 
 mealy_machine_demo()
+```
+
+---
+
+## Stochastic CFG and probabilistic CYK
+
+A **stochastic CFG** assigns a probability to each production. Convert to CNF with `SCFG.to_cnf()`, then call `parse(sentence)` (list of `Terminal` symbols) to get the string probability under **probabilistic CYK**. The API reference documents `SCFG` in full; see also `examples/scfg_cnf_conversion_example.py`.
+
+```python
+from automata.backend.grammar.transducers.scfg_parser import SCFG
+from automata.backend.grammar.dist import Terminal
+
+grammar = """
+S -> A B [0.7]
+S -> a [0.3]
+A -> a [1.0]
+B -> b [1.0]
+"""
+scfg = SCFG.from_string(grammar)
+cnf = scfg.to_cnf()
+print("P(ab) =", cnf.parse([Terminal("a"), Terminal("b")]))
+```
+
+---
+
+## KMP pattern matching and KMP DFA
+
+The Knuth–Morris–Pratt module provides `build_prefix_function`, `build_kmp_dfa` (transition tables for a pattern-matching DFA), and `kmp_search` for linear-time substring search.
+
+```python
+from automata.backend.grammar.regular_languages.dfa.algo.kmp import (
+    build_prefix_function,
+    build_kmp_dfa,
+    kmp_search,
+)
+
+pattern = "ababc"
+alphabet = set(pattern)
+print("LPS:", build_prefix_function(pattern))
+transitions, start, accept = build_kmp_dfa(pattern, alphabet)
+print("kmp_search:", kmp_search(pattern, "zababcababc"))
 ```
 
 ---
