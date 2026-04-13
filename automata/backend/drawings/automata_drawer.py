@@ -120,8 +120,12 @@ class AutomataDrawer:
         str_start_state = str(start_state)
         str_accept_states = {str(state) for state in accept_states}
 
-        # Add all states
+        # Collect all states: sources, targets, and accept states
         all_states = set(str_transitions.keys())
+        for trans in str_transitions.values():
+            all_states.update(trans.values())
+        all_states.update(str_accept_states)
+        all_states.add(str_start_state)
         for state in all_states:
             # Double circle for accept states, single circle for others
             if state in str_accept_states:
