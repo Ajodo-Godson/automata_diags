@@ -1,5 +1,28 @@
+import { buildLexerDigitOnceNfaDefinition, buildLexerDigitPlusNfaDefinition } from '../../lib/compilerTutorialLexers';
+
+const _lexerDigitPlusNfa = buildLexerDigitPlusNfaDefinition();
+const _lexerDigitOnceNfa = buildLexerDigitOnceNfaDefinition();
+
 export const useExamples = () => {
     const examples = {
+        lexer_digits_plus: {
+            name: _lexerDigitPlusNfa.name,
+            description: _lexerDigitPlusNfa.description,
+            states: _lexerDigitPlusNfa.states,
+            alphabet: _lexerDigitPlusNfa.alphabet,
+            transitions: _lexerDigitPlusNfa.transitions,
+            startState: _lexerDigitPlusNfa.startState,
+            acceptStates: _lexerDigitPlusNfa.acceptStates,
+        },
+        lexer_digit_once: {
+            name: _lexerDigitOnceNfa.name,
+            description: _lexerDigitOnceNfa.description,
+            states: _lexerDigitOnceNfa.states,
+            alphabet: _lexerDigitOnceNfa.alphabet,
+            transitions: _lexerDigitOnceNfa.transitions,
+            startState: _lexerDigitOnceNfa.startState,
+            acceptStates: _lexerDigitOnceNfa.acceptStates,
+        },
         'basic_nfa': {
             name: 'Ends with "ab"',
             description: 'Accepts strings ending with "ab"',

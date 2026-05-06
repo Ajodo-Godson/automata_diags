@@ -12,7 +12,7 @@ import { useCFG } from './useCFG';
 import { validateCFGChallenge } from '../Tutorial_components/ChallengeValidator';
 import { CheckCircle, XCircle, Target } from 'lucide-react';
 
-const CFGSimulator = ({ challenge }) => {
+const CFGSimulator = ({ challenge, tutorialDemoKey, onTutorialDemoConsumed }) => {
     const { examples } = useExamples();
     const [currentExampleName, setCurrentExampleName] = useState(challenge ? null : 'balanced_parentheses');
     const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
@@ -505,6 +505,13 @@ const CFGSimulator = ({ challenge }) => {
             resetDerivation();
         }
     }, [examples, cfg.loadCFG, resetDerivation]);
+
+    useEffect(() => {
+        if (challenge || !tutorialDemoKey) return;
+        loadExample(tutorialDemoKey);
+        onTutorialDemoConsumed?.();
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot deep-link bootstrap
+    }, [challenge, tutorialDemoKey]);
 
     const handleValidateChallenge = () => {
         if (!challenge || !challenge.challenge || !challenge.challenge.testCases) {

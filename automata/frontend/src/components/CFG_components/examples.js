@@ -1,7 +1,28 @@
 import { useState } from 'react';
 
+const DIGIT_LITERALS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const COMPILER_PRECEDENCE_DIGIT_RULES = [
+    { left: 'E', right: 'TR' },
+    { left: 'R', right: '+TR' },
+    { left: 'R', right: 'ε' },
+    { left: 'T', right: 'FS' },
+    { left: 'S', right: '*FS' },
+    { left: 'S', right: 'ε' },
+    { left: 'F', right: '(E)' },
+    ...DIGIT_LITERALS.map((d) => ({ left: 'F', right: d })),
+];
+
 export const useExamples = () => {
     const [examples] = useState({
+        compiler_precedence_digits: {
+            name: 'Compiler demo: +, ×, parentheses, digits',
+            description:
+                'Parsing demo: × binds tighter than + (same shape as a tiny programming language). Try 2+3*4 or (1+2)*3 — type digits and operators with no spaces.',
+            variables: ['E', 'R', 'T', 'S', 'F'],
+            terminals: ['+', '*', '(', ')', ...DIGIT_LITERALS],
+            rules: COMPILER_PRECEDENCE_DIGIT_RULES,
+            startVariable: 'E',
+        },
         balanced_parentheses: {
             name: 'Balanced Parentheses',
             variables: ['S'],

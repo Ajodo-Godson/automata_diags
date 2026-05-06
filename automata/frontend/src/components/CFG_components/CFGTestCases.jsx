@@ -96,7 +96,16 @@ export const CFGTestCases = ({ onLoadTest, currentExample }) => {
             { input: 'ac', expected: 'Reject' },
             { input: 'ba', expected: 'Reject' },
             { input: 'abab', expected: 'Reject' }
-        ]
+        ],
+        compiler_precedence_digits: [
+            { input: '2+3*4', expected: 'Accept' },
+            { input: '(1+2)*3', expected: 'Accept' },
+            { input: '2', expected: 'Accept' },
+            { input: '1+2*3+4', expected: 'Accept' },
+            { input: '+2', expected: 'Reject' },
+            { input: '2+', expected: 'Reject' },
+            { input: '++', expected: 'Reject' },
+        ],
     };
 
     const currentTestCases = testCases[currentExample] || [];

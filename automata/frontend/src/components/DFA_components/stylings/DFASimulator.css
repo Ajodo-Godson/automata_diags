@@ -74,6 +74,26 @@
   font-weight: 600;
 }
 
+.dfa-lexer-pattern-row {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.dfa-lexer-pattern-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.dfa-lexer-pattern-input {
+  flex: 1;
+  min-width: 140px;
+  max-width: 220px;
+}
+
 .dfa-selector-label {
   font-size: 16px;
   font-weight: 600;

@@ -11,8 +11,9 @@ import { useExamples } from './examples';
 import { useDFA } from './useDFA';
 import { validateDFAChallenge } from '../Tutorial_components/ChallengeValidator';
 import { CheckCircle, XCircle, Target } from 'lucide-react';
+import { tryBuildLexerPattern } from '../../lib/compilerTutorialLexers';
 
-const DFASimulatorNew = ({ challenge }) => {
+const DFASimulatorNew = ({ challenge, tutorialDemoKey, onTutorialDemoConsumed }) => {
     const { examples } = useExamples();
     const [currentExampleName, setCurrentExampleName] = useState(challenge ? null : 'ends_with_ab');
     const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
@@ -36,6 +37,7 @@ const DFASimulatorNew = ({ challenge }) => {
     const dfa = useDFA(initialConfig);
 
     const [inputString, setInputString] = useState('');
+    const [lexerPatternInput, setLexerPatternInput] = useState('[0-9]+');
     const [simulationSteps, setSimulationSteps] = useState([]);
     const [currentStep, setCurrentStep] = useState(-1);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -150,6 +152,33 @@ const DFASimulatorNew = ({ challenge }) => {
             handleReset();
         }
     }, [examples, dfa.loadDFA, handleReset]);
+
+    useEffect(() => {
+        if (challenge || !tutorialDemoKey) return;
+        loadExample(tutorialDemoKey);
+        onTutorialDemoConsumed?.();
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot deep-link bootstrap
+    }, [challenge, tutorialDemoKey]);
+
+    const applyLexerPattern = () => {
+        const built = tryBuildLexerPattern(lexerPatternInput);
+        if (!built) {
+            window.alert('For this demo, use [0-9]+ (one or more digits) or [0-9] (single digit).');
+            return;
+        }
+        const def = built.definition;
+        dfa.loadDFA({
+            states: def.states,
+            alphabet: def.alphabet,
+            transitions: def.transitions,
+            startState: def.startState,
+            acceptStates: def.acceptStates,
+        });
+        setCurrentExampleName(null);
+        setCurrentExampleDescription(def.description);
+        setInputString('');
+        handleReset();
+    };
 
     const handleLoadTest = (testInput) => {
         setInputString(testInput);
@@ -303,6 +332,21 @@ const DFASimulatorNew = ({ challenge }) => {
                         </div>
                         {currentExampleDescription && (
                             <div className="dfa-example-description"><strong>Description:</strong> {currentExampleDescription}</div>
+                        )}
+                        {!challenge && (
+                            <div className="dfa-lexer-pattern-row" title="Maps a tiny lexer-style regex to the DFA a real lexer would use for that token">
+                                <span className="dfa-lexer-pattern-label">Lexing pattern → DFA:</span>
+                                <input
+                                    type="text"
+                                    className="dfa-input dfa-lexer-pattern-input"
+                                    value={lexerPatternInput}
+                                    onChange={(e) => setLexerPatternInput(e.target.value)}
+                                    aria-label="Lexer regex pattern"
+                                />
+                                <button type="button" className="dfa-btn dfa-btn-outline dfa-btn-compact" onClick={applyLexerPattern}>
+                                    Apply
+                                </button>
+                            </div>
                         )}
                     </div>
                 )}

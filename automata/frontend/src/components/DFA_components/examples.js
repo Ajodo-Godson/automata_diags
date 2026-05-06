@@ -1,4 +1,27 @@
+import { buildLexerDigitOnceDfaDefinition, buildLexerDigitPlusDfaDefinition } from '../../lib/compilerTutorialLexers';
+
+const _lexerDigitPlus = buildLexerDigitPlusDfaDefinition();
+const _lexerDigitOnce = buildLexerDigitOnceDfaDefinition();
+
 export const DFA_EXAMPLES = {
+    lexer_digits_plus: {
+        name: _lexerDigitPlus.name,
+        description: _lexerDigitPlus.description,
+        states: _lexerDigitPlus.states,
+        alphabet: _lexerDigitPlus.alphabet,
+        transitions: _lexerDigitPlus.transitions,
+        startState: _lexerDigitPlus.startState,
+        acceptStates: _lexerDigitPlus.acceptStates,
+    },
+    lexer_digit_once: {
+        name: _lexerDigitOnce.name,
+        description: _lexerDigitOnce.description,
+        states: _lexerDigitOnce.states,
+        alphabet: _lexerDigitOnce.alphabet,
+        transitions: _lexerDigitOnce.transitions,
+        startState: _lexerDigitOnce.startState,
+        acceptStates: _lexerDigitOnce.acceptStates,
+    },
     "ends_with_ab": {
         name: "Ends with 'ab'",
         states: ['q0', 'q1', 'q2'],

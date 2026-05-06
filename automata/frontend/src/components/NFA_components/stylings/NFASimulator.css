@@ -225,6 +225,26 @@
   font-weight: 600;
 }
 
+.nfa-lexer-pattern-row {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.nfa-lexer-pattern-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.nfa-lexer-pattern-input {
+  flex: 1;
+  min-width: 140px;
+  max-width: 220px;
+}
+
 .nfa-selector-label {
   font-size: 16px;
   font-weight: 600;

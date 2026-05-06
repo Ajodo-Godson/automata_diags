@@ -6,6 +6,22 @@ export const NFATestCases = ({ nfa, onTestString, currentExample }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const getTestCases = () => {
+    if (currentExample === 'lexer_digits_plus') {
+      return [
+        { input: '42', expected: 'Accept', shouldAccept: true },
+        { input: '0', expected: 'Accept', shouldAccept: true },
+        { input: '9876543210', expected: 'Accept', shouldAccept: true },
+        { input: '', expected: 'Reject', shouldAccept: false },
+        { input: '42a', expected: 'Reject', shouldAccept: false },
+      ];
+    }
+    if (currentExample === 'lexer_digit_once') {
+      return [
+        { input: '7', expected: 'Accept', shouldAccept: true },
+        { input: '42', expected: 'Reject', shouldAccept: false },
+        { input: '', expected: 'Reject', shouldAccept: false },
+      ];
+    }
     // Prefer example-specific test cases when available
     if (currentExample === 'basic_nfa') {
       return [

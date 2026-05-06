@@ -11,8 +11,9 @@ import { useExamples } from './examples';
 import { useNFA } from './useNFA';
 import { validateNFAChallenge } from '../Tutorial_components/ChallengeValidator';
 import { CheckCircle, XCircle, Target } from 'lucide-react';
+import { tryBuildLexerPatternNfa } from '../../lib/compilerTutorialLexers';
 
-const NFASimulator = ({ challenge }) => {
+const NFASimulator = ({ challenge, tutorialDemoKey, onTutorialDemoConsumed }) => {
     const { examples } = useExamples();
     const [currentExampleName, setCurrentExampleName] = useState(challenge ? null : 'basic_nfa');
     const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
@@ -36,6 +37,7 @@ const NFASimulator = ({ challenge }) => {
     const nfa = useNFA(initialConfig);
 
     const [inputString, setInputString] = useState('');
+    const [lexerPatternInput, setLexerPatternInput] = useState('[0-9]+');
     const [simulationSteps, setSimulationSteps] = useState([]);
     const [currentStep, setCurrentStep] = useState(-1);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -172,6 +174,33 @@ const NFASimulator = ({ challenge }) => {
             resetSimulation();
         }
     }, [examples, nfa.loadDefinition, resetSimulation]);
+
+    useEffect(() => {
+        if (challenge || !tutorialDemoKey) return;
+        loadExample(tutorialDemoKey);
+        onTutorialDemoConsumed?.();
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot deep-link bootstrap
+    }, [challenge, tutorialDemoKey]);
+
+    const applyLexerPattern = () => {
+        const built = tryBuildLexerPatternNfa(lexerPatternInput);
+        if (!built) {
+            window.alert('For this demo, use [0-9]+ (one or more digits) or [0-9] (single digit).');
+            return;
+        }
+        const def = built.definition;
+        nfa.loadDefinition({
+            states: def.states,
+            alphabet: def.alphabet,
+            transitions: def.transitions,
+            startState: def.startState,
+            acceptStates: def.acceptStates,
+        });
+        setCurrentExampleName(null);
+        setCurrentExampleDescription(def.description);
+        setInputString('');
+        resetSimulation();
+    };
 
     // Event listeners for toolbox actions
     useEffect(() => {
@@ -317,6 +346,21 @@ const NFASimulator = ({ challenge }) => {
                         </div>
                         {currentExampleDescription && (
                             <div className="nfa-example-description"><strong>Description:</strong> {currentExampleDescription}</div>
+                        )}
+                        {!challenge && (
+                            <div className="nfa-lexer-pattern-row" title="Maps a tiny lexer-style regex to an NFA for that token">
+                                <span className="nfa-lexer-pattern-label">Lexing pattern → NFA:</span>
+                                <input
+                                    type="text"
+                                    className="nfa-input nfa-lexer-pattern-input"
+                                    value={lexerPatternInput}
+                                    onChange={(e) => setLexerPatternInput(e.target.value)}
+                                    aria-label="Lexer regex pattern for NFA"
+                                />
+                                <button type="button" className="nfa-btn nfa-btn-primary" onClick={applyLexerPattern}>
+                                    Apply
+                                </button>
+                            </div>
                         )}
                     </div>
                 )}
