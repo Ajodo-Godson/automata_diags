@@ -92,6 +92,20 @@
   flex: 1;
   min-width: 140px;
   max-width: 220px;
+  background: #ffffff !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827;
+  caret-color: #111827;
+}
+
+.dfa-lexer-pattern-input:focus {
+  background: #ffffff !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827;
+}
+
+.dfa-lexer-pattern-input::placeholder {
+  color: #6b7280 !important;
 }
 
 .dfa-selector-label {
