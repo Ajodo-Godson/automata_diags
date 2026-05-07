@@ -401,6 +401,24 @@
   font-style: italic;
 }
 
+/* Keep "Test Input String" text visible regardless of theme overrides */
+.nfa-input-card .nfa-input {
+  background: #ffffff !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827;
+  caret-color: #111827;
+}
+
+.nfa-input-card .nfa-input:focus {
+  background: #ffffff !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827;
+}
+
+.nfa-input-card .nfa-input::placeholder {
+  color: #6b7280 !important;
+}
+
 .nfa-simulate-btn {
   padding: 14px 24px;
   font-size: 16px;

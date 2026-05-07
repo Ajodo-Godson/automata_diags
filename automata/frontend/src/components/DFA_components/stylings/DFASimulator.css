@@ -327,6 +327,24 @@
   font-weight: 400;
 }
 
+/* Keep "Test Input String" text visible regardless of theme overrides */
+.dfa-input-card-compact .dfa-input {
+  background: #ffffff !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827;
+  caret-color: #111827;
+}
+
+.dfa-input-card-compact .dfa-input:focus {
+  background: #ffffff !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827;
+}
+
+.dfa-input-card-compact .dfa-input::placeholder {
+  color: #6b7280 !important;
+}
+
 .dfa-input-help {
   font-size: 14px;
   color: #6b7280;
