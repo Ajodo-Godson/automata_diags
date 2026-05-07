@@ -17,6 +17,100 @@
     gap: 0.5rem;
 }
 
+.tree-title-secondary {
+    margin-top: 0.5rem;
+}
+
+/* 2D parse tree (top-down) */
+.tree-canvas {
+    width: 100%;
+    overflow-x: auto;
+    padding: 0.5rem 0.25rem 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.tree-root,
+.tree-root ul {
+    position: relative;
+    padding-top: 1rem;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    list-style: none;
+}
+
+.tree-root li {
+    position: relative;
+    padding: 1rem 0.45rem 0 0.45rem;
+    text-align: center;
+}
+
+.tree-root li::before,
+.tree-root li::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 50%;
+    width: 50%;
+    height: 1rem;
+    border-top: 1.5px solid #cbd5e1;
+}
+
+.tree-root li::after {
+    right: auto;
+    left: 50%;
+    border-left: 1.5px solid #cbd5e1;
+}
+
+.tree-root li:only-child::before,
+.tree-root li:only-child::after {
+    display: none;
+}
+
+.tree-root li:only-child {
+    padding-top: 0;
+}
+
+.tree-root li:first-child::before,
+.tree-root li:last-child::after {
+    border: 0 none;
+}
+
+.tree-root li:last-child::before {
+    border-right: 1.5px solid #cbd5e1;
+    border-radius: 0 5px 0 0;
+}
+
+.tree-root li:first-child::after {
+    border-radius: 5px 0 0 0;
+}
+
+.tree-symbol {
+    display: inline-block;
+    min-width: 1.6rem;
+    padding: 0.25rem 0.45rem;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    font-family: 'Courier New', monospace;
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.tree-symbol-var {
+    color: #7c3aed;
+    background: #f5f3ff;
+    border-color: #ddd6fe;
+}
+
+.tree-symbol-term {
+    color: #065f46;
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+}
+
 .tree-title {
     font-size: 0.85rem;
     font-weight: 600;
@@ -155,6 +249,34 @@
 
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
+    .tree-canvas {
+        background: #111827;
+        border-color: #374151;
+    }
+
+    .tree-root li::before,
+    .tree-root li::after {
+        border-color: #4b5563;
+    }
+
+    .tree-symbol {
+        background: #1f2937;
+        border-color: #4b5563;
+        color: #e5e7eb;
+    }
+
+    .tree-symbol-var {
+        color: #c4b5fd;
+        background: #312e81;
+        border-color: #6366f1;
+    }
+
+    .tree-symbol-term {
+        color: #6ee7b7;
+        background: #064e3b;
+        border-color: #10b981;
+    }
+
     .tree-node {
         background: #1f2937;
         border-color: #374151;
