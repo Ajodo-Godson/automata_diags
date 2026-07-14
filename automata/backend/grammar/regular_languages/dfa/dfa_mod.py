@@ -177,6 +177,15 @@ class DFA(Automaton[State]):
         from .dfa_ops import find_distinguishing_string
         return find_distinguishing_string(self, other)
 
+    def to_regex(self) -> Optional[str]:
+        """
+        Return a regular expression for this DFA's language via GNFA state
+        elimination, or None if the language is empty. The result parses
+        back through `NFA.from_regex` to an equivalent automaton.
+        """
+        from .dfa_to_regex import dfa_to_regex
+        return dfa_to_regex(self)
+
     def add_transition(
         self, from_state: State, symbol: Symbol, to_state: State
     ) -> None:
