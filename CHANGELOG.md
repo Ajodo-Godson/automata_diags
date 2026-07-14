@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-07-14
+
+### Fixed
+- Myhill-Nerode minimization merged inequivalent states on partial DFAs (missing transitions were skipped during table filling). Both minimizers now complete the DFA first, treating a missing transition as a transition to an implicit dead state, and prune the dead class from the result.
+- `DFA.accepts` raised `KeyError` instead of rejecting when the run reached a state with no outgoing transitions.
+- `StateSet.from_states` aliased the caller's collection, silently storing a list when passed one (breaking `add_state` and set semantics). It now copies into a set.
+- Directly-constructed NFAs whose ε-transitions used a different marker than `epsilon_symbol` silently rejected valid strings; the constructor now raises `ValueError` on mismatched epsilon markers.
+- KMP-based DFAs (`create_dfa_from_pattern`) used integer states and plain sets, which crashed `AutomataDrawer.draw_dfa_from_object`.
+- pytest configuration lived in an ignored `[tool.pytest]` table; moved to `[tool.pytest.ini_options]` with collection limited to the package, so the test suite collects and runs again.
+
+### Changed
+- **Breaking:** the default NFA epsilon symbol is now `"ε"` (previously `""`). `regex_to_nfa` uses the same canonical marker. NFAs built with `""` epsilon transitions must pass `epsilon_symbol=""` explicitly.
+- **Breaking:** `create_dfa_from_pattern` names states `q0..qm` instead of integers.
+- Hopcroft minimization rewritten with block ids, an inverse-transition index, and the smaller-half worklist rule, achieving the textbook O(|Σ|·n log n) (previously effectively quadratic; ~125x faster at 1,000 states).
+- `Automaton` base normalizes plain sets/lists into `StateSet`/`Alphabet`, removing set-vs-StateSet drift across modules.
+
+### Added
+- `DFA.is_complete()` and `DFA.completed()` for making partial transition functions total via an explicit dead state.
+- Optional `metrics` instrumentation on NFA BFS acceptance and subset construction.
+- Regression tests for partial-DFA minimization, completion, and NFA epsilon handling.
+
+---
+
 ## [0.3.0] - 2026-02-19
 
 ### Added
