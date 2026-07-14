@@ -2,7 +2,7 @@ from typing import Dict, List, Tuple, Any, Iterable, Union
 
 from .base import TuringMachineBase
 from .tape import Tape
-from .exceptions import RejectionException, HaltingException
+from .exceptions import RejectionException, StepLimitExceeded
 from automata.backend.grammar.dist import State, Symbol, Word, StateSet, Alphabet, TapeAlphabet, TapeSymbol
 
 
@@ -100,7 +100,7 @@ class MultiTapeTuringMachine(TuringMachineBase):
 
         while self.current_state not in self._accept_states:
             if step_count >= max_steps:
-                raise HaltingException(f"Maximum number of steps ({max_steps}) reached.")
+                raise StepLimitExceeded(f"Maximum number of steps ({max_steps}) reached.")
 
             try:
                 self.step()
