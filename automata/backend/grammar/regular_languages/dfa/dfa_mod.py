@@ -137,6 +137,46 @@ class DFA(Automaton[State]):
             accept_states=StateSet.from_states(list(accept_s)),
         )
 
+    def complement(self) -> "DFA":
+        """Return a DFA accepting exactly the words this DFA rejects (over its alphabet)."""
+        from .dfa_ops import complement
+        return complement(self)
+
+    def union(self, other: "DFA") -> "DFA":
+        """Return a DFA accepting words accepted by this DFA or `other`."""
+        from .dfa_ops import union
+        return union(self, other)
+
+    def intersection(self, other: "DFA") -> "DFA":
+        """Return a DFA accepting words accepted by both this DFA and `other`."""
+        from .dfa_ops import intersection
+        return intersection(self, other)
+
+    def difference(self, other: "DFA") -> "DFA":
+        """Return a DFA accepting words this DFA accepts but `other` rejects."""
+        from .dfa_ops import difference
+        return difference(self, other)
+
+    def is_empty(self) -> bool:
+        """Return True if this DFA accepts no word at all."""
+        from .dfa_ops import is_empty
+        return is_empty(self)
+
+    def shortest_accepted(self) -> Optional[Word]:
+        """Return a shortest accepted word, or None if the language is empty."""
+        from .dfa_ops import shortest_accepted
+        return shortest_accepted(self)
+
+    def equivalent_to(self, other: "DFA") -> bool:
+        """Return True if this DFA and `other` accept exactly the same language."""
+        from .dfa_ops import equivalent
+        return equivalent(self, other)
+
+    def find_distinguishing_string(self, other: "DFA") -> Optional[Word]:
+        """Return a shortest word on which this DFA and `other` disagree, or None."""
+        from .dfa_ops import find_distinguishing_string
+        return find_distinguishing_string(self, other)
+
     def add_transition(
         self, from_state: State, symbol: Symbol, to_state: State
     ) -> None:
