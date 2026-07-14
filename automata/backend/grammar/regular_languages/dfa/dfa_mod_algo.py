@@ -8,14 +8,23 @@ def create_dfa_from_pattern(pattern: str, alphabet: set[str]) -> DFA:
     Build a DFA that recognizes the single pattern 'pattern' (KMP-based).
     """
     transitions, start_state, accept_states = build_kmp_dfa(pattern, alphabet)
-    states = set(transitions.keys())
+
+    # KMP states are ints (chars matched so far); name them q0..qm so the
+    # DFA is consistent with the rest of the package (and drawable).
+    def name(state: int) -> str:
+        return f"q{state}"
+
+    named_transitions = {
+        name(state): {symbol: name(target) for symbol, target in trans.items()}
+        for state, trans in transitions.items()
+    }
 
     return DFA(
-        states=states,
+        states={name(s) for s in transitions.keys()},
         alphabet=alphabet,
-        transitions=transitions,
-        start_state=start_state,
-        accept_states=accept_states,
+        transitions=named_transitions,
+        start_state=name(start_state),
+        accept_states={name(s) for s in accept_states},
         sink_state=None,
     )
 
