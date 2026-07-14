@@ -2,6 +2,9 @@ import itertools
 from automata.backend.grammar.dist import State, Alphabet, StateSet, Symbol
 from automata.backend.grammar.regular_languages.nfa.nfa_mod import NFA
 
+# Canonical epsilon marker, shared with NFA's default epsilon_symbol.
+EPSILON = Symbol("ε")
+
 class _NFAFragment:
     """A helper class to represent a fragment of an NFA."""
     def __init__(self, start_state, accept_states, transitions):
@@ -21,7 +24,7 @@ def _create_fragment_for_symbol(symbol: Symbol, state_counter: itertools.count):
 def _concatenate_fragments(f1: _NFAFragment, f2: _NFAFragment):
     transitions = {**f1.transitions, **f2.transitions}
     for state in f1.accept_states:
-        transitions.setdefault(state, {})[Symbol('')] = StateSet.from_states({f2.start_state})
+        transitions.setdefault(state, {})[EPSILON] = StateSet.from_states({f2.start_state})
     return _NFAFragment(f1.start_state, f2.accept_states, transitions)
 
 def _union_fragments(f1: _NFAFragment, f2: _NFAFragment, state_counter: itertools.count):
@@ -30,11 +33,11 @@ def _union_fragments(f1: _NFAFragment, f2: _NFAFragment, state_counter: itertool
     transitions = {
         **f1.transitions, **f2.transitions,
         start: {
-            Symbol(''): StateSet.from_states({f1.start_state, f2.start_state})
+            EPSILON: StateSet.from_states({f1.start_state, f2.start_state})
         }
     }
     for state in f1.accept_states | f2.accept_states:
-        transitions.setdefault(state, {})[Symbol('')] = StateSet.from_states({accept})
+        transitions.setdefault(state, {})[EPSILON] = StateSet.from_states({accept})
     return _NFAFragment(start, {accept}, transitions)
 
 def _star_fragment(f: _NFAFragment, state_counter: itertools.count):
@@ -42,10 +45,10 @@ def _star_fragment(f: _NFAFragment, state_counter: itertools.count):
     accept = State(f"q{next(state_counter)}")
     transitions = {
         **f.transitions,
-        start: {Symbol(''): StateSet.from_states({f.start_state, accept})}
+        start: {EPSILON: StateSet.from_states({f.start_state, accept})}
     }
     for state in f.accept_states:
-        transitions.setdefault(state, {})[Symbol('')] = StateSet.from_states({f.start_state, accept})
+        transitions.setdefault(state, {})[EPSILON] = StateSet.from_states({f.start_state, accept})
     return _NFAFragment(start, {accept}, transitions)
 
 def _tokenize_regex(regex: str):
