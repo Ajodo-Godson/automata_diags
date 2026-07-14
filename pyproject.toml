@@ -57,8 +57,11 @@ docs = [
 "Documentation" = "https://automata-diags.readthedocs.io/"
 "Portfolio" = "https://ajoson.netlify.app"
 
-[tool.pytest]
+# pytest only reads [tool.pytest.ini_options]; a bare [tool.pytest] table is ignored.
+# testpaths keeps collection inside the package (examples/ are scripts, not tests).
+[tool.pytest.ini_options]
 pythonpath = ["."]
+testpaths = ["automata"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["automata"]
