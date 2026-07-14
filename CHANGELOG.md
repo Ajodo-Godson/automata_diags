@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Breaking:** regex engine rewritten as a recursive-descent parser over an AST (replacing string-preprocessing). `.` is now a wildcard matching any symbol of the automaton's alphabet (previously it was silently interpreted as concatenation); `?` and `{n,m}` are newly supported; malformed patterns raise `RegexSyntaxError` with the offending position instead of producing a wrong automaton. `ε` is accepted as an explicit empty-string atom. `regex_to_nfa` gains an optional `alphabet=` argument (required for patterns like `.*` with no literal characters).
+
 ### Added
+- `DFA.to_regex()` — DFA to regular expression via GNFA state elimination, closing the Kleene's theorem loop (`regex -> NFA -> DFA -> regex`). Round-trip equivalence is enforced by a Hypothesis property test.
+- Tutorial section "Comparing and Grading Automata" and API reference coverage for the language operations, completion helpers, and `to_regex`.
 - Regular-language operations in `dfa_ops` (also as `DFA` methods): `complement`, `union`, `intersection`, `difference`, `symmetric_difference` via product construction over the union alphabet; `is_empty`, `shortest_accepted`; and `equivalent_to` / `find_distinguishing_string`, which returns a *shortest* word on which two DFAs disagree — usable as an autograding counterexample.
 - Property-based test suite (Hypothesis) cross-validating regex→NFA against Python's `re`, NFA→DFA conversion, both minimizers, and the new language operations (involution, De Morgan, counterexample validity).
 - GitHub Actions CI running the test suite on Python 3.9 and 3.12 for pushes and pull requests.
