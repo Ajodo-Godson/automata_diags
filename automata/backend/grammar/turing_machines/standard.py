@@ -1,8 +1,9 @@
-from typing import Dict, Set, Tuple, Any, Iterable, Union
+from typing import Dict, Optional, Set, Tuple, Any, Iterable, Union
 
 from .base import TuringMachineBase
 from .tape import Tape
-from .exceptions import RejectionException, HaltingException
+from .exceptions import RejectionException, StepLimitExceeded
+from .result import Configuration, Outcome, RunResult
 from automata.backend.grammar.dist import State, Symbol, Word, StateSet, Alphabet, TapeAlphabet, TapeSymbol
 
 
@@ -65,39 +66,122 @@ class TuringMachine(TuringMachineBase):
         if not all(symbol in self._input_alphabet for symbol in word):
             raise ValueError("Input word contains symbols not in the input alphabet.")
 
+    def reset(self, word: Word = ()) -> None:
+        """
+        Initialize a fresh run for manual stepping: load `word` on the tape
+        and rewind to the start state.
+        """
+        self.validate_word(word)
+        self.tape = Tape(word, self.blank_symbol)
+        self.current_state = self._start_state
+
     def step(self) -> None:
         """
         Performs a single transition step.
         """
         current_symbol = self.tape.read()
-        
+
         if self.current_state not in self.transitions or current_symbol not in self.transitions[self.current_state]:
             raise RejectionException(f"No transition defined for state '{self.current_state}' and symbol '{current_symbol}'.")
 
         next_state, write_symbol, direction = self.transitions[self.current_state][current_symbol]
-        
+
         self.tape.write(write_symbol)
         self.tape.move(direction)
         self.current_state = next_state
 
-    def accepts(self, word: Word, max_steps: int = 1000) -> bool:
-        self.validate_word(word)
-        self.tape = Tape(word, self.blank_symbol)
-        self.current_state = self._start_state
-        step_count = 0
+    def run(
+        self,
+        word: Word,
+        max_steps: int = 10_000,
+        record_trace: bool = False,
+    ) -> RunResult:
+        """
+        Run the machine on `word` and report how the computation ended.
 
-        while self.current_state not in self._accept_states:
-            if step_count >= max_steps:
-                raise HaltingException(f"Maximum number of steps ({max_steps}) reached.")
-            
-            try:
-                self.step()
-            except RejectionException:
-                return False
-            
-            step_count += 1
-        
-        return True
+        Unlike `accepts`, this never raises for a machine-level event:
+        exceeding `max_steps` is reported as `Outcome.TIMEOUT`, halting with
+        no applicable transition as `Outcome.REJECT`, and reaching an
+        accepting state as `Outcome.ACCEPT`.
+
+        Args:
+            word: Input word (a string works; each character is a symbol).
+            max_steps: Step budget before giving up.
+            record_trace: If True, `result.trace` holds one `Configuration`
+                per step (including the initial one) for visualization.
+        """
+        self.validate_word(word)
+        tape = Tape(word, self.blank_symbol)
+        state = self._start_state
+        trace = [] if record_trace else None
+        steps = 0
+
+        def snap() -> Configuration:
+            window, offset = tape.snapshot()
+            return Configuration(
+                state=state,
+                tape=window,
+                head=tape.head_position,
+                offset=offset,
+                step=steps,
+            )
+
+        if trace is not None:
+            trace.append(snap())
+
+        while state not in self._accept_states:
+            if steps >= max_steps:
+                return RunResult(Outcome.TIMEOUT, steps, state, tape.contents(), trace)
+
+            row = self.transitions.get(state, {})
+            symbol = tape.read()
+            if symbol not in row:
+                return RunResult(Outcome.REJECT, steps, state, tape.contents(), trace)
+
+            state, write_symbol, direction = row[symbol]
+            tape.write(write_symbol)
+            tape.move(direction)
+            steps += 1
+            if trace is not None:
+                trace.append(snap())
+
+        return RunResult(Outcome.ACCEPT, steps, state, tape.contents(), trace)
+
+    def accepts(self, word: Word, max_steps: int = 10_000) -> bool:
+        """
+        True if the machine halts in an accepting state on `word`.
+
+        Raises:
+            StepLimitExceeded: If the machine does not halt within
+                `max_steps` (use `run()` for a non-raising three-valued
+                answer).
+        """
+        result = self.run(word, max_steps=max_steps)
+        if result.outcome is Outcome.TIMEOUT:
+            raise StepLimitExceeded(
+                f"Maximum number of steps ({max_steps}) reached."
+            )
+        return result.accepted
+
+    def compute(self, word: Word, max_steps: int = 10_000) -> str:
+        """
+        Run the machine as a function: return the final tape contents
+        (trimmed of blanks) after it halts in an accepting state.
+
+        Raises:
+            RejectionException: If the machine halts without accepting.
+            StepLimitExceeded: If it does not halt within `max_steps`.
+        """
+        result = self.run(word, max_steps=max_steps)
+        if result.outcome is Outcome.TIMEOUT:
+            raise StepLimitExceeded(
+                f"Maximum number of steps ({max_steps}) reached."
+            )
+        if result.outcome is Outcome.REJECT:
+            raise RejectionException(
+                f"Machine halted in non-accepting state '{result.final_state}'."
+            )
+        return result.output
 
     def get_configuration(self) -> Dict[str, Any]:
         """
@@ -115,6 +199,7 @@ class TuringMachine(TuringMachineBase):
         start_state: str,
         accept_states: Set[str],
         blank_symbol: str = "_",
+        input_symbols: Optional[Set[str]] = None,
     ) -> "TuringMachine":
         """
         Create a TuringMachine from a string representation.
@@ -124,11 +209,17 @@ class TuringMachine(TuringMachineBase):
 
         Direction is R (right), L (left), or N (no move).
 
+        The input alphabet is `input_symbols` if given; otherwise it is
+        inferred as the non-blank symbols appearing in *read* position.
+        Pass `input_symbols` explicitly when the machine reads its own
+        tape markers (e.g. X/Y in a marking machine), since inference
+        cannot tell markers apart from genuine input symbols.
+
         Example:
             "q0,0,q0,0,R; q0,1,q1,1,R; q1,0,q1,0,R; q1,1,q0,1,R; q0,_,qa,_,N"
         """
         all_states: Set[State] = set()
-        input_symbols: Set[str] = set()
+        read_symbols: Set[str] = set()
         tape_symbols: Set[str] = set()
         transitions: Dict[State, Dict[TapeSymbol, Tuple[State, TapeSymbol, str]]] = {}
 
@@ -158,9 +249,7 @@ class TuringMachine(TuringMachineBase):
             tape_symbols.add(write_str)
 
             if read_str != blank_symbol:
-                input_symbols.add(read_str)
-            if write_str != blank_symbol:
-                input_symbols.add(write_str)
+                read_symbols.add(read_str)
 
             if direction not in ("R", "L", "N"):
                 raise ValueError(f"Direction must be R, L, or N, got '{direction}'")
@@ -173,6 +262,11 @@ class TuringMachine(TuringMachineBase):
         all_states.add(start_s)
         for a in accept_states:
             all_states.add(State(a))
+
+        if input_symbols is None:
+            input_symbols = read_symbols
+        else:
+            tape_symbols |= set(input_symbols)
 
         return cls(
             states=StateSet.from_states(list(all_states)),
