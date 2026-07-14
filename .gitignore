@@ -61,3 +61,6 @@ docs/
 
 #evaluations
 automata/backend/analysis/
+# Generated diagrams and benchmark artifacts
+outputs/
+.hypothesis/
