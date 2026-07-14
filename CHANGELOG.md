@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Regular-language operations in `dfa_ops` (also as `DFA` methods): `complement`, `union`, `intersection`, `difference`, `symmetric_difference` via product construction over the union alphabet; `is_empty`, `shortest_accepted`; and `equivalent_to` / `find_distinguishing_string`, which returns a *shortest* word on which two DFAs disagree — usable as an autograding counterexample.
+- Property-based test suite (Hypothesis) cross-validating regex→NFA against Python's `re`, NFA→DFA conversion, both minimizers, and the new language operations (involution, De Morgan, counterexample validity).
+- GitHub Actions CI running the test suite on Python 3.9 and 3.12 for pushes and pull requests.
+
+### Removed
+- Empty placeholder modules that advertised unimplemented features: `backend/api/`, `backend/theory/` (kolmogorov, recursion theorem, lambda calculus, cellular automata, decidability), `backend/grammar/logic/`, `backend/grammar/context_sensitive/`, and `backend/utils/`.
+- Empty documentation pages (`rest_api.md`, `python_api.md`, `CORE_MODULES.md`, `THEORY.md`) and component docs describing the removed empty modules.
+- Generated diagrams under `outputs/` are no longer tracked (directory is gitignored).
+
+---
+
 ## [0.4.0] - 2026-07-14
 
 ### Fixed
