@@ -7,15 +7,16 @@
 3. [Non-deterministic Finite Automata](#non-deterministic-finite-automata)
 4. [Regular Expressions](#regular-expressions)
 5. [DFA Minimization](#dfa-minimization)
-6. [Context-Free Grammars](#context-free-grammars)
-7. [Pushdown Automata](#pushdown-automata)
-8. [Turing Machines](#turing-machines)
-9. [Finite-State Transducers](#finite-state-transducers)
-10. [Stochastic CFG and probabilistic CYK](#stochastic-cfg-and-probabilistic-cyk)
-11. [KMP pattern matching and KMP DFA](#kmp-pattern-matching-and-kmp-dfa)
-12. [Visualization Techniques](#visualization-techniques)
-13. [Advanced Examples](#advanced-examples)
-14. [Best Practices](#best-practices)
+6. [Comparing and Grading Automata](#comparing-and-grading-automata)
+7. [Context-Free Grammars](#context-free-grammars)
+8. [Pushdown Automata](#pushdown-automata)
+9. [Turing Machines](#turing-machines)
+10. [Finite-State Transducers](#finite-state-transducers)
+11. [Stochastic CFG and probabilistic CYK](#stochastic-cfg-and-probabilistic-cyk)
+12. [KMP pattern matching and KMP DFA](#kmp-pattern-matching-and-kmp-dfa)
+13. [Visualization Techniques](#visualization-techniques)
+14. [Advanced Examples](#advanced-examples)
+15. [Best Practices](#best-practices)
 
 ---
 
@@ -216,6 +217,23 @@ for word_str in test_words:
 
 ## Regular Expressions
 
+### Supported Syntax
+
+| Pattern | Meaning |
+|---------|---------|
+| `a` | literal character |
+| `ε` | the empty string |
+| `.` | any symbol of the alphabet (pattern characters + optional `alphabet=` argument) |
+| `rs`, `r\|s` | concatenation, union |
+| `r*`, `r+`, `r?` | zero-or-more, one-or-more, zero-or-one |
+| `r{n}`, `r{n,}`, `r{n,m}` | bounded repetition |
+| `[abc]`, `[a-z0-9]` | character classes, with ranges |
+| `\d`, `\w`, `\s` | digit / word / whitespace classes |
+| `\.`, `\*`, ... | escaped literal metacharacters |
+| `^r$` | anchors allowed at the pattern edges (matching is whole-word anyway) |
+
+A malformed pattern raises `RegexSyntaxError` with the offending position. Note that `.` matches symbols of the **automaton's alphabet**, not "any character": `regex_to_nfa(".*", alphabet="ab")` accepts every string over {a, b}.
+
 ### Thompson's Construction
 
 Convert regular expressions to NFAs using Thompson's construction:
@@ -281,6 +299,19 @@ def complex_regex_demo():
 
 complex_regex_demo()
 ```
+
+### From a DFA Back to a Regex
+
+`DFA.to_regex()` runs GNFA state elimination, closing the Kleene's theorem loop:
+
+```python
+dfa = DFA.from_string("e,a,o;o,a,e;e,b,e;o,b,o", start_state="e", accept_states={"e"})
+regex = dfa.to_regex()          # a regex for "even number of a's"
+back = NFA.from_regex(regex).to_dfa()
+assert back.equivalent_to(dfa)  # round-trip preserves the language
+```
+
+It returns `None` when the DFA's language is empty.
 
 ---
 
@@ -350,6 +381,53 @@ def minimization_comparison():
     print(f"\nBoth algorithms agree: {'✓' if same_size else '✗'}")
 
 minimization_comparison()
+```
+
+---
+
+## Comparing and Grading Automata
+
+Regular languages support Boolean set operations and decidable equivalence, and both are built in. `equivalent_to` answers "same language?"; `find_distinguishing_string` returns a **shortest** input the two automata disagree on — exactly what you want for autograding or debugging.
+
+```python
+from automata.backend.grammar.regular_languages.dfa.dfa_mod import DFA
+
+# Reference solution: strings over {a, b} with an even number of a's
+reference = DFA.from_string(
+    "e,a,o;o,a,e;e,b,e;o,b,o", start_state="e", accept_states={"e"}
+)
+
+# A student's (buggy) attempt
+student = DFA.from_string(
+    "q0,a,q1;q1,a,q0;q0,b,q0", start_state="q0", accept_states={"q0"}
+)
+
+if student.equivalent_to(reference):
+    print("Correct!")
+else:
+    witness = student.find_distinguishing_string(reference)
+    word = "".join(witness) if witness else "ε"
+    expected = reference.accepts(witness)
+    print(f"Not quite: on input '{word}' your DFA "
+          f"{'rejects' if expected else 'accepts'}, but it should "
+          f"{'accept' if expected else 'reject'}.")
+    # Not quite: on input 'aba' your DFA rejects, but it should accept.
+    # (The student's DFA forgot the b-loop on the odd state.)
+```
+
+Set operations compose languages:
+
+```python
+ends_in_a  = DFA.from_string("s,a,t;s,b,s;t,a,t;t,b,s", start_state="s", accept_states={"t"})
+even_length = DFA.from_string("e,a,o;e,b,o;o,a,e;o,b,e", start_state="e", accept_states={"e"})
+
+both    = ends_in_a.intersection(even_length)  # ends in 'a' AND even length
+either  = ends_in_a.union(even_length)
+neither = either.complement()
+only_odd_a = ends_in_a.difference(even_length)
+
+print(both.shortest_accepted())   # ['a', 'a'] - shortest witness, found by BFS
+print(neither.is_empty())         # False ('b' is neither: odd length, ends in b)
 ```
 
 ---
