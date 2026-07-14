@@ -14,11 +14,25 @@ class NFA(Automaton[State]):
         transitions: Dict[State, Dict[Symbol, StateSet]],
         start_state: State,
         accept_states: StateSet,
-        epsilon_symbol: Symbol = Symbol(""),
+        epsilon_symbol: Symbol = Symbol("ε"),
     ):
         super().__init__(states, alphabet, start_state, accept_states)
         self.transitions = transitions
         self.epsilon_symbol = epsilon_symbol
+        # Guard against silently-dead epsilon transitions: transitions written
+        # with a different epsilon marker than `epsilon_symbol` would never be
+        # followed, so fail loudly instead.
+        other_epsilons = {Symbol(""), Symbol("ε")}
+        other_epsilons.discard(epsilon_symbol)
+        for state, trans in transitions.items():
+            used = other_epsilons.intersection(trans.keys())
+            if used:
+                raise ValueError(
+                    f"State {state!r} has transitions on {sorted(used)}, which look "
+                    f"like epsilon transitions, but this NFA's epsilon symbol is "
+                    f"{epsilon_symbol!r}. Pass epsilon_symbol={next(iter(used))!r} "
+                    f"or relabel the transitions."
+                )
 
     @classmethod
     def from_string(
