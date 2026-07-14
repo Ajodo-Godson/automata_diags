@@ -554,6 +554,72 @@ Generate the distinguishability table for analysis. Each entry tells you whether
 **Returns:**
 - `Dict[Tuple[State, State], bool]`: State pair distinguishability mapping (True = distinguishable, False = equivalent)
 
+Both minimizers accept partial DFAs: a missing transition is treated as a transition to an implicit dead (rejecting) state, and the dead state's class is pruned from the result.
+
+---
+
+## Language Operations
+
+Regular languages are closed under the Boolean set operations, and questions like "do these two automata accept the same language?" are decidable. This section covers both: closure constructions and decision procedures, available as functions in `dfa_ops` and as methods on `DFA`.
+
+```python
+from automata.backend.grammar.regular_languages.dfa.dfa_ops import (
+    complement, union, intersection, difference, symmetric_difference,
+    is_empty, shortest_accepted, equivalent, find_distinguishing_string,
+)
+```
+
+### Set Operations
+
+#### `DFA.complement() -> DFA`
+Return a DFA accepting exactly the words (over this DFA's alphabet) that this DFA rejects.
+
+#### `DFA.union(other) -> DFA` / `DFA.intersection(other) -> DFA` / `DFA.difference(other) -> DFA`
+Product constructions over the union of the two alphabets, restricted to reachable state pairs. `difference(a, b)` accepts the words `a` accepts and `b` rejects.
+
+All operations accept partial DFAs.
+
+### Decision Procedures
+
+#### `DFA.is_empty() -> bool`
+True if the DFA accepts no word at all.
+
+#### `DFA.shortest_accepted() -> Optional[Word]`
+A shortest accepted word (breadth-first search, deterministic symbol order), or `None` if the language is empty. `[]` means the empty word.
+
+#### `DFA.equivalent_to(other) -> bool`
+True if the two DFAs accept exactly the same language.
+
+#### `DFA.find_distinguishing_string(other) -> Optional[Word]`
+A **shortest** word accepted by exactly one of the two DFAs, or `None` if they are equivalent. This is the counterexample generator: when comparing a student's automaton against a reference solution, the returned word shows precisely where they disagree.
+
+```python
+reference = DFA.from_string("q0,a,q1;q1,b,q0", start_state="q0", accept_states={"q0"})
+student   = DFA.from_string("p,a,p;p,b,p",     start_state="p",  accept_states={"p"})
+
+if not student.equivalent_to(reference):
+    witness = student.find_distinguishing_string(reference)
+    print(f"Not equivalent - check the input {witness!r}")
+```
+
+### Completion
+
+#### `DFA.is_complete() -> bool` / `DFA.completed() -> DFA`
+A DFA is *complete* when every state has a transition on every alphabet symbol. `completed()` returns an equivalent total DFA, routing missing transitions to an explicit dead state (or `self` if already complete). Algorithms that assume a total transition function build on this.
+
+### DFA to Regular Expression
+
+#### `DFA.to_regex() -> Optional[str]`
+Convert the DFA back to a regular expression via GNFA state elimination, or `None` if the language is empty. Together with `NFA.from_regex` and `NFA.to_dfa`, this closes the Kleene's theorem loop:
+
+```python
+regex = dfa.to_regex()                      # e.g. "(a|ba*b)*"
+back  = NFA.from_regex(regex).to_dfa()
+assert back.equivalent_to(dfa)
+```
+
+The emitted expression is correct but generally not the shortest possible; state elimination trades brevity for simplicity.
+
 ---
 
 ## Transducers
