@@ -1,12 +1,12 @@
 from collections import deque
-from typing import Dict, Set
+from typing import Dict, MutableMapping, Optional, Set
 
 from automata.backend.grammar.dist import State, Symbol, Alphabet, StateSet
 from automata.backend.grammar.regular_languages.dfa.dfa_mod import DFA
 from automata.backend.grammar.regular_languages.nfa.nfa_mod import NFA
 from automata.backend.grammar.regular_languages.nfa.algo.nfa_bfs import epsilon_closure
 
-def nfa_to_dfa(nfa: NFA) -> DFA:
+def nfa_to_dfa(nfa: NFA, metrics: Optional[MutableMapping[str, int]] = None) -> DFA:
     """
     Convert an NFA to an equivalent DFA.
     """
@@ -16,7 +16,16 @@ def nfa_to_dfa(nfa: NFA) -> DFA:
     dfa_accept_states: Set[State] = set()
 
     # The states in the DFA are frozensets of states from the NFA
-    nfa_start_closure = frozenset(epsilon_closure({nfa._start_state}, nfa.transitions, nfa.epsilon_symbol))
+    transition_lookups = 0
+    epsilon_closure_calls = 0
+    max_queue_size = 1
+
+    def closure_with_metrics(states: Set[State]) -> frozenset[State]:
+        nonlocal epsilon_closure_calls
+        epsilon_closure_calls += 1
+        return frozenset(epsilon_closure(states, nfa.transitions, nfa.epsilon_symbol))
+
+    nfa_start_closure = closure_with_metrics({nfa._start_state})
     
     queue = deque([nfa_start_closure])
     processed_states = {nfa_start_closure}
@@ -37,17 +46,19 @@ def nfa_to_dfa(nfa: NFA) -> DFA:
         for symbol in nfa._alphabet.symbols():
             next_nfa_states_set = set()
             for nfa_state in current_nfa_states:
+                transition_lookups += 1
                 if symbol in nfa.transitions.get(nfa_state, {}):
                     next_nfa_states_set.update(nfa.transitions[nfa_state][symbol].states())
 
             if not next_nfa_states_set:
                 continue
 
-            next_nfa_states_closure = frozenset(epsilon_closure(next_nfa_states_set, nfa.transitions, nfa.epsilon_symbol))
+            next_nfa_states_closure = closure_with_metrics(next_nfa_states_set)
             
             if next_nfa_states_closure not in processed_states:
                 processed_states.add(next_nfa_states_closure)
                 queue.append(next_nfa_states_closure)
+                max_queue_size = max(max_queue_size, len(queue))
 
                 new_dfa_state = state_name(next_nfa_states_closure)
                 dfa_states.add(new_dfa_state)
@@ -58,10 +69,23 @@ def nfa_to_dfa(nfa: NFA) -> DFA:
                 dfa_transitions[current_dfa_state] = {}
             dfa_transitions[current_dfa_state][symbol] = state_name(next_nfa_states_closure)
 
-    return DFA(
+    dfa = DFA(
         states=StateSet.from_states(dfa_states),
         alphabet=nfa._alphabet,
         transitions=dfa_transitions,
         start_state=dfa_start_state,
         accept_states=StateSet.from_states(dfa_accept_states)
     )
+    if metrics is not None:
+        metrics.update(
+            {
+                "subset_count": len(processed_states),
+                "transition_lookups": transition_lookups,
+                "traversal_work_units": transition_lookups,
+                "structural_work_units": len(processed_states),
+                "epsilon_closure_calls": epsilon_closure_calls,
+                "max_queue_size": max_queue_size,
+                "dfa_state_count": len(list(dfa._states.states())),
+            }
+        )
+    return dfa
