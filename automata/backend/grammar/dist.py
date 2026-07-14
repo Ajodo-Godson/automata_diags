@@ -83,12 +83,12 @@ class StateSet:
         self._states: Set[State] = {State(s) for s in states}
 
     @classmethod
-    def from_states(cls, states: Set[State]) -> "StateSet":
+    def from_states(cls, states: Iterable[State]) -> "StateSet":
         """
-        Create a StateSet directly from a set of State objects.
+        Create a StateSet directly from an iterable of State objects.
         """
         instance = cls([])
-        instance._states = states
+        instance._states = set(states)
         return instance
 
     def __contains__(self, item: Union[str, State]) -> bool:
