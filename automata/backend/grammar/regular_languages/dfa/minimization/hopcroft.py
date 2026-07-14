@@ -1,202 +1,152 @@
 """
 Hopcroft's DFA Minimization Algorithm
 
-This module implements Hopcroft's algorithm for minimizing DFAs, which runs in O(n log n) time.
-The algorithm uses partition refinement to identify equivalent states.
+This module implements Hopcroft's partition-refinement algorithm with the
+data structures needed for the textbook O(|Σ| · n log n) bound:
+
+- an inverse-transition index (predecessors per symbol), built once;
+- blocks addressed by id, with a state -> block-id map, so a split only
+  touches the blocks that actually contain predecessors of the splitter;
+- a worklist of (block_id, symbol) pairs with Hopcroft's rule: when a block
+  that is on the worklist splits, both halves replace it; otherwise only the
+  smaller half is enqueued. Each state's block can therefore reappear on the
+  worklist only O(log n) times per symbol.
+
+The input DFA is first completed (missing transitions are routed to an
+explicit dead state) so that partial DFAs are minimized correctly.
 """
 
-from typing import Dict, Set, List, Tuple
+from typing import Dict, List, Set
 from collections import defaultdict, deque
-from automata.backend.grammar.dist import State, Symbol, StateSet, Alphabet
+
+from automata.backend.grammar.dist import State, Symbol
 from automata.backend.grammar.regular_languages.dfa.dfa_mod import DFA
+from automata.backend.grammar.regular_languages.dfa.minimization.partition_builder import (
+    build_dfa_from_partition,
+)
+
+_DEAD = "__dead__"
+
+
+def _refine_partition(dfa: DFA) -> List[Set[State]]:
+    """
+    Run Hopcroft's partition refinement on a completed DFA and return the
+    final partition into equivalence classes.
+    """
+    all_states = dfa._states.states()
+    accepting = set(dfa._accept_states.states()) & all_states
+    non_accepting = all_states - accepting
+    symbols = list(dfa._alphabet.symbols())
+
+    # Inverse transition index: predecessors[symbol][state] = states that
+    # reach `state` on `symbol`.
+    predecessors: Dict[Symbol, Dict[State, Set[State]]] = {
+        symbol: defaultdict(set) for symbol in symbols
+    }
+    for state, trans in dfa._transitions.items():
+        for symbol, target in trans.items():
+            predecessors[symbol][target].add(state)
+
+    # Blocks are addressed by id so worklist entries stay valid across splits.
+    blocks: Dict[int, Set[State]] = {}
+    block_of: Dict[State, int] = {}
+    next_id = 0
+    for group in (non_accepting, accepting):
+        if group:
+            blocks[next_id] = set(group)
+            for s in group:
+                block_of[s] = next_id
+            next_id += 1
+
+    if len(blocks) <= 1:
+        return list(blocks.values())
+
+    smaller_id = min(blocks, key=lambda b: len(blocks[b]))
+    worklist = deque((smaller_id, symbol) for symbol in symbols)
+    on_worklist = set(worklist)
+
+    while worklist:
+        splitter_id, symbol = worklist.popleft()
+        on_worklist.discard((splitter_id, symbol))
+        preds_on_symbol = predecessors[symbol]
+
+        # Group the splitter's predecessors by the block they currently
+        # occupy; only those blocks can split.
+        hits_by_block: Dict[int, Set[State]] = defaultdict(set)
+        for state in blocks[splitter_id]:
+            for pred in preds_on_symbol.get(state, ()):
+                hits_by_block[block_of[pred]].add(pred)
+
+        for hit_id, hit in hits_by_block.items():
+            remainder = blocks[hit_id]
+            if len(hit) == len(remainder):
+                continue  # every member leads into the splitter: no split
+
+            # Split: `hit` becomes a new block, hit_id keeps the rest.
+            new_id = next_id
+            next_id += 1
+            remainder -= hit
+            blocks[new_id] = hit
+            for state in hit:
+                block_of[state] = new_id
+
+            for sym in symbols:
+                if (hit_id, sym) in on_worklist:
+                    # The pending entry now denotes the remainder; enqueue
+                    # the split-off half so both are processed.
+                    worklist.append((new_id, sym))
+                    on_worklist.add((new_id, sym))
+                else:
+                    enqueue = new_id if len(hit) <= len(remainder) else hit_id
+                    worklist.append((enqueue, sym))
+                    on_worklist.add((enqueue, sym))
+
+    return list(blocks.values())
 
 
 def hopcroft_minimize(dfa: DFA) -> DFA:
     """
-    Minimize a DFA using Hopcroft's algorithm.
-    
+    Minimize a DFA using Hopcroft's algorithm in O(|Σ| · n log n).
+
+    Works on partial DFAs: missing transitions are treated as transitions to
+    an implicit dead state, so states that only differ in *how* they reject
+    (dead-state loop vs. missing transition) are correctly merged.
+
     Args:
         dfa: The DFA to minimize
-        
+
     Returns:
-        A minimized DFA with equivalent language but fewer states
+        A minimized DFA accepting the same language
     """
-    # Step 1: Initialize partition with accepting and non-accepting states
-    accepting_states = set(dfa._accept_states.states())
-    non_accepting_states = set(dfa._states.states()) - accepting_states
-    
-    # Initial partition
-    partition = []
-    if non_accepting_states:
-        partition.append(non_accepting_states)
-    if accepting_states:
-        partition.append(accepting_states)
-    
-    # If only one partition, DFA is already minimal
-    if len(partition) <= 1:
-        return dfa
-    
-    # Step 2: Initialize worklist with the smaller partition
-    worklist = deque()
-    if len(accepting_states) <= len(non_accepting_states):
-        worklist.append(accepting_states)
-    else:
-        worklist.append(non_accepting_states)
-    
-    # Step 3: Refine partitions
-    while worklist:
-        splitter = worklist.popleft()
-        
-        for symbol in dfa._alphabet.symbols():
-            # Find states that transition to splitter on symbol
-            predecessors = set()
-            for state in dfa._states.states():
-                if (state in dfa._transitions and 
-                    symbol in dfa._transitions[state] and
-                    dfa._transitions[state][symbol] in splitter):
-                    predecessors.add(state)
-            
-            # Refine partitions
-            new_partition = []
-            for block in partition:
-                intersection = block & predecessors
-                difference = block - predecessors
-                
-                if intersection and difference:
-                    # Split the block
-                    new_partition.extend([intersection, difference])
-                    
-                    # Update worklist
-                    if block in worklist:
-                        worklist.remove(block)
-                        worklist.extend([intersection, difference])
-                    else:
-                        # Add the smaller block to worklist
-                        if len(intersection) <= len(difference):
-                            worklist.append(intersection)
-                        else:
-                            worklist.append(difference)
-                else:
-                    new_partition.append(block)
-            
-            partition = new_partition
-    
-    # Step 4: Build minimized DFA
-    return _build_minimized_dfa(dfa, partition)
-
-
-def _build_minimized_dfa(dfa: DFA, partition: List[Set[State]]) -> DFA:
-    """Build the minimized DFA from the final partition."""
-    
-    # Create state mapping from old states to partition representatives
-    state_to_partition = {}
-    partition_representatives = {}
-    
-    for i, block in enumerate(partition):
-        rep_state = State(f"q{i}")
-        partition_representatives[i] = rep_state
-        for state in block:
-            state_to_partition[state] = i
-    
-    # Build new states
-    new_states = StateSet.from_states(list(partition_representatives.values()))
-    
-    # Build new transitions
-    new_transitions = defaultdict(dict)
-    for old_state in dfa._states.states():
-        if old_state in dfa._transitions:
-            for symbol, target_state in dfa._transitions[old_state].items():
-                from_partition = state_to_partition[old_state]
-                to_partition = state_to_partition[target_state]
-                
-                from_rep = partition_representatives[from_partition]
-                to_rep = partition_representatives[to_partition]
-                
-                new_transitions[from_rep][symbol] = to_rep
-    
-    # Find new start state
-    start_partition = state_to_partition[dfa._start_state]
-    new_start_state = partition_representatives[start_partition]
-    
-    # Find new accept states
-    new_accept_states = set()
-    for old_accept_state in dfa._accept_states.states():
-        accept_partition = state_to_partition[old_accept_state]
-        new_accept_states.add(partition_representatives[accept_partition])
-    
-    return DFA(
-        states=new_states,
-        alphabet=dfa._alphabet,
-        transitions=dict(new_transitions),
-        start_state=new_start_state,
-        accept_states=StateSet.from_states(list(new_accept_states))
-    )
+    completed = dfa.completed(_DEAD)
+    partition = _refine_partition(completed)
+    added = completed._states.states() - dfa._states.states()
+    dead = next(iter(added)) if added else None
+    return build_dfa_from_partition(completed, partition, dead_state=dead)
 
 
 def analyze_equivalence_classes(dfa: DFA) -> Dict[str, List[State]]:
     """
     Analyze and return the equivalence classes found during minimization.
-    
+
     Args:
         dfa: The DFA to analyze
-        
+
     Returns:
-        Dictionary mapping equivalence class names to lists of equivalent states
+        Dictionary mapping equivalence class names to sorted lists of
+        equivalent states
     """
-    # Run minimization to get partition
-    accepting_states = set(dfa._accept_states.states())
-    non_accepting_states = set(dfa._states.states()) - accepting_states
-    
-    partition = []
-    if non_accepting_states:
-        partition.append(non_accepting_states)
-    if accepting_states:
-        partition.append(accepting_states)
-    
-    if len(partition) <= 1:
-        return {"class_0": list(dfa._states.states())}
-    
-    worklist = deque()
-    if len(accepting_states) <= len(non_accepting_states):
-        worklist.append(accepting_states)
-    else:
-        worklist.append(non_accepting_states)
-    
-    while worklist:
-        splitter = worklist.popleft()
-        
-        for symbol in dfa._alphabet.symbols():
-            predecessors = set()
-            for state in dfa._states.states():
-                if (state in dfa._transitions and 
-                    symbol in dfa._transitions[state] and
-                    dfa._transitions[state][symbol] in splitter):
-                    predecessors.add(state)
-            
-            new_partition = []
-            for block in partition:
-                intersection = block & predecessors
-                difference = block - predecessors
-                
-                if intersection and difference:
-                    new_partition.extend([intersection, difference])
-                    
-                    if block in worklist:
-                        worklist.remove(block)
-                        worklist.extend([intersection, difference])
-                    else:
-                        if len(intersection) <= len(difference):
-                            worklist.append(intersection)
-                        else:
-                            worklist.append(difference)
-                else:
-                    new_partition.append(block)
-            
-            partition = new_partition
-    
-    # Format result
+    completed = dfa.completed(_DEAD)
+    partition = _refine_partition(completed)
+    original = dfa._states.states()
+
     result = {}
-    for i, equiv_class in enumerate(partition):
-        result[f"class_{i}"] = sorted(list(equiv_class))
-    
+    index = 0
+    for block in partition:
+        visible = block & original
+        if visible:
+            result[f"class_{index}"] = sorted(visible)
+            index += 1
+    if not result:
+        result["class_0"] = sorted(original)
     return result
