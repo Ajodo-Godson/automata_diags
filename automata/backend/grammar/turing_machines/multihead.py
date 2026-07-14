@@ -2,7 +2,7 @@ from typing import Dict, List, Tuple, Any, Iterable, Union
 
 from .base import TuringMachineBase
 from .tape import Tape
-from .exceptions import RejectionException, HaltingException
+from .exceptions import RejectionException, StepLimitExceeded
 from automata.backend.grammar.dist import State, Symbol, Word, StateSet, Alphabet, TapeAlphabet, TapeSymbol
 
 
@@ -78,7 +78,7 @@ class MultiHeadTuringMachine(TuringMachineBase):
         """
         Performs a single transition step.
         """
-        current_symbols_list = [self.tape.tape[pos] for pos in self.head_positions]
+        current_symbols_list = [self.tape.read_at(pos) for pos in self.head_positions]
         current_symbols = tuple(current_symbols_list)
 
         if self.current_state not in self.transitions or current_symbols not in self.transitions[self.current_state]:
@@ -90,8 +90,8 @@ class MultiHeadTuringMachine(TuringMachineBase):
         # Note: Concurrent writes to same cell? Last one wins logic here.
         for i, (write_symbol, direction) in enumerate(actions):
             pos = self.head_positions[i]
-            self.tape.tape[pos] = write_symbol
-            
+            self.tape.write_at(pos, write_symbol)
+
             if direction == 'R':
                 self.head_positions[i] += 1
             elif direction == 'L':
@@ -108,7 +108,7 @@ class MultiHeadTuringMachine(TuringMachineBase):
 
         while self.current_state not in self._accept_states:
             if step_count >= max_steps:
-                raise HaltingException(f"Maximum number of steps ({max_steps}) reached.")
+                raise StepLimitExceeded(f"Maximum number of steps ({max_steps}) reached.")
             
             try:
                 self.step()
