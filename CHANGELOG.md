@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.0] - 2026-07-14
 
 ### Changed
 - **Breaking:** regex engine rewritten as a recursive-descent parser over an AST (replacing string-preprocessing). `.` is now a wildcard matching any symbol of the automaton's alphabet (previously it was silently interpreted as concatenation); `?` and `{n,m}` are newly supported; malformed patterns raise `RegexSyntaxError` with the offending position instead of producing a wrong automaton. `ε` is accepted as an explicit empty-string atom. `regex_to_nfa` gains an optional `alphabet=` argument (required for patterns like `.*` with no literal characters).
