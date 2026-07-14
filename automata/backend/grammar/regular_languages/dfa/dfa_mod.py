@@ -25,7 +25,7 @@ class DFA(Automaton[State]):
                 return False
 
             # If current state doesn't have a transition for this symbol
-            if symbol not in self._transitions[current]:
+            if symbol not in self._transitions.get(current, {}):
                 if self._sink_state is not None:
                     current = self._sink_state
                 else:
@@ -35,6 +35,50 @@ class DFA(Automaton[State]):
             current = self._transitions[current][symbol]
 
         return current in self._accept_states
+
+    def is_complete(self) -> bool:
+        """Return True if every state has a transition on every alphabet symbol."""
+        symbols = self._alphabet.symbols()
+        return all(
+            symbol in self._transitions.get(state, {})
+            for state in self._states.states()
+            for symbol in symbols
+        )
+
+    def completed(self, dead_state_name: str = "__dead__") -> "DFA":
+        """
+        Return an equivalent DFA with a total transition function.
+
+        Missing transitions are routed to a non-accepting dead state that
+        loops to itself on every symbol. Returns self unchanged if the
+        transition function is already total. Algorithms that assume a total
+        transition function (e.g. minimization) should operate on the result.
+        """
+        if self.is_complete():
+            return self
+
+        dead = State(dead_state_name)
+        while dead in self._states:
+            dead = State(dead + "_")
+
+        symbols = self._alphabet.symbols()
+        transitions = {
+            state: dict(self._transitions.get(state, {}))
+            for state in self._states.states()
+        }
+        for state in transitions:
+            for symbol in symbols:
+                transitions[state].setdefault(symbol, dead)
+        transitions[dead] = {symbol: dead for symbol in symbols}
+
+        return DFA(
+            states=StateSet.from_states(self._states.states() | {dead}),
+            alphabet=self._alphabet,
+            transitions=transitions,
+            start_state=self._start_state,
+            accept_states=self._accept_states,
+            sink_state=dead,
+        )
 
     @classmethod
     def from_string(
