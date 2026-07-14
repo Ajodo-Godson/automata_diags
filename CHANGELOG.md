@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Turing machine execution core: `TuringMachine.run(word, record_trace=...)` returns a `RunResult` with a three-valued `Outcome` (ACCEPT / REJECT / TIMEOUT), step count, final tape output, and an optional JSON-friendly step-by-step `Configuration` trace; `compute(word)` runs the machine as a function and returns the final tape contents; `reset(word)` initializes manual stepping.
+- `NondeterministicTuringMachine` with BFS acceptance over configurations (cycle-safe), including a `from_string` factory where repeated (state, read) pairs express nondeterminism.
+- Turing machine library (`turing_machines.library`): palindrome checker, aⁿbⁿcⁿ, binary increment, and unary addition — each property-tested against plain-Python oracles.
+- `Tape.snapshot()` / `Tape.contents()` / positional `read_at` / `write_at`.
+
+### Fixed
+- `TuringMachine.from_string` no longer classifies write-only tape markers as input symbols; the input alphabet is inferred from read symbols, with an explicit `input_symbols=` override.
+- `Tape` no longer allocates a cell on every read of a blank (long head excursions previously grew memory without bound).
+- Turing machine runs no longer leak state between calls: `run`/`accepts`/`compute` are self-contained.
+
+### Changed
+- **Breaking:** `HaltingException` is renamed `StepLimitExceeded` (the old name fired when the machine did *not* halt); `HaltingException` remains as a deprecated alias. `RejectionException` no longer subclasses it, so catching a timeout no longer swallows rejections.
+
+---
+
 ## [0.5.0] - 2026-07-14
 
 ### Changed
