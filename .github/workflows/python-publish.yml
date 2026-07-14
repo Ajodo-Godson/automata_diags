@@ -29,5 +29,21 @@ jobs:
     - name: Build package
       run: python -m build
 
+    - name: Verify release tag matches package version
+      run: |
+        package_version="$(python - <<'PY'
+        import tomllib
+        from pathlib import Path
+
+        pyproject = tomllib.loads(Path("pyproject.toml").read_text())
+        print(pyproject["project"]["version"])
+        PY
+        )"
+        tag_version="${GITHUB_REF_NAME#v}"
+        if [ "$package_version" != "$tag_version" ]; then
+          echo "Release tag ${GITHUB_REF_NAME} does not match package version ${package_version}."
+          exit 1
+        fi
+
     - name: Publish package to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
