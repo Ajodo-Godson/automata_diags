@@ -30,14 +30,21 @@ ALPHABET = ["a", "b"]
 
 # ── Strategies ───────────────────────────────────────────────────────────────
 
-# Regex ASTs over {a, b} with union, concatenation, and star: the syntax
-# subset that automata-diags and Python's `re` share.
+# Regex ASTs over {a, b} with union, concatenation, star, plus, optional,
+# and bounded repeats: the syntax subset automata-diags and Python's `re`
+# interpret identically. (The `.` wildcard is excluded: `re` reads it as
+# "any character" while automata-diags scopes it to the automaton alphabet.)
 regex_asts = st.recursive(
     st.sampled_from(ALPHABET),
     lambda inner: st.one_of(
         st.tuples(st.just("|"), inner, inner),
         st.tuples(st.just("cat"), inner, inner),
         st.tuples(st.just("*"), inner),
+        st.tuples(st.just("+"), inner),
+        st.tuples(st.just("?"), inner),
+        st.tuples(
+            st.just("rep"), inner, st.integers(0, 2), st.integers(0, 3)
+        ),
     ),
     max_leaves=6,
 )
@@ -52,7 +59,10 @@ def _ast_to_pattern(ast) -> str:
         return f"({_ast_to_pattern(ast[1])}|{_ast_to_pattern(ast[2])})"
     if ast[0] == "cat":
         return f"({_ast_to_pattern(ast[1])}{_ast_to_pattern(ast[2])})"
-    return f"({_ast_to_pattern(ast[1])})*"
+    if ast[0] == "rep":
+        low, extra = ast[2], ast[3]
+        return f"({_ast_to_pattern(ast[1])}){{{low},{low + extra}}}"
+    return f"({_ast_to_pattern(ast[1])}){ast[0]}"  # *, +, ?
 
 
 @st.composite
@@ -136,6 +146,20 @@ def test_de_morgan(d1, d2):
     lhs = d1.union(d2).complement()
     rhs = d1.complement().intersection(d2.complement())
     assert lhs.equivalent_to(rhs)
+
+
+@given(dfas(max_states=4))
+def test_dfa_to_regex_roundtrip(dfa):
+    # Kleene's theorem, executably: DFA -> regex -> NFA -> DFA preserves
+    # the language. (Small DFAs: eliminated-state expressions grow fast.)
+    from automata.backend.grammar.regular_languages.regex_to_nfa import regex_to_nfa
+
+    regex = dfa.to_regex()
+    if regex is None:
+        assert dfa.is_empty()
+    else:
+        roundtripped = regex_to_nfa(regex, alphabet=ALPHABET).to_dfa()
+        assert roundtripped.equivalent_to(dfa)
 
 
 @given(dfas(), dfas(), words)
