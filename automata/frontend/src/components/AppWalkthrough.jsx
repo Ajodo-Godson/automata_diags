@@ -97,6 +97,16 @@ const AppWalkthrough = ({ isOpen, onClose, currentAutomaton, setCurrentAutomaton
         };
     }, [isOpen, currentStep]);
 
+    // Escape closes the tour, as with any modal dialog.
+    useEffect(() => {
+        if (!isOpen) return undefined;
+        const onKey = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     const nextStep = () => {
@@ -124,7 +134,12 @@ const AppWalkthrough = ({ isOpen, onClose, currentAutomaton, setCurrentAutomaton
     }
 
     return (
-        <div className="tour-overlay" role="dialog" aria-modal="true" aria-label="App walkthrough">
+        <div
+            className={`tour-overlay ${targetRect ? '' : 'is-centred'}`}
+            role="dialog"
+            aria-modal="true"
+            aria-label="App walkthrough"
+        >
             {targetRect && (
                 <div
                     className="tour-highlight"
@@ -140,13 +155,23 @@ const AppWalkthrough = ({ isOpen, onClose, currentAutomaton, setCurrentAutomaton
             <div className="tour-card" style={cardStyle}>
                 <div className="tour-card-top">
                     <span className="tour-step-count">Step {stepIndex + 1} / {steps.length}</span>
-                    <button className="tour-skip-btn" onClick={onClose}>Skip</button>
+                    <button type="button" className="tour-skip-btn" onClick={onClose}>Skip</button>
+                </div>
+                <div className="tour-progress" aria-hidden="true">
+                    {steps.map((_, i) => (
+                        <span
+                            key={i}
+                            className={`tour-progress-tick ${i <= stepIndex ? 'is-done' : ''}`}
+                        />
+                    ))}
                 </div>
                 <h3>{currentStep.title}</h3>
                 <p>{currentStep.content}</p>
                 <div className="tour-actions">
-                    <button onClick={prevStep} disabled={stepIndex === 0}>Back</button>
-                    <button onClick={nextStep}>{stepIndex === steps.length - 1 ? 'Finish' : 'Next'}</button>
+                    <button type="button" className="btn" onClick={prevStep} disabled={stepIndex === 0}>Back</button>
+                    <button type="button" className="btn btn-primary" onClick={nextStep}>
+                        {stepIndex === steps.length - 1 ? 'Finish' : 'Next'}
+                    </button>
                 </div>
             </div>
         </div>
