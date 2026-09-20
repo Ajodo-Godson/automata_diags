@@ -56,3 +56,25 @@
 .tc-load:focus-visible {
     opacity: 1;
 }
+
+/*
+ * Touch devices have no hover, so a control revealed by it is simply
+ * unreachable. Show it outright wherever hover is unavailable.
+ */
+@media (hover: none) {
+    .tc-load {
+        opacity: 1;
+    }
+}
+
+/* Comfortable thumb target on touch. */
+@media (pointer: coarse) {
+    .tc-item {
+        padding: var(--space-2);
+    }
+
+    .tc-load {
+        height: 32px;
+        padding: 0 var(--space-3);
+    }
+}
