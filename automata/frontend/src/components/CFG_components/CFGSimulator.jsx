@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import '../shared/SimulatorShell.css';
 import './stylings/CFGSimulator.css';
-import { CFGControlPanel } from './CFGControlPanel';
+import Transport from '../shared/Transport';
 import { CFGTestCases } from './CFGTestCases';
 import { ParseTree } from './ParseTree';
 import { VariablesEditor } from './VariablesEditor';
@@ -10,7 +11,7 @@ import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { useCFG } from './useCFG';
 import { validateCFGChallenge } from '../Tutorial_components/ChallengeValidator';
-import { CheckCircle, XCircle, Target } from 'lucide-react';
+import { CheckCircle, Target } from 'lucide-react';
 
 const CFGSimulator = ({ challenge, tutorialDemoKey, onTutorialDemoConsumed }) => {
     const { examples } = useExamples();
@@ -526,116 +527,215 @@ const CFGSimulator = ({ challenge, tutorialDemoKey, onTutorialDemoConsumed }) =>
         }
     };
 
+    const atEnd = currentStep >= 0 && currentStep === derivationSteps.length - 1;
+
     return (
-        <div className="cfg-simulator-new">
-            <div className="cfg-container">
-                {challenge && challenge.challenge && (
-                    <div className="compact-challenge-header">
-                        <div className="challenge-info">
-                            <Target size={20} />
-                            <span><strong>Challenge:</strong> {challenge.challenge.description}</span>
-                        </div>
-                        <button className="validate-btn-compact" onClick={handleValidateChallenge}>
-                            <CheckCircle size={16} /> Validate
-                        </button>
+        <div className="sim">
+            <div>
+                {challenge?.challenge && (
+                    <div className="sim-challenge">
+                        <Target size={16} aria-hidden="true" />
+                        <span className="sim-challenge-text">
+                            <strong>Challenge:</strong> {challenge.challenge.description}
+                        </span>
                         {validationResults && (
-                            <div className={`mini-results ${validationResults.passed === validationResults.total ? 'pass' : 'fail'}`}>
-                                {validationResults.passed}/{validationResults.total} Passed
-                            </div>
+                            <span
+                                className={`verdict ${
+                                    validationResults.passed === validationResults.total
+                                        ? 'verdict-accept'
+                                        : 'verdict-reject'
+                                }`}
+                            >
+                                {validationResults.passed}/{validationResults.total} passing
+                            </span>
                         )}
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={handleValidateChallenge}
+                        >
+                            <CheckCircle size={14} aria-hidden="true" />
+                            Validate
+                        </button>
                     </div>
                 )}
 
-                {!challenge && (
-                    <div className="cfg-header">
-                        <h1 className="cfg-title">CFG Simulator</h1>
-                        <p className="cfg-subtitle">Context-Free Grammar - Derivation and parsing visualization</p>
+                <div className="sim-toolbar">
+                    <div className="sim-identity">
+                        <h1 className="sim-title">Context-Free Grammar</h1>
+                        <p className="sim-subtitle">
+                            Start symbol {cfg.startVariable} · {cfg.variables.length} variables ·{' '}
+                            {cfg.rules.length} productions
+                        </p>
                     </div>
-                )}
+
+                    <div className="sim-run">
+                        <label className="sr-only" htmlFor="cfg-input">
+                            String to parse
+                        </label>
+                        <input
+                            id="cfg-input"
+                            className="field"
+                            value={inputString}
+                            placeholder="String to parse, e.g. (())"
+                            onChange={(e) => setInputString(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && parseString()}
+                        />
+                        <button type="button" className="btn btn-primary" onClick={parseString}>
+                            Parse
+                        </button>
+                    </div>
+
+                    {isAccepted !== null && (
+                        <div
+                            className={`verdict ${
+                                isAccepted ? 'verdict-accept' : 'verdict-reject'
+                            } sim-verdict`}
+                        >
+                            {isAccepted ? 'Derivable' : 'Not derivable'}
+                            <span className="verdict-note">
+                                {isAccepted
+                                    ? `Derived in ${derivationSteps.length} steps.`
+                                    : `No derivation from ${cfg.startVariable}.`}
+                            </span>
+                        </div>
+                    )}
+                </div>
 
                 {!challenge && (
-                    <div className="cfg-example-selector">
-                        <label className="cfg-selector-label">Load Example:</label>
-                        <div className="cfg-selector-buttons">
+                    <div className="sim-examples">
+                        <span className="eyebrow sim-examples-label">Examples</span>
+                        <div className="sim-examples-list">
                             {Object.entries(examples).map(([key, example]) => (
-                                <button key={key} className={`cfg-selector-btn ${currentExampleName === key ? 'active' : ''}`} onClick={() => loadExample(key)}>
+                                <button
+                                    key={key}
+                                    type="button"
+                                    className="chip"
+                                    aria-pressed={currentExampleName === key}
+                                    onClick={() => loadExample(key)}
+                                >
                                     {example.name}
                                 </button>
                             ))}
                         </div>
-                        {currentExampleDescription && (
-                            <div className="cfg-example-description"><strong>Description:</strong> {currentExampleDescription}</div>
-                        )}
                     </div>
                 )}
 
-                <div className="cfg-grid">
-                    <div className="cfg-left-col">
-                        <div className="cfg-input-card">
-                            <h3 className="cfg-card-title">Test Input String</h3>
-                            <div className="cfg-input-group">
-                                <input type="text" value={inputString} onChange={(e) => setInputString(e.target.value)} placeholder="Enter string to parse (e.g., aa)" className="cfg-input" />
-                                <button onClick={parseString} className="cfg-btn cfg-btn-primary">Parse</button>
-                            </div>
-                            <p className="cfg-input-help">Terminals: {cfg.terminals.join(', ')}</p>
-                            {isAccepted !== null && (
-                                <div className={`cfg-result ${isAccepted ? 'accepted' : 'rejected'}`}>
-                                    String is {isAccepted ? 'ACCEPTED' : 'REJECTED'}
-                                </div>
+                {!challenge && currentExampleDescription && (
+                    <p className="sim-example-note">{currentExampleDescription}</p>
+                )}
+            </div>
+
+            <div className="sim-body">
+                {/*
+                  * The parse tree is this machine's diagram, so it takes the
+                  * stage. It used to be the last accordion in the sidebar.
+                  */}
+                <div className="sim-stage">
+                    <div className="card sim-diagram-card">
+                        <div className="card-header">
+                            <h2 className="card-title">Parse tree</h2>
+                            {derivationSteps.length > 0 && (
+                                <span className="hint">
+                                    Step {currentStep + 1} of {derivationSteps.length}
+                                </span>
                             )}
                         </div>
+                        <div className="card-body cfg-tree-body">
+                            <ParseTree
+                                derivationSteps={derivationSteps}
+                                currentStep={currentStep}
+                                tokenMode={detectTokenMode(cfg)}
+                                variables={cfg.variables}
+                            />
+                        </div>
+                    </div>
 
-                        <CFGControlPanel
-                            currentStep={currentStep}
-                            totalSteps={derivationSteps.length}
+                    <div className="card">
+                        <Transport
                             isPlaying={isPlaying}
-                            isComplete={currentStep >= 0 && currentStep === derivationSteps.length - 1}
-                            isAccepted={isAccepted}
-                            speed={playbackSpeed}
+                            canPlay={derivationSteps.length > 0 && !atEnd}
+                            canStep={derivationSteps.length > 0 && !atEnd}
                             onRun={() => setIsPlaying(true)}
                             onPause={() => setIsPlaying(false)}
-                            onStep={() => { if (currentStep < derivationSteps.length - 1) setCurrentStep(currentStep + 1); }}
+                            onStep={() => {
+                                if (currentStep < derivationSteps.length - 1)
+                                    setCurrentStep(currentStep + 1);
+                            }}
                             onReset={resetDerivation}
+                            speed={playbackSpeed}
                             onSpeedChange={setPlaybackSpeed}
+                            readouts={[
+                                {
+                                    label: 'Sentential form',
+                                    value:
+                                        currentStep >= 0 && derivationSteps[currentStep]
+                                            ? derivationSteps[currentStep].sentential ||
+                                              derivationSteps[currentStep].current ||
+                                              cfg.startVariable
+                                            : cfg.startVariable,
+                                },
+                                {
+                                    label: 'Step',
+                                    value: `${Math.max(currentStep + 1, 0)}/${
+                                        derivationSteps.length || 0
+                                    }`,
+                                },
+                            ]}
                         />
+                    </div>
+                </div>
 
-                        <CollapsibleSection title="Grammar Rules" defaultOpen={true}>
-                            <div className="cfg-grammar-card">
-                                <div className="cfg-rules-list">
+                <aside className="sim-panel">
+                    {/* The grammar itself is the reference you read while parsing. */}
+                    <section className="card">
+                        <div className="card-header">
+                            <h2 className="card-title">Productions</h2>
+                            <span className="hint">
+                                terminals {cfg.terminals.join(' ') || '—'}
+                            </span>
+                        </div>
+                        <div className="card-body">
+                            {cfg.rules.length === 0 ? (
+                                <p className="empty">No productions yet.</p>
+                            ) : (
+                                <ul className="cfg-rules">
                                     {cfg.rules.map((rule, index) => (
-                                        <div key={index} className="cfg-rule">
+                                        <li className="cfg-rule" key={`${rule.left}-${index}`}>
                                             <span className="cfg-rule-left">{rule.left}</span>
                                             <span className="cfg-rule-arrow">→</span>
                                             <span className="cfg-rule-right">{rule.right}</span>
-                                        </div>
+                                        </li>
                                     ))}
-                                </div>
-                            </div>
-                        </CollapsibleSection>
-                    </div>
+                                </ul>
+                            )}
+                        </div>
+                    </section>
 
-                    <div className="cfg-right-col">
-                        <CollapsibleSection title="Variables Editor" defaultOpen={challenge ? true : false}>
-                            <VariablesEditor cfg={cfg} onUpdate={resetDerivation} />
+                    <CollapsibleSection title="Variables" defaultOpen={!!challenge}>
+                        <VariablesEditor cfg={cfg} onUpdate={resetDerivation} />
+                    </CollapsibleSection>
+
+                    <CollapsibleSection title="Terminals" defaultOpen={!!challenge}>
+                        <TerminalsEditor cfg={cfg} onUpdate={resetDerivation} />
+                    </CollapsibleSection>
+
+                    <CollapsibleSection title="Edit productions" defaultOpen={!!challenge}>
+                        <ProductionRulesEditor cfg={cfg} onUpdate={resetDerivation} />
+                    </CollapsibleSection>
+
+                    {!challenge && (
+                        <CollapsibleSection title="Test cases" defaultOpen={false}>
+                            <CFGTestCases
+                                onLoadTest={(t) => {
+                                    setInputString(t);
+                                    resetDerivation();
+                                }}
+                                currentExample={currentExampleName}
+                            />
                         </CollapsibleSection>
-                        <CollapsibleSection title="Terminals Editor" defaultOpen={challenge ? true : false}>
-                            <TerminalsEditor cfg={cfg} onUpdate={resetDerivation} />
-                        </CollapsibleSection>
-                        <CollapsibleSection title="Production Rules Editor" defaultOpen={challenge ? true : false}>
-                            <ProductionRulesEditor cfg={cfg} onUpdate={resetDerivation} />
-                        </CollapsibleSection>
-                        {!challenge && (
-                            <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
-                                <CFGTestCases onLoadTest={(ti) => { setInputString(ti); resetDerivation(); }} currentExample={currentExampleName} />
-                            </CollapsibleSection>
-                        )}
-                        <CollapsibleSection title="Parse Tree" defaultOpen={true}>
-                            <div className="cfg-tree-card">
-                                <ParseTree derivationSteps={derivationSteps} currentStep={currentStep} tokenMode={detectTokenMode(cfg)} variables={cfg.variables} />
-                            </div>
-                        </CollapsibleSection>
-                    </div>
-                </div>
+                    )}
+                </aside>
             </div>
         </div>
     );
