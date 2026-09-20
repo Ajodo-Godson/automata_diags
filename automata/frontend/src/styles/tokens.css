@@ -1,0 +1,359 @@
+/*
+ * Design tokens — the single source of truth for colour, type, space and depth.
+ *
+ * Every value used anywhere in the app should come from here. If you find
+ * yourself writing a raw hex code or a magic pixel value in a component
+ * stylesheet, add a token instead.
+ *
+ * The palette is defined in full on bare :root (light). Dark mode only
+ * *redefines* tokens — it never introduces one that light does not have.
+ */
+
+:root {
+    color-scheme: light dark;
+
+    /* ---- Brand ------------------------------------------------------ */
+    /* One accent, used for interactive affordances and the current state. */
+    --accent-50: #eef4ff;
+    --accent-100: #dbe6fe;
+    --accent-200: #bfd3fe;
+    --accent-300: #93b4fd;
+    --accent-400: #608dfa;
+    --accent-500: #3b6bf6;
+    --accent-600: #254ceb;
+    --accent-700: #1d3ad8;
+    --accent-800: #1e32af;
+    --accent-900: #1e318a;
+
+    /* ---- Neutrals --------------------------------------------------- */
+    --gray-0: #ffffff;
+    --gray-25: #fcfcfd;
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e6ebf1;
+    --gray-300: #d3dbe4;
+    --gray-400: #9fabbc;
+    --gray-500: #6d7b8d;
+    --gray-600: #4e5b6b;
+    --gray-700: #374252;
+    --gray-800: #232c39;
+    --gray-900: #151b24;
+    --gray-950: #0c1016;
+
+    /* ---- Semantic ---------------------------------------------------
+     * Accept/reject carry meaning in every simulator, so they are named
+     * for the meaning, not the hue. Both pass 4.5:1 on their own surface.
+     */
+    --accept-surface: #e7f7ee;
+    --accept-border: #9fdcb9;
+    --accept-fg: #0f6b3d;
+    --accept-solid: #12844c;
+
+    --reject-surface: #fdeceb;
+    --reject-border: #f4b7b2;
+    --reject-fg: #a3231a;
+    --reject-solid: #c62a20;
+
+    --warn-surface: #fdf4e3;
+    --warn-border: #f0d49a;
+    --warn-fg: #8a5a08;
+
+    --info-surface: var(--accent-50);
+    --info-border: var(--accent-200);
+    --info-fg: var(--accent-800);
+
+    /* ---- Surfaces ---------------------------------------------------
+     * canvas  – the page behind everything
+     * surface – cards and panels that sit on the canvas
+     * raised  – things that sit on a surface (inputs, table headers)
+     * sunken  – wells and code blocks
+     */
+    --canvas: var(--gray-100);
+    --surface: var(--gray-0);
+    --surface-raised: var(--gray-0);
+    --surface-sunken: var(--gray-50);
+    --surface-inverted: var(--gray-900);
+
+    --border: var(--gray-200);
+    --border-strong: var(--gray-300);
+    --border-inverted: rgba(255, 255, 255, 0.14);
+
+    /* Interaction states. These must flip with the theme, so components use
+     * these rather than reaching for a raw --gray-* step. */
+    --hover: var(--gray-50);
+    --hover-strong: var(--gray-100);
+    --border-hover: var(--gray-400);
+    --track: var(--gray-200);
+    --media-bg: var(--gray-0);
+
+    /* ---- Text ------------------------------------------------------- */
+    --text: var(--gray-900);
+    --text-muted: var(--gray-600);
+    /* #6d7b8d measured 4.31:1 on white and 3.94:1 on the canvas — under the
+     * 4.5:1 minimum, and this carries every caption in the app. */
+    --text-subtle: #64707f;
+    --text-on-accent: #ffffff;
+    --text-inverted: var(--gray-50);
+    --text-inverted-muted: rgba(255, 255, 255, 0.66);
+
+    /* ---- Diagram ----------------------------------------------------
+     * The state diagram is the centrepiece; it gets its own named tokens
+     * so the graph never drifts from the rest of the UI.
+     */
+    --node-fill: var(--gray-0);
+    --node-stroke: var(--gray-700);
+    --node-text: var(--gray-900);
+    --node-active-fill: var(--accent-500);
+    --node-active-stroke: var(--accent-700);
+    --node-active-text: #ffffff;
+    --edge: var(--gray-400);
+    --edge-active: var(--accent-500);
+    --edge-label: var(--gray-800);
+    --diagram-canvas: var(--gray-50);
+    --diagram-grid: var(--gray-200);
+
+    /* ---- Type -------------------------------------------------------
+     * Two families, no more. `--font-mono` is for anything the machine
+     * reads or writes: symbols, tape cells, state names, grammar rules.
+     */
+    --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+        "Liberation Mono", monospace;
+
+    --text-2xs: 0.6875rem;  /* 11px — table micro-labels only */
+    --text-xs: 0.75rem;     /* 12px — eyebrow labels, captions */
+    --text-sm: 0.8125rem;   /* 13px — secondary UI text */
+    --text-base: 0.875rem;  /* 14px — default UI text */
+    --text-md: 1rem;        /* 16px — panel titles */
+    --text-lg: 1.125rem;    /* 18px — section headings */
+    --text-xl: 1.375rem;    /* 22px — page title */
+    --text-2xl: 1.75rem;    /* 28px — hero */
+
+    --leading-tight: 1.25;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.65;
+
+    --weight-normal: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+
+    /* ---- Space ------------------------------------------------------
+     * A 4px scale. Use these, never bare pixels.
+     */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+
+    /* ---- Radius ------------------------------------------------------ */
+    --radius-sm: 4px;
+    --radius: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-full: 999px;
+
+    /* ---- Depth -------------------------------------------------------
+     * Shallow and neutral. Depth separates layers; it is not decoration.
+     */
+    --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+    --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
+    --shadow-md: 0 4px 8px -2px rgba(16, 24, 40, 0.08), 0 2px 4px -2px rgba(16, 24, 40, 0.04);
+    --shadow-lg: 0 12px 16px -4px rgba(16, 24, 40, 0.08), 0 4px 6px -2px rgba(16, 24, 40, 0.03);
+
+    --ring: 0 0 0 3px var(--accent-200);
+
+    /* ---- Motion ------------------------------------------------------
+     * Short and purposeful. Nothing in this app loops forever.
+     */
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --duration-fast: 100ms;
+    --duration: 160ms;
+
+    /* ---- Layout ------------------------------------------------------ */
+    --header-height: 56px;
+    --panel-width: 380px;
+    --content-max: 1600px;
+}
+
+/*
+ * Dark mode. Guarded with :not([data-theme="light"]) so an explicit light
+ * choice always wins over the OS preference.
+ */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --canvas: #181d26;
+        --surface: #212834;
+        --surface-raised: #2a3240;
+        --surface-sunken: #1c222c;
+        --surface-inverted: #2a3240;
+
+        --border: #313a49;
+        --border-strong: #435062;
+        --border-inverted: rgba(255, 255, 255, 0.1);
+
+        --hover: #2a3240;
+        --hover-strong: #323b4b;
+        --border-hover: #55647a;
+        --track: #323b4b;
+        --media-bg: #e8edf4;
+
+        --text: #eaeff6;
+        --text-muted: #aab7c7;
+        --text-subtle: #8b97a8;
+        --text-inverted: #eaeff6;
+        --text-inverted-muted: rgba(255, 255, 255, 0.6);
+
+        --accent-50: #1b2942;
+        --accent-100: #22355a;
+        --accent-200: #2b4478;
+        --accent-300: #3960a8;
+        --accent-400: #4a77dd;
+        --accent-500: #6a93f7;
+        --accent-600: #8aabfa;
+        /*
+         * In dark mode the scale inverts: the high steps are used as TEXT on
+         * dark surfaces, so they must get lighter, not darker. Leaving 700-900
+         * at their light-mode navy put --accent-700 text at 1.87:1 on the
+         * header surface.
+         */
+        --accent-700: #a8c2fb;
+        --accent-800: #c6d8fd;
+        --accent-900: #e0eaff;
+
+        /* The accent fill is light here, so text on it must be dark. */
+        --text-on-accent: #101722;
+
+        --accept-surface: #163427;
+        --accept-border: #2e6a48;
+        --accept-fg: #72d9a0;
+        --accept-solid: #1d9e5e;
+
+        --reject-surface: #381d1a;
+        --reject-border: #78352e;
+        --reject-fg: #f4948b;
+        --reject-solid: #d1483c;
+
+        --warn-surface: #342917;
+        --warn-border: #6b5525;
+        --warn-fg: #e8bd69;
+
+        --info-surface: var(--accent-50);
+        --info-border: var(--accent-200);
+        --info-fg: #a8c2fb;
+
+        --node-fill: #2a3240;
+        --node-stroke: #8e9bad;
+        --node-text: #eaeff6;
+        --node-active-fill: var(--accent-500);
+        --node-active-stroke: var(--accent-600);
+        --node-active-text: #0c1016;
+        --edge: #6b7889;
+        --edge-active: var(--accent-500);
+        --edge-label: #d4dce7;
+        --diagram-canvas: #1c222c;
+        --diagram-grid: #2f3846;
+
+        --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+        --shadow-lg: 0 12px 16px -4px rgba(0, 0, 0, 0.55), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+
+        --ring: 0 0 0 3px var(--accent-300);
+    }
+}
+
+/* Explicit dark choice — mirrors the media block so the toggle wins. */
+:root[data-theme="dark"] {
+    --canvas: #181d26;
+    --surface: #212834;
+    --surface-raised: #2a3240;
+    --surface-sunken: #1c222c;
+    --surface-inverted: #2a3240;
+
+    --border: #313a49;
+    --border-strong: #435062;
+    --border-inverted: rgba(255, 255, 255, 0.1);
+
+    --hover: #2a3240;
+    --hover-strong: #323b4b;
+    --border-hover: #55647a;
+    --track: #323b4b;
+    --media-bg: #e8edf4;
+
+    --text: #eaeff6;
+    --text-muted: #aab7c7;
+    --text-subtle: #8b97a8;
+    --text-inverted: #eaeff6;
+    --text-inverted-muted: rgba(255, 255, 255, 0.6);
+
+    --accent-50: #1b2942;
+    --accent-100: #22355a;
+    --accent-200: #2b4478;
+    --accent-300: #3960a8;
+    --accent-400: #4a77dd;
+    --accent-500: #6a93f7;
+    --accent-600: #8aabfa;
+    /*
+     * In dark mode the scale inverts: the high steps are used as TEXT on
+     * dark surfaces, so they must get lighter, not darker. Leaving 700-900
+     * at their light-mode navy put --accent-700 text at 1.87:1 on the
+     * header surface.
+     */
+    --accent-700: #a8c2fb;
+    --accent-800: #c6d8fd;
+    --accent-900: #e0eaff;
+
+    /* The accent fill is light here, so text on it must be dark. */
+    --text-on-accent: #101722;
+
+    --accept-surface: #163427;
+    --accept-border: #2e6a48;
+    --accept-fg: #72d9a0;
+    --accept-solid: #1d9e5e;
+
+    --reject-surface: #381d1a;
+    --reject-border: #78352e;
+    --reject-fg: #f4948b;
+    --reject-solid: #d1483c;
+
+    --warn-surface: #342917;
+    --warn-border: #6b5525;
+    --warn-fg: #e8bd69;
+
+    --info-surface: var(--accent-50);
+    --info-border: var(--accent-200);
+    --info-fg: #a8c2fb;
+
+    --node-fill: #2a3240;
+    --node-stroke: #8e9bad;
+    --node-text: #eaeff6;
+    --node-active-fill: var(--accent-500);
+    --node-active-stroke: var(--accent-600);
+    --node-active-text: #0c1016;
+    --edge: #6b7889;
+    --edge-active: var(--accent-500);
+    --edge-label: #d4dce7;
+    --diagram-canvas: #1c222c;
+    --diagram-grid: #2f3846;
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 12px 16px -4px rgba(0, 0, 0, 0.55), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+
+    --ring: 0 0 0 3px var(--accent-300);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --duration-fast: 0ms;
+        --duration: 0ms;
+    }
+}
