@@ -1,99 +1,100 @@
 import React from 'react';
+import { Download, HelpCircle, Upload, Trash2 } from 'lucide-react';
+import ThemeToggle from './shared/ThemeToggle';
 import './Layout.css';
 
-const getToolboxButtons = (automatonType) => {
-    // Keep only essential buttons - editors handle state/transition management
-    const commonTools = [
-        { label: 'Import', event: 'import', description: 'Import machine definition from JSON' },
-        { label: 'Export', event: 'export', description: 'Export machine definition as JSON' },
-        { label: 'Clear All', event: 'clearAll', description: 'Clear and create new machine' }
-    ];
+const MACHINES = [
+    { id: 'DFA', label: 'DFA', title: 'Deterministic Finite Automaton' },
+    { id: 'NFA', label: 'NFA', title: 'Nondeterministic Finite Automaton' },
+    { id: 'PDA', label: 'PDA', title: 'Pushdown Automaton' },
+    { id: 'CFG', label: 'CFG', title: 'Context-Free Grammar' },
+    { id: 'TM', label: 'TM', title: 'Turing Machine' },
+];
 
-    // All automaton types use the same essential tools now
-    return commonTools;
-};
+const FILE_TOOLS = [
+    { event: 'import', label: 'Import', Icon: Upload, title: 'Import a machine definition from JSON' },
+    { event: 'export', label: 'Export', Icon: Download, title: 'Export this machine as JSON' },
+    { event: 'clearAll', label: 'Clear', Icon: Trash2, title: 'Clear the machine and start fresh' },
+];
 
 const Layout = ({ children, currentAutomaton, setCurrentAutomaton, onOpenGuide }) => {
+    const isTutorial = currentAutomaton === 'Tutorial';
+
     return (
-        <div className="layout">
-            <header className="header">
-                <div className="logo-section">
-                    <h1>Interactive Automata Toolkit</h1>
+        <div className="app">
+            <header className="app-header">
+                {/*
+                 * Three fixed grid zones. The tool buttons used to unmount on
+                 * the Tutorial tab, which let `space-between` re-centre the nav
+                 * and shifted every button ~123px sideways — clicking "TM"
+                 * would land on "CFG". The zones now hold their width and the
+                 * tools are only made inert, never removed.
+                 */}
+                <div className="app-header-start">
+                    <span className="app-mark" aria-hidden="true">
+                        q<sub>0</sub>
+                    </span>
+                    <span className="app-name">Automata Toolkit</span>
                 </div>
-                
-                {/* Horizontal Automata Type Selector */}
-                <nav className="automata-types-horizontal" data-tour="automata-nav">
-                    <button 
-                        className={`type-btn-horizontal ${currentAutomaton === 'DFA' ? 'active' : ''}`}
-                        onClick={() => setCurrentAutomaton('DFA')}
-                        data-tour="nav-dfa"
-                    >
-                        DFA
-                    </button>
-                    <button 
-                        className={`type-btn-horizontal ${currentAutomaton === 'NFA' ? 'active' : ''}`}
-                        onClick={() => setCurrentAutomaton('NFA')}
-                    >
-                        NFA
-                    </button>
-                    <button 
-                        className={`type-btn-horizontal ${currentAutomaton === 'PDA' ? 'active' : ''}`}
-                        onClick={() => setCurrentAutomaton('PDA')}
-                    >
-                        PDA
-                    </button>
-                    <button 
-                        className={`type-btn-horizontal ${currentAutomaton === 'CFG' ? 'active' : ''}`}
-                        onClick={() => setCurrentAutomaton('CFG')}
-                    >
-                        CFG
-                    </button>
-                    <button 
-                        className={`type-btn-horizontal ${currentAutomaton === 'TM' ? 'active' : ''}`}
-                        onClick={() => setCurrentAutomaton('TM')}
-                    >
-                        TM
-                    </button>
-                    <button 
-                        className={`type-btn-horizontal tutorial-btn ${currentAutomaton === 'Tutorial' ? 'active' : ''}`}
+
+                <nav className="app-nav" aria-label="Machine type" data-tour="automata-nav">
+                    {MACHINES.map(({ id, label, title }) => (
+                        <button
+                            key={id}
+                            type="button"
+                            className={`app-nav-btn ${currentAutomaton === id ? 'is-active' : ''}`}
+                            title={title}
+                            aria-current={currentAutomaton === id ? 'page' : undefined}
+                            onClick={() => setCurrentAutomaton(id)}
+                            data-tour={id === 'DFA' ? 'nav-dfa' : undefined}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                    <span className="app-nav-sep" aria-hidden="true" />
+                    <button
+                        type="button"
+                        className={`app-nav-btn ${isTutorial ? 'is-active' : ''}`}
                         onClick={() => setCurrentAutomaton('Tutorial')}
+                        aria-current={isTutorial ? 'page' : undefined}
                         data-tour="nav-tutorial"
                     >
-                        Tutorial
+                        Learn
                     </button>
                 </nav>
 
-                {/* Tool buttons in header */}
-                <div className="header-tools" data-tour="header-tools">
+                <div className="app-header-end" data-tour="header-tools">
+                    <div className={`app-tools ${isTutorial ? 'is-hidden' : ''}`} aria-hidden={isTutorial}>
+                        {FILE_TOOLS.map(({ event, label, Icon, title }) => (
+                            <button
+                                key={event}
+                                type="button"
+                                className="app-tool-btn"
+                                title={title}
+                                tabIndex={isTutorial ? -1 : 0}
+                                onClick={() => window.dispatchEvent(new CustomEvent(event))}
+                            >
+                                <Icon size={14} aria-hidden="true" />
+                                <span className="app-tool-label">{label}</span>
+                            </button>
+                        ))}
+                    </div>
+                    <ThemeToggle />
                     <button
+                        type="button"
+                        className="app-tool-btn app-tool-btn-accent"
                         onClick={onOpenGuide}
-                        className="header-tool-btn guide-tool-btn"
-                        title="Start interactive walkthrough"
+                        title="Start the interactive walkthrough"
                     >
-                        Walkthrough
+                        <HelpCircle size={14} aria-hidden="true" />
+                        <span className="app-tool-label">Guide</span>
                     </button>
-                {currentAutomaton !== 'Tutorial' && (
-                    getToolboxButtons(currentAutomaton).map((tool, index) => (
-                        <button 
-                            key={index}
-                            onClick={() => window.dispatchEvent(new CustomEvent(tool.event, { detail: tool.data }))}
-                            className="header-tool-btn"
-                            title={tool.description}
-                        >
-                            {tool.label}
-                        </button>
-                    ))
-                )}
                 </div>
             </header>
 
-            <div className="main-content">
-                <main className="workspace-full">
-                    {children}
-                </main>
-            </div>
+            <main className="app-main">{children}</main>
         </div>
     );
 };
 
-export default Layout; 
+export default Layout;
