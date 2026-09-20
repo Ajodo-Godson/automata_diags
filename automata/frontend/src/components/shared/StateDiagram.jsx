@@ -454,6 +454,13 @@ export default function StateDiagram({
                 maxZoom={1.8}
                 nodesConnectable={false}
                 elementsSelectable={false}
+                /*
+                 * Let a wheel or trackpad scroll over the canvas move the page
+                 * instead of zooming the diagram; zooming stays on pinch and
+                 * the controls. Dragging to pan is unchanged.
+                 */
+                preventScrolling={false}
+                zoomOnPinch
                 proOptions={{ hideAttribution: true }}
             >
                 <FitView shapeKey={shapeKey} containerRef={containerRef} />
