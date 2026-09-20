@@ -16,9 +16,9 @@ Consider the language L = {w | w ends in 01}.
 A DFA would need to "remember" if the last symbol was a 0, in case the current one is a 1.
 
 States needed:
-• q₀: Start state (haven't seen a 0)
-• q₁: Just saw a 0
-• q₂: Just saw "01" (accept state)
+- q₀: Start state (haven't seen a 0)
+- q₁: Just saw a 0
+- q₂: Just saw "01" (accept state)
 
 This is manageable. Now consider L = {w | w contains the substring 1101}. Building the DFA for this is much more complex, as you have to track partial matches.`,
                     keyPoints: [
@@ -72,9 +72,9 @@ q₀: Start state
 F = {q₂}
 
 Transitions:
-• δ(q₀, 0) = {q₀, q₁}  (Either stay in q₀ OR guess this is the start of "01")
-• δ(q₀, 1) = {q₀}      (Stay in q₀)
-• δ(q₁, 1) = {q₂}      (If we're in q₁ (just saw '0'), and now see '1', move to accept)`,
+- δ(q₀, 0) = {q₀, q₁}  (Either stay in q₀ OR guess this is the start of "01")
+- δ(q₀, 1) = {q₀}      (Stay in q₀)
+- δ(q₁, 1) = {q₂}      (If we're in q₁ (just saw '0'), and now see '1', move to accept)`,
                     example: {
                         description: 'State diagram and execution trace',
                         code: `State Diagram:
@@ -175,9 +175,9 @@ The start state of the DFA is the set of states the NFA can be in at the beginni
 An accept state in the DFA is any set-state that contains at least one of the NFA's accept states.
 
 Conclusion:
-• DFA: Deterministic, one path. Can be complex to design.
-• NFA: Nondeterministic, multiple "guesses." Often easier to design.
-• Power: NFAs and DFAs are equally powerful. They both recognize the same class of languages: the Regular Languages.`,
+- DFA: Deterministic, one path. Can be complex to design.
+- NFA: Nondeterministic, multiple "guesses." Often easier to design.
+- Power: NFAs and DFAs are equally powerful. They both recognize the same class of languages: the Regular Languages.`,
                     keyPoints: [
                         'NFAs and DFAs recognize the same languages',
                         'NFAs are often simpler to design',
@@ -202,11 +202,11 @@ Conclusion:
                     title: 'Formal Definition of an NFA',
                     content: `A Nondeterministic Finite Automaton is formally defined as a 5-tuple N = (Q, Σ, δ, q₀, F) where:
 
-• Q is a finite set of states
-• Σ is a finite alphabet
-• δ: Q × Σ_ε → P(Q) is the transition function
-• q₀ ∈ Q is the start state
-• F ⊆ Q is the set of accept states
+- Q is a finite set of states
+- Σ is a finite alphabet
+- δ: Q × Σ_ε → P(Q) is the transition function
+- q₀ ∈ Q is the start state
+- F ⊆ Q is the set of accept states
 
 Key differences from DFA:
 1. Σ_ε = Σ ∪ {ε} (allows ε-transitions)
@@ -372,9 +372,9 @@ Accept states: {q₀,q₂} (contains q₂)`
                     title: 'Complexity Analysis',
                     content: `Worst-case analysis of subset construction:
 
-• NFA states: n
-• Potential DFA states: 2^n (all subsets)
-• Actual reachable states: often much smaller
+- NFA states: n
+- Potential DFA states: 2^n (all subsets)
+- Actual reachable states: often much smaller
 
 Time complexity:
 - Naive: O(2^n × |Σ|) to enumerate all states
@@ -477,14 +477,14 @@ This is one of the most important theorems in theoretical computer science.`,
                     content: `Thompson's construction converts regex to NFA compositionally.
 
 Base cases:
-• ∅: No accept states
-• ε: Start state is accept state with ε-transition
-• a ∈ Σ: Two states with transition labeled 'a'
+- ∅: No accept states
+- ε: Start state is accept state with ε-transition
+- a ∈ Σ: Two states with transition labeled 'a'
 
 Inductive cases:
-• R₁|R₂ (union): Create new start, ε-transition to both
-• R₁R₂ (concat): Connect accept states of R₁ to start of R₂ via ε
-• R* (star): New start/accept, ε to old start, ε from old accepts back
+- R₁|R₂ (union): Create new start, ε-transition to both
+- R₁R₂ (concat): Connect accept states of R₁ to start of R₂ via ε
+- R* (star): New start/accept, ε to old start, ε from old accepts back
 
 Result: NFA with O(|r|) states where |r| is regex length.
 
