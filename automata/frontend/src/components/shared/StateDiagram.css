@@ -1,0 +1,214 @@
+.sd-wrap {
+    width: 100%;
+    border-radius: var(--radius);
+    background: var(--diagram-canvas);
+    overflow: hidden;
+}
+
+/* ------------------------------------------------------------------ Node */
+
+.sd-node {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border: 2px solid var(--node-stroke);
+    border-radius: var(--radius-full);
+    background: var(--node-fill);
+    color: var(--node-text);
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    transition: background var(--duration) var(--ease),
+        border-color var(--duration) var(--ease),
+        color var(--duration) var(--ease);
+}
+
+.sd-node-label {
+    line-height: 1;
+}
+
+/*
+ * Accept states get the conventional double circle, drawn as an inset ring so
+ * it scales with the node and never clips.
+ */
+.sd-node.is-accept::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 2px solid currentColor;
+    border-radius: var(--radius-full);
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+.sd-node.is-current {
+    background: var(--node-active-fill);
+    border-color: var(--node-active-stroke);
+    color: var(--node-active-text);
+    box-shadow: 0 0 0 4px var(--accent-200);
+}
+
+/* The entry arrow that marks the start state. */
+.sd-start-arrow {
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    width: 28px;
+    height: 12px;
+    margin-right: 4px;
+    transform: translateY(-50%);
+    overflow: visible;
+    pointer-events: none;
+}
+
+.sd-start-arrow path {
+    fill: none;
+    stroke: var(--node-stroke);
+    stroke-width: 2;
+}
+
+.sd-start-arrow .sd-start-arrow-head {
+    fill: var(--node-stroke);
+    stroke: none;
+}
+
+/* Handles anchor edge routing; they are not meant to be seen. */
+.sd-handle {
+    width: 1px;
+    height: 1px;
+    min-width: 0;
+    min-height: 0;
+    border: 0;
+    background: transparent;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sd-node-delete {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-full);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--duration) var(--ease),
+        color var(--duration) var(--ease),
+        border-color var(--duration) var(--ease);
+}
+
+.sd-node:hover .sd-node-delete,
+.sd-node-delete:focus-visible {
+    opacity: 1;
+}
+
+.sd-node-delete:hover {
+    color: var(--reject-fg);
+    border-color: var(--reject-solid);
+}
+
+/* ----------------------------------------------------------------- Edges */
+
+/*
+ * Labels sit on a plate so they stay readable where edges cross. The previous
+ * implementation removed the background and compensated with 800-weight text,
+ * which did not work once two edges overlapped.
+ */
+.sd-edge-label {
+    position: absolute;
+    padding: 1px var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--diagram-canvas);
+    color: var(--edge-label);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    line-height: 1.4;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.sd-edge-label.is-active {
+    background: var(--accent-600);
+    color: var(--text-on-accent);
+}
+
+/* --------------------------------------------------- ReactFlow overrides */
+
+.sd-wrap .react-flow__controls {
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.sd-wrap .react-flow__controls-button {
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    fill: var(--text-muted);
+}
+
+.sd-wrap .react-flow__controls-button:hover {
+    background: var(--hover-strong);
+    fill: var(--text);
+}
+
+.sd-wrap .react-flow__edge.animated path {
+    stroke-dasharray: 6 4;
+    animation: sd-dash 0.6s linear infinite;
+}
+
+@keyframes sd-dash {
+    to {
+        stroke-dashoffset: -10;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sd-wrap .react-flow__edge.animated path {
+        animation: none;
+    }
+}
+
+/* Multi-transition labels stack, one transition per line. */
+.sd-edge-label-line {
+    display: block;
+    text-align: center;
+}
+
+/*
+ * Shell around each state circle. It reserves the space a self-loop arc and
+ * its label occupy above the circle — set inline, because a PDA's three-line
+ * rule block needs far more room than a DFA's single symbol — so ReactFlow's
+ * fitView bounds include the arc instead of clipping it.
+ */
+.sd-node-shell {
+    display: flex;
+    flex-direction: column;
+    width: 64px;
+    /* Room for a return lane and its label to pass beneath the state. */
+    padding-bottom: 30px; /* keep in step with LANE_CLEARANCE */
+}
+
+/* "+N more" points at the Transitions panel for the full rule list. */
+.sd-edge-label-line.is-overflow {
+    font-family: var(--font-sans);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-normal);
+    opacity: 0.75;
+}
