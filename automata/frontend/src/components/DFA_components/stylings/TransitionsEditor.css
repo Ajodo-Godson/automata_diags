@@ -1,254 +1,118 @@
+/*
+ * Transition editor. Shared by the DFA, NFA and PDA panels.
+ *
+ * Transitions are written in the notation the course uses — δ(q, a) = q' — so
+ * the editor reads like the textbook rather than like a form.
+ */
+
 .transitions-editor {
-    background: transparent;
-    padding: 0;
-}
-
-.editor-header {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid #f3f4f6;
-}
-
-.editor-header-simple {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.editor-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #1f2937;
-    margin: 0;
-}
-
-.editor-subtitle {
-    font-size: 0.7rem;
-    color: #6b7280;
-    margin: 0;
-}
-
-.btn-add {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.3rem 0.6rem;
-    background: #1f2937;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-add:hover {
-    background: #111827;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    flex-direction: column;
+    gap: var(--space-3);
 }
 
 .transitions-list {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
-    max-height: 250px;
+    gap: var(--space-1);
+    max-height: 260px;
     overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .transition-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.35rem 0.5rem;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
-    transition: all 0.2s;
-    font-family: 'Courier New', monospace;
-    font-size: 0.75rem;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: border-color var(--duration) var(--ease);
 }
 
 .transition-item:hover {
-    background: #f3f4f6;
-    border-color: #d1d5db;
+    border-color: var(--border-strong);
 }
 
+/*
+ * The δ(q, a) = q' line. One monospace run so the glyphs line up between rows;
+ * the pieces are tinted rather than differently sized.
+ */
 .transition-text {
-    font-size: 0.75rem;
-    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    min-width: 0;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .delta-symbol {
-    color: #3b82f6;
-    font-weight: bold;
+    color: var(--accent-600);
+    font-weight: var(--weight-semibold);
 }
 
-.transition-text .state-name {
-    color: #7c3aed;
-    font-weight: 500;
-    font-size: 0.7rem;
-}
-
-.symbol-name {
-    color: #dc2626;
-    font-weight: 600;
-    font-size: 0.7rem;
-}
-
+.separator,
 .equals {
-    color: #6b7280;
-    margin: 0 0.5rem;
+    color: var(--text-subtle);
+    padding: 0 var(--space-1);
 }
 
 .transition-actions {
     display: flex;
-    gap: 0.5rem;
-}
-
-.btn-icon {
-    padding: 0.4rem;
-    background: transparent;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
     align-items: center;
-    justify-content: center;
-}
-
-.btn-icon-add {
-    color: #3b82f6;
-}
-
-.btn-icon-add:hover {
-    background: #dbeafe;
-}
-
-.btn-icon-delete {
-    color: #dc2626;
-    font-size: 0.85rem;
-    background: rgba(220, 38, 38, 0.1);
-    border: 1px solid rgba(220, 38, 38, 0.2);
-}
-
-.btn-icon-delete:hover {
-    background: #fee2e2;
-    border-color: #dc2626;
-    color: #991b1b;
-    transform: scale(1.1);
+    gap: var(--space-1);
+    flex: 0 0 auto;
 }
 
 .transition-add-form {
-    padding: 0.75rem;
-    background: #eff6ff;
-    border: 2px dashed #3b82f6;
-    border-radius: 6px;
-    margin-bottom: 0.4rem;
-}
-
-.form-inputs {
     display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-    margin-bottom: 0.5rem;
-    font-family: 'Courier New', monospace;
-    font-size: 0.85rem;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-sunken);
 }
 
-.input-small {
-    padding: 0.3rem 0.5rem;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 0.8rem;
-    width: 50px;
-    text-align: center;
-    font-weight: 600;
+.transition-add-form select,
+.transition-add-form input {
+    min-width: 0;
+    height: 28px;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
 }
 
-.input-small:focus {
+.transition-add-form select:focus,
+.transition-add-form input:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--accent-500);
+    box-shadow: var(--ring);
 }
 
-.separator {
-    color: #6b7280;
+/*
+ * When the add button sits in the editor header it is an inline action, not a
+ * full-width dropzone, so it must not inherit .btn-add's width:100%.
+ */
+.editor-header-simple .btn-add,
+.editor-header-simple .btn-add-state {
+    width: auto;
+    flex: 0 0 auto;
+    padding: 0 var(--space-3);
+    border-style: solid;
 }
 
-.form-actions {
-    display: flex;
-    gap: 0.5rem;
+.editor-header-simple .editor-subtitle {
+    min-width: 0;
 }
-
-.btn-save, .btn-cancel {
-    padding: 0.4rem 0.75rem;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-save {
-    background: #3b82f6;
-    color: white;
-}
-
-.btn-save:hover {
-    background: #2563eb;
-}
-
-.btn-cancel {
-    background: #f3f4f6;
-    color: #6b7280;
-}
-
-.btn-cancel:hover {
-    background: #e5e7eb;
-}
-
-.empty-state {
-    padding: 2rem;
-    text-align: center;
-    color: #9ca3af;
-}
-
-.empty-state p {
-    margin: 0.25rem 0;
-}
-
-.empty-hint {
-    font-size: 0.8rem;
-}
-
-.btn-epsilon-small {
-    padding: 2px 6px;
-    background: #f3f4f6;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    font-size: 14px;
-    color: #374151;
-    cursor: pointer;
-    transition: all 0.2s;
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-epsilon-small:hover {
-    background: #e5e7eb;
-    border-color: #9ca3af;
-    color: #111827;
-}
-
