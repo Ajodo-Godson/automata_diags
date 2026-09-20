@@ -1,31 +1,75 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import Layout from '../Layout';
 
+const setup = (props = {}) =>
+    render(
+        <Layout
+            currentAutomaton="DFA"
+            setCurrentAutomaton={() => {}}
+            onOpenGuide={() => {}}
+            {...props}
+        >
+            <div data-testid="content">Workspace</div>
+        </Layout>
+    );
+
 describe('Layout', () => {
-    test('renders header and navigation', () => {
-        render(<Layout />);
+    test('renders the machine navigation and children', () => {
+        setup();
 
-        expect(screen.getByText('Interactive Automata Toolkit')).toBeInTheDocument();
-        expect(screen.getByText('Documentation')).toBeInTheDocument();
-        expect(screen.getByText('Help')).toBeInTheDocument();
+        ['DFA', 'NFA', 'PDA', 'CFG', 'TM', 'Learn'].forEach((label) => {
+            expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
+        });
+        expect(screen.getByTestId('content')).toBeInTheDocument();
     });
 
-    test('renders sidebar with automata types', () => {
-        render(<Layout />);
+    test('marks the current machine as the active page', () => {
+        setup({ currentAutomaton: 'PDA' });
 
-        expect(screen.getByText('DFA')).toBeInTheDocument();
-        expect(screen.getByText('NFA (Coming Soon)')).toBeInTheDocument();
-        expect(screen.getByText('PDA (Coming Soon)')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'PDA' })).toHaveAttribute(
+            'aria-current',
+            'page'
+        );
+        expect(screen.getByRole('button', { name: 'DFA' })).not.toHaveAttribute('aria-current');
     });
 
-    test('renders children content', () => {
-        render(
-            <Layout>
-                <div data-testid="test-content">Test Content</div>
+    test('selecting a machine reports it upward', async () => {
+        const setCurrentAutomaton = jest.fn();
+        setup({ setCurrentAutomaton });
+
+        await userEvent.click(screen.getByRole('button', { name: 'TM' }));
+
+        expect(setCurrentAutomaton).toHaveBeenCalledWith('TM');
+    });
+
+    /*
+     * Regression: the file tools used to unmount on the Learn tab, which let
+     * the header re-centre and shifted every nav button ~123px sideways —
+     * clicking "TM" would land on "CFG". They must stay mounted.
+     */
+    test('file tools stay mounted on the Learn tab so the nav cannot shift', () => {
+        const { rerender } = setup({ currentAutomaton: 'DFA' });
+        expect(screen.getByRole('button', { name: /Import/ })).toBeInTheDocument();
+
+        rerender(
+            <Layout currentAutomaton="Tutorial" setCurrentAutomaton={() => {}} onOpenGuide={() => {}}>
+                <div data-testid="content">Workspace</div>
             </Layout>
         );
 
-        expect(screen.getByTestId('test-content')).toBeInTheDocument();
+        const tools = document.querySelector('.app-tools');
+        expect(tools).toBeInTheDocument();
+        expect(tools).toHaveClass('is-hidden');
     });
-}); 
+
+    test('the guide button opens the walkthrough', async () => {
+        const onOpenGuide = jest.fn();
+        setup({ onOpenGuide });
+
+        await userEvent.click(screen.getByRole('button', { name: /Guide/ }));
+
+        expect(onOpenGuide).toHaveBeenCalled();
+    });
+});
