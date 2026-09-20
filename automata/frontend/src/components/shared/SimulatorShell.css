@@ -1,0 +1,360 @@
+/*
+ * The layout every simulator shares.
+ *
+ * Three regions, so a reader always finds the same thing in the same place:
+ *
+ *   ┌──────────────────────────────────────────────────────────┐
+ *   │ toolbar  — title, example picker, input + verdict          │
+ *   ├────────────────────────────────────┬─────────────────────┤
+ *   │ stage    — the diagram / tape /    │ panel — editors,    │
+ *   │            parse tree, and the     │ transition table,   │
+ *   │            transport controls      │ test cases          │
+ *   └────────────────────────────────────┴─────────────────────┘
+ *
+ * The stage owns the vertical space and scrolls independently of the panel,
+ * so the diagram stays put while you scroll the editors.
+ */
+
+.sim {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+    background: var(--canvas);
+}
+
+/* --------------------------------------------------------------- Toolbar */
+
+.sim-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.sim-identity {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    margin-right: auto;
+}
+
+.sim-title {
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.01em;
+    line-height: var(--leading-tight);
+}
+
+.sim-subtitle {
+    color: var(--text-subtle);
+    font-size: var(--text-sm);
+    line-height: var(--leading-tight);
+}
+
+/* Input + run control, the thing people came here to use. */
+.sim-run {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.sim-run .field {
+    width: 240px;
+    font-family: var(--font-mono);
+}
+
+.sim-verdict {
+    min-width: 0;
+}
+
+/* -------------------------------------------------------------- Examples */
+
+.sim-examples {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.sim-examples-label {
+    flex: 0 0 auto;
+    padding-top: 2px;
+}
+
+.sim-examples-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.sim-example-note {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: var(--info-surface);
+    border-bottom: 1px solid var(--border);
+    color: var(--info-fg);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+}
+
+/* ----------------------------------------------------------------- Body  */
+
+.sim-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--panel-width);
+    min-height: 0;
+    overflow: hidden;
+}
+
+/*
+ * The diagram takes whatever vertical space is spare; the transport strip is
+ * pinned beneath it so Run/Step/Reset are always reachable without scrolling.
+ */
+.sim-stage {
+    display: grid;
+    grid-template-rows: minmax(240px, 1fr) auto;
+    gap: var(--space-3);
+    min-width: 0;
+    min-height: 0;
+    padding: var(--space-4);
+    overflow: hidden;
+}
+
+.sim-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-height: 0;
+    padding: var(--space-4);
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/*
+ * Panel sections keep their natural height and let the panel scroll. Without
+ * this they are flex items with the default flex-shrink:1, so expanding an
+ * accordion squeezed every section into a few clipped pixels instead of
+ * growing the scrollable content.
+ */
+.sim-panel > * {
+    flex: 0 0 auto;
+}
+
+.sim-diagram-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.sim-diagram-card > .card-body {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: var(--space-3);
+}
+
+.sim-diagram-card .sd-wrap {
+    flex: 1 1 auto;
+}
+
+/* ------------------------------------------------------------- Transport */
+
+.sim-transport {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+}
+
+.sim-transport-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.sim-transport-readout {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-left: auto;
+}
+
+.sim-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: var(--leading-tight);
+}
+
+.sim-readout-value {
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+}
+
+.sim-speed {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.sim-speed input[type='range'] {
+    width: 110px;
+    accent-color: var(--accent-600);
+}
+
+/* --------------------------------------------------------------- Tracing */
+
+/*
+ * The step trace. Reading the input one symbol at a time is the core idea of
+ * the whole app, so the consumed / current / remaining split is explicit.
+ */
+.sim-tape-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding: var(--space-2) var(--space-3);
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+}
+
+.sim-symbol {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 26px;
+    padding: 0 var(--space-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text-subtle);
+    font-size: var(--text-base);
+}
+
+.sim-symbol.is-consumed {
+    color: var(--text-muted);
+    background: var(--hover-strong);
+}
+
+.sim-symbol.is-current {
+    background: var(--accent-600);
+    border-color: var(--accent-600);
+    color: var(--text-on-accent);
+    font-weight: var(--weight-semibold);
+}
+
+.sim-step-note {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+}
+
+.sim-step-note strong {
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-weight: var(--weight-semibold);
+}
+
+/* ------------------------------------------------------------- Challenge */
+
+.sim-challenge {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--warn-surface);
+    border-bottom: 1px solid var(--warn-border);
+    color: var(--warn-fg);
+    font-size: var(--text-base);
+}
+
+.sim-challenge-text {
+    margin-right: auto;
+}
+
+/* ---------------------------------------------------------- Narrow view  */
+
+@media (max-width: 1180px) {
+    .sim-body {
+        grid-template-columns: minmax(0, 1fr) 320px;
+    }
+}
+
+/*
+ * Below this width the panel moves under the stage and the whole simulator
+ * scrolls as one column, rather than two independently scrolling panes.
+ */
+@media (max-width: 980px) {
+    .sim {
+        grid-template-rows: auto auto;
+        height: auto;
+        min-height: 100%;
+    }
+
+    .sim-body {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        overflow: visible;
+    }
+
+    .sim-stage {
+        display: flex;
+        flex-direction: column;
+        overflow: visible;
+    }
+
+    /*
+     * `height` alone does not stop a flex item shrinking, and the stage sits
+     * in a height-constrained grid — so the diagram card collapsed to a couple
+     * of pixels. `flex: 0 0` fixes the track.
+     *
+     * Order matters: the diagram card carries both `card` and
+     * `sim-diagram-card`, which have equal specificity here, so the general
+     * rule has to come first or it wins on source order.
+     */
+    .sim-stage > .card {
+        flex: 0 0 auto;
+    }
+
+    .sim-stage > .sim-diagram-card {
+        flex: 0 0 380px;
+    }
+
+    .sim-panel {
+        border-left: 0;
+        border-top: 1px solid var(--border);
+        overflow: visible;
+    }
+
+    .sim-run {
+        flex: 1 1 100%;
+    }
+
+    .sim-run .field {
+        width: auto;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .sim-identity {
+        width: 100%;
+        margin-right: 0;
+    }
+}
