@@ -5,231 +5,191 @@ import './stylings/TutorialHub.css';
 import LessonViewer from './LessonViewer';
 import ExerciseViewer from './ExerciseViewer';
 import { tutorialData } from './tutorialData';
-import { BookOpen, Award, CheckCircle, Circle, ChevronRight } from 'lucide-react';
+import { Award, BookOpen, Check } from 'lucide-react';
+
+const MACHINE_BLURB = {
+    DFA: 'Deterministic finite automata',
+    NFA: 'Nondeterministic finite automata',
+    PDA: 'Pushdown automata',
+    CFG: 'Context-free grammars',
+    TM: 'Turing machines',
+};
+
+/** A thin progress bar. The old hub drew two SVG donuts that clipped. */
+function Progress({ label, done, total }) {
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    return (
+        <div className="tut-progress">
+            <div className="tut-progress-head">
+                <span className="eyebrow">{label}</span>
+                <span className="tut-progress-count">
+                    {done}/{total}
+                </span>
+            </div>
+            <div
+                className="tut-progress-track"
+                role="progressbar"
+                aria-valuenow={pct}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`${label} progress`}
+            >
+                <div className="tut-progress-fill" style={{ width: `${pct}%` }} />
+            </div>
+        </div>
+    );
+}
 
 const TutorialHub = () => {
-    const [selectedAutomaton, setSelectedAutomaton] = useState('DFA');
+    const [machine, setMachine] = useState('DFA');
     const [selectedLesson, setSelectedLesson] = useState(null);
     const [selectedExercise, setSelectedExercise] = useState(null);
-    const [completedLessons, setCompletedLessons] = useState(new Set());
-    const [completedExercises, setCompletedExercises] = useState(new Set());
+    const [doneLessons, setDoneLessons] = useState(new Set());
+    const [doneExercises, setDoneExercises] = useState(new Set());
 
-    const handleLessonComplete = (lessonId) => {
-        setCompletedLessons(new Set([...completedLessons, lessonId]));
+    const data = tutorialData[machine] || { lessons: [], exercises: [], description: '' };
+    const lessons = data.lessons || [];
+    const exercises = data.exercises || [];
+
+    const lessonsDone = lessons.filter((l) => doneLessons.has(`${machine}-${l.id}`)).length;
+    const exercisesDone = exercises.filter((e) => doneExercises.has(`${machine}-${e.id}`)).length;
+
+    const selectMachine = (type) => {
+        setMachine(type);
+        setSelectedLesson(null);
+        setSelectedExercise(null);
     };
 
-    const handleExerciseComplete = (exerciseId) => {
-        setCompletedExercises(new Set([...completedExercises, exerciseId]));
+    const renderItem = (item, kind) => {
+        const id = `${machine}-${item.id}`;
+        const isDone = kind === 'lesson' ? doneLessons.has(id) : doneExercises.has(id);
+        const isActive =
+            kind === 'lesson'
+                ? selectedLesson?.id === item.id
+                : selectedExercise?.id === item.id;
+
+        return (
+            <li key={item.id}>
+                <button
+                    type="button"
+                    className={`tut-item ${isActive ? 'is-active' : ''}`}
+                    aria-current={isActive ? 'true' : undefined}
+                    onClick={() => {
+                        if (kind === 'lesson') {
+                            setSelectedLesson(item);
+                            setSelectedExercise(null);
+                        } else {
+                            setSelectedExercise(item);
+                            setSelectedLesson(null);
+                        }
+                    }}
+                >
+                    <span className={`tut-check ${isDone ? 'is-done' : ''}`} aria-hidden="true">
+                        {isDone && <Check size={11} strokeWidth={3} />}
+                    </span>
+                    <span className="tut-item-title">{item.title}</span>
+                </button>
+            </li>
+        );
     };
-
-    const currentData = tutorialData[selectedAutomaton] || { lessons: [], exercises: [], description: '' };
-
-    // Calculate progress with safety checks
-    const totalLessons = currentData?.lessons?.length || 0;
-    const completedLessonsCount = currentData?.lessons ? currentData.lessons.filter(l => 
-        completedLessons.has(`${selectedAutomaton}-${l.id}`)
-    ).length : 0;
-    const totalExercises = currentData?.exercises?.length || 0;
-    const completedExercisesCount = currentData?.exercises ? currentData.exercises.filter(e => 
-        completedExercises.has(`${selectedAutomaton}-${e.id}`)
-    ).length : 0;
 
     return (
-        <div className="tutorial-hub">
-            {/* Top Header Bar */}
-            <div className="tutorial-header">
-                <div className="header-left">
-                    <BookOpen size={28} />
-                    <div>
-                        <h1>Automata Theory Learning Hub</h1>
-                        <p>Master computational models step by step</p>
-                    </div>
-                </div>
-                
-                {/* Progress Cards in Header */}
-                <div className="header-progress">
-                    <div className="progress-card">
-                        <div className="progress-card-icon"></div>
-                        <div className="progress-card-info">
-                            <span className="progress-label">Lessons</span>
-                            <span className="progress-value">{completedLessonsCount}/{totalLessons}</span>
-                        </div>
-                        <div className="circular-progress">
-                            <svg width="50" height="50">
-                                <circle cx="25" cy="25" r="20" fill="none" stroke="#e0e0e0" strokeWidth="4" />
-                                <circle 
-                                    cx="25" cy="25" r="20" fill="none" 
-                                    stroke="#667eea" strokeWidth="4"
-                                    strokeDasharray={`${2 * Math.PI * 20}`}
-                                    strokeDashoffset={`${2 * Math.PI * 20 * (1 - (completedLessonsCount / totalLessons || 0))}`}
-                                    strokeLinecap="round"
-                                    transform="rotate(-90 25 25)"
-                                />
-                            </svg>
-                            <span className="progress-percentage">{Math.round((completedLessonsCount / totalLessons || 0) * 100)}%</span>
-                        </div>
-                    </div>
-                    
-                    <div className="progress-card">
-                        <div className="progress-card-icon"></div>
-                        <div className="progress-card-info">
-                            <span className="progress-label">Exercises</span>
-                            <span className="progress-value">{completedExercisesCount}/{totalExercises}</span>
-                        </div>
-                        <div className="circular-progress">
-                            <svg width="50" height="50">
-                                <circle cx="25" cy="25" r="20" fill="none" stroke="#e0e0e0" strokeWidth="4" />
-                                <circle 
-                                    cx="25" cy="25" r="20" fill="none" 
-                                    stroke="#764ba2" strokeWidth="4"
-                                    strokeDasharray={`${2 * Math.PI * 20}`}
-                                    strokeDashoffset={`${2 * Math.PI * 20 * (1 - (completedExercisesCount / totalExercises || 0))}`}
-                                    strokeLinecap="round"
-                                    transform="rotate(-90 25 25)"
-                                />
-                            </svg>
-                            <span className="progress-percentage">{Math.round((completedExercisesCount / totalExercises || 0) * 100)}%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Main Container with Sidebar and Content */}
-            <div className="tutorial-main">
-                {/* Sidebar Navigation */}
-                <div className="tutorial-sidebar" data-tour="tutorial-sidebar">
-                    {/* Automaton Type Selector - Card Grid */}
-                    <div className="automaton-selector">
-                        <h3>Choose Your Topic</h3>
-                        <div className="automaton-grid">
-                            {Object.keys(tutorialData).map(type => (
-                                <button
-                                    key={type}
-                                    className={`automaton-card ${selectedAutomaton === type ? 'active' : ''}`}
-                                    onClick={() => {
-                                        setSelectedAutomaton(type);
-                                        setSelectedLesson(null);
-                                        setSelectedExercise(null);
-                                    }}
-                                >
-                                    <span className="automaton-name">{type}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Combined Content List - Tabs Style */}
-                    <div className="content-section">
-                        <div className="content-tabs">
-                            <div className="tab-header">
-                                <h3> Learning Materials</h3>
-                                {/* <div className="tutorial-description">
-                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                        {currentData?.description || ''}
-                                    </ReactMarkdown>
-                                </div> */}
-                                <span className="topic-badge">{selectedAutomaton}</span>
-                            </div>
-                        </div>
-
-                        {/* Lessons */}
-                        <div className="content-group">
-                            <div className="group-header">
-                                <BookOpen size={16} />
-                                <span>Lessons ({currentData?.lessons?.length || 0})</span>
-                            </div>
-                            <div className="content-items">
-                                {currentData?.lessons && currentData.lessons.map((lesson) => {
-                                    const lessonId = `${selectedAutomaton}-${lesson.id}`;
-                                    const isCompleted = completedLessons.has(lessonId);
-                                    return (
-                                        <button
-                                            key={lesson.id}
-                                            className={`content-item ${selectedLesson?.id === lesson.id ? 'active' : ''}`}
-                                            onClick={() => {
-                                                setSelectedLesson(lesson);
-                                                setSelectedExercise(null);
-                                            }}
-                                        >
-                                            {isCompleted ? <CheckCircle size={16} /> : <Circle size={16} />}
-                                            <span>{lesson.title}</span>
-                                            <ChevronRight size={16} className="chevron" />
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Exercises */}
-                        <div className="content-group">
-                            <div className="group-header">
-                                <Award size={16} />
-                                <span>Exercises ({currentData?.exercises?.length || 0})</span>
-                            </div>
-                            <div className="content-items">
-                                {currentData?.exercises && currentData.exercises.map((exercise) => {
-                                    const exerciseId = `${selectedAutomaton}-${exercise.id}`;
-                                    const isCompleted = completedExercises.has(exerciseId);
-                                    return (
-                                        <button
-                                            key={exercise.id}
-                                            className={`content-item ${selectedExercise?.id === exercise.id ? 'active' : ''}`}
-                                            onClick={() => {
-                                                setSelectedExercise(exercise);
-                                                setSelectedLesson(null);
-                                            }}
-                                        >
-                                            {isCompleted ? <CheckCircle size={16} /> : <Circle size={16} />}
-                                            <span>{exercise.title}</span>
-                                            <ChevronRight size={16} className="chevron" />
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
+        <div className="tut">
+            <aside className="tut-sidebar" data-tour="tutorial-sidebar">
+                <div className="tut-machines" role="tablist" aria-label="Topic">
+                    {Object.keys(tutorialData).map((type) => (
+                        <button
+                            key={type}
+                            type="button"
+                            role="tab"
+                            aria-selected={machine === type}
+                            className={`tut-machine ${machine === type ? 'is-active' : ''}`}
+                            onClick={() => selectMachine(type)}
+                        >
+                            {type}
+                        </button>
+                    ))}
                 </div>
 
-                {/* Main Content Area */}
-                <div className="tutorial-content" data-tour="tutorial-content">
+                <div className="tut-progress-group">
+                    <Progress label="Lessons" done={lessonsDone} total={lessons.length} />
+                    <Progress label="Exercises" done={exercisesDone} total={exercises.length} />
+                </div>
+
+                <nav className="tut-nav">
+                    <section className="tut-group">
+                        <h2 className="tut-group-title">
+                            <BookOpen size={13} aria-hidden="true" />
+                            Lessons
+                            <span className="tut-group-count">{lessons.length}</span>
+                        </h2>
+                        <ul className="tut-list">
+                            {lessons.length === 0 ? (
+                                <li className="hint tut-empty">No lessons yet.</li>
+                            ) : (
+                                lessons.map((l) => renderItem(l, 'lesson'))
+                            )}
+                        </ul>
+                    </section>
+
+                    <section className="tut-group">
+                        <h2 className="tut-group-title">
+                            <Award size={13} aria-hidden="true" />
+                            Exercises
+                            <span className="tut-group-count">{exercises.length}</span>
+                        </h2>
+                        <ul className="tut-list">
+                            {exercises.length === 0 ? (
+                                <li className="hint tut-empty">No exercises yet.</li>
+                            ) : (
+                                exercises.map((e) => renderItem(e, 'exercise'))
+                            )}
+                        </ul>
+                    </section>
+                </nav>
+            </aside>
+
+            <div className="tut-content" data-tour="tutorial-content">
                 {!selectedLesson && !selectedExercise && (
-                    <div className="welcome-screen">
-                        <BookOpen size={64} />
-                        <h2>Welcome to {selectedAutomaton} Tutorials</h2>
-                        <div className="tutorial-description-content">
+                    <div className="tut-intro">
+                        <p className="eyebrow">{machine}</p>
+                        <h1 className="tut-intro-title">{MACHINE_BLURB[machine] || machine}</h1>
+                        <div className="tut-prose">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {currentData?.description || 'Learn about this automaton type.'}
+                                {data.description || 'Learn about this machine.'}
                             </ReactMarkdown>
                         </div>
-                        <div className="quick-start">
-                            <h3>Quick Start</h3>
-                            <ul>
-                                <li>Select a lesson from the sidebar to start learning</li>
-                                <li>Complete exercises to test your understanding</li>
-                                <li>Track your progress as you go</li>
-                            </ul>
-                        </div>
+                        <p className="hint tut-intro-hint">
+                            Pick a lesson on the left to begin, or jump straight to an exercise.
+                        </p>
                     </div>
                 )}
 
                 {selectedLesson && (
                     <LessonViewer
                         lesson={selectedLesson}
-                        automatonType={selectedAutomaton}
-                        onComplete={() => handleLessonComplete(`${selectedAutomaton}-${selectedLesson.id}`)}
-                        isCompleted={completedLessons.has(`${selectedAutomaton}-${selectedLesson.id}`)}
+                        automatonType={machine}
+                        onComplete={() =>
+                            setDoneLessons(
+                                (prev) => new Set([...prev, `${machine}-${selectedLesson.id}`])
+                            )
+                        }
+                        isCompleted={doneLessons.has(`${machine}-${selectedLesson.id}`)}
                     />
                 )}
 
                 {selectedExercise && (
                     <ExerciseViewer
                         exercise={selectedExercise}
-                        automatonType={selectedAutomaton}
-                        onComplete={() => handleExerciseComplete(`${selectedAutomaton}-${selectedExercise.id}`)}
-                        isCompleted={completedExercises.has(`${selectedAutomaton}-${selectedExercise.id}`)}
+                        automatonType={machine}
+                        onComplete={() =>
+                            setDoneExercises(
+                                (prev) => new Set([...prev, `${machine}-${selectedExercise.id}`])
+                            )
+                        }
+                        isCompleted={doneExercises.has(`${machine}-${selectedExercise.id}`)}
                     />
                 )}
-                </div>
             </div>
         </div>
     );
