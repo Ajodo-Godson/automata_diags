@@ -1,25 +1,30 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useId, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import './CollapsibleSection.css';
 
-export function CollapsibleSection({ title, children, defaultOpen = true }) {
+export function CollapsibleSection({ title, children, defaultOpen = true, action }) {
     const [isOpen, setIsOpen] = useState(defaultOpen);
+    const contentId = useId();
 
     return (
-        <div className="collapsible-section">
-            <button 
+        <section className="collapsible-section">
+            <button
+                type="button"
                 className="collapsible-header"
-                onClick={() => setIsOpen(!isOpen)}
+                aria-expanded={isOpen}
+                aria-controls={contentId}
+                onClick={() => setIsOpen((open) => !open)}
             >
-                <h3 className="collapsible-title">{title}</h3>
-                {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                <span className="collapsible-title">{title}</span>
+                {/* One chevron that rotates, rather than swapping two icons. */}
+                <ChevronDown size={16} className="collapsible-chevron" aria-hidden="true" />
             </button>
             {isOpen && (
-                <div className="collapsible-content">
+                <div className="collapsible-content" id={contentId}>
+                    {action}
                     {children}
                 </div>
             )}
-        </div>
+        </section>
     );
 }
-
