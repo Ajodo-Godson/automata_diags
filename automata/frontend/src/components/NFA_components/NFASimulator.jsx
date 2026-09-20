@@ -1,179 +1,205 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import './stylings/NFASimulator.css';
-import NFAGraph from './NFAGraph';
-import { NFAControlPanel } from './NFAControlPanel';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { CheckCircle, Target } from 'lucide-react';
+import '../shared/SimulatorShell.css';
+import StateDiagram from '../shared/StateDiagram';
+import Transport from '../shared/Transport';
+import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { NFATestCases } from './NFATestCases';
 import { NFATransitionsEditor } from './TransitionsEditor';
 import { NFAStatesEditor } from './StatesEditor';
 import { NFAAlphabetEditor } from './AlphabetEditor';
-import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { useNFA } from './useNFA';
 import { validateNFAChallenge } from '../Tutorial_components/ChallengeValidator';
-import { CheckCircle, XCircle, Target } from 'lucide-react';
 import { tryBuildLexerPatternNfa } from '../../lib/compilerTutorialLexers';
 
-const NFASimulator = ({ challenge, tutorialDemoKey, onTutorialDemoConsumed }) => {
-    const { examples } = useExamples();
-    const [currentExampleName, setCurrentExampleName] = useState(challenge ? null : 'basic_nfa');
-    const [currentExampleDescription, setCurrentExampleDescription] = useState(null);
-    const [validationResults, setValidationResults] = useState(null);
-    
-    // Memoize initialConfig
-    const initialConfig = useMemo(() => challenge ? {
-        states: ['q0'],
-        alphabet: challenge.challenge?.alphabet || ['0', '1'],
-        transitions: [],
-        startState: 'q0',
-        acceptStates: [],
-    } : {
-        states: examples['basic_nfa'].states,
-        alphabet: examples['basic_nfa'].alphabet,
-        transitions: examples['basic_nfa'].transitions,
-        startState: examples['basic_nfa'].startState,
-        acceptStates: examples['basic_nfa'].acceptStates,
-    }, [challenge, examples]);
-    
-    const nfa = useNFA(initialConfig);
+const DEFAULT_EXAMPLE = 'basic_nfa';
+const EPSILON = 'ε';
 
-    const [inputString, setInputString] = useState('');
-    const [lexerPatternInput, setLexerPatternInput] = useState('[0-9]+');
-    const [simulationSteps, setSimulationSteps] = useState([]);
-    const [currentStep, setCurrentStep] = useState(-1);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [playbackSpeed, setPlaybackSpeed] = useState(500);
+const isEpsilon = (symbol) => symbol === EPSILON || symbol === 'epsilon' || symbol === '';
 
-    const isComplete = currentStep >= 0 && currentStep === simulationSteps.length - 1;
-    const isAccepted = isComplete && simulationSteps[currentStep]?.accepted;
-
-    // Auto-play simulation
-    useEffect(() => {
-        let timer;
-        if (isPlaying && currentStep < simulationSteps.length - 1) {
-            timer = setTimeout(() => {
-                setCurrentStep(currentStep + 1);
-            }, playbackSpeed);
-        } else if (currentStep >= simulationSteps.length - 1) {
-            setIsPlaying(false);
-        }
-        return () => clearTimeout(timer);
-    }, [isPlaying, currentStep, simulationSteps.length, playbackSpeed]);
-
-    const resetSimulation = useCallback(() => {
-        setCurrentStep(-1);
-        setSimulationSteps([]);
-        setIsPlaying(false);
-    }, []);
-
-    const simulateString = () => {
-        setSimulationSteps([]);
-        setCurrentStep(-1);
-
-        let steps = [];
-        const pathColors = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6'];
-        
-        // Start with epsilon closure
-        const startClosure = getEpsilonClosure(new Set([nfa.startState]), nfa.transitions);
-        let activePaths = Array.from(startClosure).map((state, idx) => ({
-            id: idx,
-            state: state,
-            color: pathColors[idx % pathColors.length],
-            history: [nfa.startState, state].filter((s, i, a) => i === 0 || s !== a[i-1])
-        }));
-
-        steps.push({
-            paths: activePaths.map(p => ({ ...p })),
-            states: Array.from(new Set(activePaths.map(p => p.state))),
-            remainingInput: inputString,
-            description: `Starting in state(s): ${Array.from(new Set(activePaths.map(p => p.state))).join(', ')}`,
-            activeTransitions: [],
-            accepted: false
-        });
-
-        for (let i = 0; i < inputString.length; i++) {
-            const symbol = inputString[i];
-            const nextPaths = [];
-            const activeTransitions = [];
-
-            activePaths.forEach(path => {
-                const validTransitions = nfa.transitions.filter(t => t.from === path.state && t.symbol === symbol);
-                validTransitions.forEach((trans) => {
-                    const closure = getEpsilonClosure(new Set([trans.to]), nfa.transitions);
-                    closure.forEach((closureState) => {
-                        const pathId = nextPaths.length;
-                        nextPaths.push({
-                            id: pathId,
-                            state: closureState,
-                            color: path.color,
-                            history: [...path.history, closureState],
-                            parentId: path.id
-                        });
-                        activeTransitions.push({
-                            from: trans.from,
-                            to: trans.to,
-                            symbol: symbol,
-                            color: path.color,
-                            pathId: pathId
-                        });
-                        if (closureState !== trans.to) {
-                            activeTransitions.push({ from: trans.to, to: closureState, symbol: 'ε', color: path.color, pathId: pathId });
-                        }
-                    });
-                });
-            });
-
-            if (nextPaths.length === 0) break; // Computation dies
-
-            activePaths = nextPaths;
-            const currentStates = Array.from(new Set(activePaths.map(p => p.state)));
-            steps.push({
-                paths: activePaths.map(p => ({ ...p })),
-                states: currentStates,
-                remainingInput: inputString.slice(i + 1),
-                description: `Read '${symbol}' → ${currentStates.length} path(s) in state(s): ${currentStates.join(', ')}`,
-                activeTransitions: activeTransitions,
-                accepted: false
-            });
-            
-            // Performance safety: limit number of parallel paths
-            if (activePaths.length > 100) break;
-        }
-
-        const finalAccepted = activePaths.some(path => nfa.acceptStates.includes(path.state));
-        if (steps.length > 0) {
-            steps[steps.length - 1].accepted = finalAccepted;
-            steps[steps.length - 1].description += finalAccepted ? ' ✓ ACCEPTED' : ' ✗ REJECTED';
-        }
-        setSimulationSteps(steps);
-        setCurrentStep(0);
-    };
-
-    const getEpsilonClosure = (states, transitions) => {
-        const closure = new Set(states);
-        const stack = Array.from(states);
-        while (stack.length > 0) {
-            const state = stack.pop();
-            const epsilonTransitions = transitions.filter(t => t.from === state && (t.symbol === 'ε' || t.symbol === 'epsilon' || t.symbol === ''));
-            epsilonTransitions.forEach(t => {
+/** All states reachable from `states` using only ε-transitions. */
+function epsilonClosure(states, transitions) {
+    const closure = new Set(states);
+    const stack = [...states];
+    while (stack.length) {
+        const state = stack.pop();
+        transitions
+            .filter((t) => t.from === state && isEpsilon(t.symbol))
+            .forEach((t) => {
                 if (!closure.has(t.to)) {
                     closure.add(t.to);
                     stack.push(t.to);
                 }
             });
-        }
-        return closure;
-    };
+    }
+    return closure;
+}
 
-    const loadExample = useCallback((exampleName) => {
-        const example = examples[exampleName];
-        if (example) {
-            setCurrentExampleName(exampleName);
-            setCurrentExampleDescription(example?.description || null);
-            nfa.loadDefinition(example);
-            setInputString('');
-            resetSimulation();
+/**
+ * Subset-construct the NFA's run over the input, one step per symbol.
+ *
+ * Like the DFA, acceptance requires consuming the whole input. The previous
+ * version broke out of the loop when the frontier went empty and then tested
+ * `activePaths.some(isAccepting)` against the *surviving* set, so an input
+ * that killed the computation partway could still report ACCEPTED.
+ */
+export function runNFA(nfa, input) {
+    const acceptSet = new Set(nfa.acceptStates);
+    const start = epsilonClosure(new Set([nfa.startState]), nfa.transitions);
+
+    const steps = [
+        {
+            states: [...start],
+            index: 0,
+            activeTransitions: [],
+            note:
+                start.size > 1
+                    ? `Start in ${nfa.startState}; ε-closure gives {${[...start].join(', ')}}.`
+                    : `Start in ${nfa.startState}.`,
+        },
+    ];
+
+    let frontier = start;
+    let halted = null;
+
+    for (let i = 0; i < input.length; i += 1) {
+        const symbol = input[i];
+
+        // ε is a transition label, never an input symbol.
+        if (isEpsilon(symbol)) {
+            halted = { reason: 'symbol', note: `ε is not an input symbol — it only labels transitions.` };
+            break;
         }
-    }, [examples, nfa.loadDefinition, resetSimulation]);
+
+        if (!nfa.alphabet.filter((s) => !isEpsilon(s)).includes(symbol)) {
+            halted = {
+                reason: 'symbol',
+                note: `'${symbol}' is not in the alphabet {${nfa.alphabet
+                    .filter((s) => !isEpsilon(s))
+                    .join(', ')}}.`,
+            };
+            break;
+        }
+
+        const moved = new Set();
+        const activeTransitions = [];
+        frontier.forEach((state) => {
+            nfa.transitions
+                .filter((t) => t.from === state && t.symbol === symbol)
+                .forEach((t) => {
+                    activeTransitions.push({ from: t.from, to: t.to, label: symbol });
+                    epsilonClosure(new Set([t.to]), nfa.transitions).forEach((s) => moved.add(s));
+                });
+        });
+
+        if (moved.size === 0) {
+            halted = {
+                reason: 'dead',
+                note: `No path survives reading '${symbol}' from {${[...frontier].join(', ')}}.`,
+            };
+            break;
+        }
+
+        frontier = moved;
+        steps.push({
+            states: [...frontier],
+            index: i + 1,
+            activeTransitions,
+            note: `Read '${symbol}' → {${[...frontier].join(', ')}}.`,
+        });
+    }
+
+    const accepted = !halted && [...frontier].some((s) => acceptSet.has(s));
+    const accepting = [...frontier].filter((s) => acceptSet.has(s));
+
+    const last = steps[steps.length - 1];
+    if (halted) {
+        last.note = halted.note;
+    } else {
+        last.note += accepted
+            ? ` ${accepting.join(', ')} ${accepting.length > 1 ? 'are' : 'is'} accepting.`
+            : ' No state in the set is accepting.';
+    }
+
+    return {
+        steps,
+        accepted,
+        rejectedBecause: accepted ? null : halted ? halted.reason : 'notAccepting',
+        finalStates: [...frontier],
+    };
+}
+
+const NFASimulator = ({ challenge, tutorialDemoKey, onTutorialDemoConsumed }) => {
+    const { examples } = useExamples();
+    const [exampleKey, setExampleKey] = useState(challenge ? null : DEFAULT_EXAMPLE);
+    const [exampleNote, setExampleNote] = useState(
+        challenge ? null : examples[DEFAULT_EXAMPLE].description
+    );
+    const [validation, setValidation] = useState(null);
+
+    const initialConfig = useMemo(
+        () =>
+            challenge
+                ? {
+                      states: ['q0'],
+                      alphabet: challenge.challenge?.alphabet || ['0', '1'],
+                      transitions: [],
+                      startState: 'q0',
+                      acceptStates: [],
+                  }
+                : examples[DEFAULT_EXAMPLE],
+        [challenge, examples]
+    );
+
+    const nfa = useNFA(initialConfig);
+
+    const [input, setInput] = useState('');
+    const [lexerPattern, setLexerPattern] = useState('[0-9]+');
+    const [lexerError, setLexerError] = useState(null);
+    const [result, setResult] = useState(null);
+    const [step, setStep] = useState(-1);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [speed, setSpeed] = useState(500);
+
+    const steps = result?.steps ?? [];
+    const atEnd = step >= 0 && step === steps.length - 1;
+    const current = step >= 0 ? steps[step] : null;
+
+    const reset = useCallback(() => {
+        setResult(null);
+        setStep(-1);
+        setIsPlaying(false);
+    }, []);
+
+    useEffect(() => {
+        if (!isPlaying) return undefined;
+        if (step >= steps.length - 1) {
+            setIsPlaying(false);
+            return undefined;
+        }
+        const timer = setTimeout(() => setStep((s) => s + 1), speed);
+        return () => clearTimeout(timer);
+    }, [isPlaying, step, steps.length, speed]);
+
+    const run = useCallback(() => {
+        setResult(runNFA(nfa, input));
+        setStep(0);
+    }, [nfa, input]);
+
+    const loadExample = useCallback(
+        (key) => {
+            const example = examples[key];
+            if (!example) return;
+            setExampleKey(key);
+            setExampleNote(example.description || null);
+            nfa.loadDefinition(example);
+            setInput('');
+            reset();
+            // eslint-disable-next-line react-hooks/exhaustive-deps -- nfa identity churns each render
+        },
+        [examples, nfa.loadDefinition, reset]
+    );
 
     useEffect(() => {
         if (challenge || !tutorialDemoKey) return;
@@ -183,286 +209,373 @@ const NFASimulator = ({ challenge, tutorialDemoKey, onTutorialDemoConsumed }) =>
     }, [challenge, tutorialDemoKey]);
 
     const applyLexerPattern = () => {
-        const built = tryBuildLexerPatternNfa(lexerPatternInput);
+        const built = tryBuildLexerPatternNfa(lexerPattern);
         if (!built) {
-            window.alert('For this demo, use [0-9]+ (one or more digits) or [0-9] (single digit).');
+            setLexerError('Supported patterns: [0-9]+ or [0-9]');
             return;
         }
-        const def = built.definition;
-        nfa.loadDefinition({
-            states: def.states,
-            alphabet: def.alphabet,
-            transitions: def.transitions,
-            startState: def.startState,
-            acceptStates: def.acceptStates,
-        });
-        setCurrentExampleName(null);
-        setCurrentExampleDescription(def.description);
-        setInputString('');
-        resetSimulation();
+        setLexerError(null);
+        nfa.loadDefinition(built.definition);
+        setExampleKey(null);
+        setExampleNote(built.definition.description);
+        setInput('');
+        reset();
     };
 
-    // Event listeners for toolbox actions
     useEffect(() => {
-        const handleImport = () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = (e) => {
+        const onImport = () => {
+            const picker = document.createElement('input');
+            picker.type = 'file';
+            picker.accept = '.json';
+            picker.onchange = (e) => {
                 const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const nfaDefinition = JSON.parse(e.target.result);
-                            nfa.loadDefinition({
-                                states: nfaDefinition.states || [],
-                                alphabet: nfaDefinition.alphabet || [],
-                                transitions: nfaDefinition.transitions || [],
-                                startState: nfaDefinition.startState || 'q0',
-                                acceptStates: nfaDefinition.acceptStates || []
-                            });
-                            setCurrentExampleName(nfaDefinition.name || 'Imported NFA');
-                            setCurrentExampleDescription(nfaDefinition.description || null);
-                            resetSimulation();
-                        } catch (error) {
-                            alert('Invalid JSON file or NFA definition format');
-                        }
-                    };
-                    reader.readAsText(file);
-                }
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const parsed = JSON.parse(ev.target.result);
+                        nfa.loadDefinition({
+                            states: parsed.states || [],
+                            alphabet: parsed.alphabet || [],
+                            transitions: parsed.transitions || [],
+                            startState: parsed.startState || 'q0',
+                            acceptStates: parsed.acceptStates || [],
+                        });
+                        setExampleKey(null);
+                        setExampleNote(parsed.description || parsed.name || 'Imported machine.');
+                        reset();
+                    } catch {
+                        setExampleNote('That file is not a valid NFA definition.');
+                    }
+                };
+                reader.readAsText(file);
             };
-            input.click();
+            picker.click();
         };
 
-        const handleExport = () => {
-            const nfaDefinition = {
-                name: currentExampleName || 'Custom NFA',
-                description: currentExampleDescription || 'Exported NFA definition',
+        const onExport = () => {
+            const payload = {
+                name: exampleKey ? examples[exampleKey]?.name : 'Custom NFA',
+                description: exampleNote || 'Exported NFA definition',
                 states: nfa.states,
                 alphabet: nfa.alphabet,
                 transitions: nfa.transitions,
                 startState: nfa.startState,
-                acceptStates: nfa.acceptStates
+                acceptStates: nfa.acceptStates,
             };
-            const dataStr = JSON.stringify(nfaDefinition, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', 'nfa_definition.json');
-            linkElement.click();
+            const uri =
+                'data:application/json;charset=utf-8,' +
+                encodeURIComponent(JSON.stringify(payload, null, 2));
+            const link = document.createElement('a');
+            link.setAttribute('href', uri);
+            link.setAttribute('download', 'nfa_definition.json');
+            link.click();
         };
 
-        const handleClearAll = () => {
-            if (window.confirm('Are you sure you want to clear all and start fresh?')) {
-                nfa.loadDefinition({ states: ['q0'], alphabet: ['0', '1'], transitions: [], startState: 'q0', acceptStates: [] });
-                setCurrentExampleName(null);
-                setCurrentExampleDescription(null);
-                resetSimulation();
-                setValidationResults(null);
-            }
-        };
-
-        window.addEventListener('import', handleImport);
-        window.addEventListener('export', handleExport);
-        window.addEventListener('clearAll', handleClearAll);
-        return () => {
-            window.removeEventListener('import', handleImport);
-            window.removeEventListener('export', handleExport);
-            window.removeEventListener('clearAll', handleClearAll);
-        };
-    }, [nfa.loadDefinition, nfa.states, nfa.alphabet, nfa.transitions, nfa.startState, nfa.acceptStates, currentExampleName, currentExampleDescription, resetSimulation]);
-
-    // Reset to blank when challenge mode is activated
-    useEffect(() => {
-        if (challenge) {
+        const onClear = () => {
+            if (!window.confirm('Clear this machine and start from scratch?')) return;
             nfa.loadDefinition({
                 states: ['q0'],
-                alphabet: challenge.challenge?.alphabet || ['0', '1'],
+                alphabet: ['0', '1'],
                 transitions: [],
                 startState: 'q0',
                 acceptStates: [],
             });
-            setInputString('');
-            resetSimulation();
-            setValidationResults(null);
-        }
+            setExampleKey(null);
+            setExampleNote(null);
+            setInput('');
+            reset();
+            setValidation(null);
+        };
+
+        window.addEventListener('import', onImport);
+        window.addEventListener('export', onExport);
+        window.addEventListener('clearAll', onClear);
+        return () => {
+            window.removeEventListener('import', onImport);
+            window.removeEventListener('export', onExport);
+            window.removeEventListener('clearAll', onClear);
+        };
+    }, [nfa, examples, exampleKey, exampleNote, reset]);
+
+    useEffect(() => {
+        if (!challenge) return;
+        nfa.loadDefinition({
+            states: ['q0'],
+            alphabet: challenge.challenge?.alphabet || ['0', '1'],
+            transitions: [],
+            startState: 'q0',
+            acceptStates: [],
+        });
+        setInput('');
+        reset();
+        setValidation(null);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- challenge bootstrap only
     }, [challenge]);
 
-    const handleValidateChallenge = () => {
-        if (!challenge || !challenge.challenge || !challenge.challenge.testCases) {
-            alert('No challenge data available');
-            return;
-        }
-        const userNFA = { states: nfa.states, alphabet: nfa.alphabet, transitions: nfa.transitions, startState: nfa.startState, acceptStates: nfa.acceptStates };
-        const results = validateNFAChallenge(userNFA, challenge.challenge.testCases);
-        setValidationResults(results);
+    const validateChallenge = () => {
+        if (!challenge?.challenge?.testCases) return;
+        const results = validateNFAChallenge(
+            {
+                states: nfa.states,
+                alphabet: nfa.alphabet,
+                transitions: nfa.transitions,
+                startState: nfa.startState,
+                acceptStates: nfa.acceptStates,
+            },
+            challenge.challenge.testCases
+        );
+        setValidation(results);
         if (window.opener && challenge.returnTo === 'tutorial') {
-            window.opener.postMessage({ type: 'CHALLENGE_RESULT', results: results }, window.location.origin);
+            window.opener.postMessage({ type: 'CHALLENGE_RESULT', results }, window.location.origin);
         }
     };
 
-    const stepForward = () => { if (currentStep < simulationSteps.length - 1) setCurrentStep(currentStep + 1); };
-    const stepBackward = () => { if (currentStep > -1) setCurrentStep(currentStep - 1); };
-    const togglePlayback = () => { if (simulationSteps.length === 0) simulateString(); setIsPlaying(!isPlaying); };
+    const diagramTransitions = useMemo(
+        () => nfa.transitions.map((t) => ({ from: t.from, to: t.to, label: t.symbol || EPSILON })),
+        [nfa.transitions]
+    );
+
+    // Only one edge can be highlighted at a time, so prefer the first.
+    const activeTransition = current?.activeTransitions?.[0] ?? null;
+
+    const inputAlphabet = nfa.alphabet.filter((s) => !isEpsilon(s));
+
+    const verdictNote = () => {
+        if (!result) return null;
+        if (result.accepted) return `Accepting state reached.`;
+        switch (result.rejectedBecause) {
+            case 'symbol':
+                return 'Input contains a symbol outside the alphabet.';
+            case 'dead':
+                return 'Every path died — input was not fully read.';
+            default:
+                return 'No surviving path ends in an accept state.';
+        }
+    };
 
     return (
-        <div className="nfa-simulator-new">
-            <div className="nfa-container">
-                {/* Compact Challenge Header */}
-                {challenge && challenge.challenge && (
-                    <div className="compact-challenge-header">
-                        <div className="challenge-info">
-                            <Target size={20} />
-                            <span><strong>Challenge:</strong> {challenge.challenge.description}</span>
-                </div>
-                        <button className="validate-btn-compact" onClick={handleValidateChallenge}>
-                            <CheckCircle size={16} /> Validate
-                            </button>
-                        {validationResults && (
-                            <div className={`mini-results ${validationResults.passed === validationResults.total ? 'pass' : 'fail'}`}>
-                                {validationResults.passed}/{validationResults.total} Passed
-                            </div>
+        <div className="sim">
+            <div>
+                {challenge?.challenge && (
+                    <div className="sim-challenge">
+                        <Target size={16} aria-hidden="true" />
+                        <span className="sim-challenge-text">
+                            <strong>Challenge:</strong> {challenge.challenge.description}
+                        </span>
+                        {validation && (
+                            <span
+                                className={`verdict ${
+                                    validation.passed === validation.total
+                                        ? 'verdict-accept'
+                                        : 'verdict-reject'
+                                }`}
+                            >
+                                {validation.passed}/{validation.total} passing
+                            </span>
                         )}
+                        <button type="button" className="btn btn-primary" onClick={validateChallenge}>
+                            <CheckCircle size={14} aria-hidden="true" />
+                            Validate
+                        </button>
                     </div>
                 )}
 
-                {!challenge && (
-                    <div className="nfa-header">
-                        <h1 className="nfa-title">NFA Simulator</h1>
-                        <p className="nfa-subtitle">Interactive Non-deterministic Finite Automaton with ε-transitions</p>
+                <div className="sim-toolbar">
+                    <div className="sim-identity">
+                        <h1 className="sim-title">Nondeterministic Finite Automaton</h1>
+                        <p className="sim-subtitle">
+                            Alphabet {'{'}
+                            {inputAlphabet.join(', ')}
+                            {'}'} · {nfa.states.length} states · {nfa.acceptStates.length} accepting
+                        </p>
+                    </div>
+
+                    <div className="sim-run">
+                        <label className="sr-only" htmlFor="nfa-input">
+                            Input string
+                        </label>
+                        <input
+                            id="nfa-input"
+                            className="field"
+                            value={input}
+                            placeholder="Type a string, e.g. aab"
+                            onChange={(e) => {
+                                setInput(e.target.value);
+                                reset();
+                            }}
+                            onKeyDown={(e) => e.key === 'Enter' && run()}
+                        />
+                        <button type="button" className="btn btn-primary" onClick={run}>
+                            Test
+                        </button>
+                    </div>
+
+                    {result && (
+                        <div
+                            className={`verdict ${
+                                result.accepted ? 'verdict-accept' : 'verdict-reject'
+                            } sim-verdict`}
+                        >
+                            {result.accepted ? 'Accepted' : 'Rejected'}
+                            <span className="verdict-note">{verdictNote()}</span>
                         </div>
-                )}
+                    )}
+                </div>
 
                 {!challenge && (
-                    <div className="nfa-example-selector">
-                        <label className="nfa-selector-label">Load Example:</label>
-                        <div className="nfa-selector-buttons">
+                    <div className="sim-examples">
+                        <span className="eyebrow sim-examples-label">Examples</span>
+                        <div className="sim-examples-list">
                             {Object.entries(examples).map(([key, example]) => (
-                                <button key={key} className={`nfa-selector-btn ${currentExampleName === key ? 'active' : ''}`} onClick={() => loadExample(key)}>
+                                <button
+                                    key={key}
+                                    type="button"
+                                    className="chip"
+                                    aria-pressed={exampleKey === key}
+                                    onClick={() => loadExample(key)}
+                                >
                                     {example.name}
                                 </button>
                             ))}
                         </div>
-                        {currentExampleDescription && (
-                            <div className="nfa-example-description"><strong>Description:</strong> {currentExampleDescription}</div>
-                        )}
-                        {!challenge && (
-                            <div className="nfa-lexer-pattern-row" title="Maps a tiny lexer-style regex to an NFA for that token">
-                                <span className="nfa-lexer-pattern-label">Lexing pattern → NFA:</span>
-                                <input
-                                    type="text"
-                                    className="nfa-input nfa-lexer-pattern-input"
-                                    value={lexerPatternInput}
-                                    onChange={(e) => setLexerPatternInput(e.target.value)}
-                                    aria-label="Lexer regex pattern for NFA"
-                                />
-                                <button type="button" className="nfa-btn nfa-btn-primary" onClick={applyLexerPattern}>
-                                    Apply
-                                </button>
-                            </div>
-                        )}
                     </div>
                 )}
 
-                <div className="nfa-grid">
-                    <div className="nfa-left-col">
-                        <div className="nfa-input-card">
-                            <h3 className="nfa-card-title">Test Input String</h3>
-                            <div className="nfa-input-group">
-                                <input type="text" value={inputString} onChange={(e) => setInputString(e.target.value)} placeholder="Enter input string (e.g., 010)" className="nfa-input" />
-                                <button onClick={simulateString} className="nfa-btn nfa-btn-primary">Test</button>
-                            </div>
-                            <p className="nfa-input-help">Alphabet: {nfa.alphabet.join(', ')} (ε for epsilon)</p>
-                            {isComplete && (
-                                <div className={`nfa-result-indicator ${isAccepted ? 'nfa-result-accepted' : 'nfa-result-rejected'}`}>
-                                    {isAccepted ? '✓ ACCEPTED' : '✗ REJECTED'}
-                                </div>
+                {!challenge && exampleNote && <p className="sim-example-note">{exampleNote}</p>}
+            </div>
+
+            <div className="sim-body">
+                <div className="sim-stage">
+                    <div className="card sim-diagram-card">
+                        <div className="card-header">
+                            <h2 className="card-title">State diagram</h2>
+                            {current && (
+                                <span className="hint">
+                                    Step {step + 1} of {steps.length} · {current.states.length}{' '}
+                                    active {current.states.length === 1 ? 'state' : 'states'}
+                                </span>
                             )}
+                        </div>
+                        <div className="card-body">
+                            <StateDiagram
+                                states={nfa.states}
+                                transitions={diagramTransitions}
+                                startState={nfa.startState}
+                                acceptStates={nfa.acceptStates}
+                                currentStates={current?.states}
+                                activeTransition={activeTransition}
+                                onDeleteState={nfa.removeState}
+                            />
+                        </div>
                     </div>
 
-                        <NFAControlPanel 
-                            onTogglePlayback={togglePlayback}
-                            onStepForward={stepForward}
-                            onStepBackward={stepBackward}
-                            onReset={resetSimulation}
+                    <div className="card">
+                        <Transport
                             isPlaying={isPlaying}
-                            canStepForward={currentStep < simulationSteps.length - 1}
-                            canStepBackward={currentStep > -1}
-                            speed={playbackSpeed}
-                            onSpeedChange={setPlaybackSpeed}
+                            canPlay={!atEnd}
+                            canStep={!atEnd}
+                            onRun={() => {
+                                if (!result) run();
+                                setIsPlaying(true);
+                            }}
+                            onPause={() => setIsPlaying(false)}
+                            onStep={() => {
+                                if (!result) run();
+                                else if (step < steps.length - 1) setStep(step + 1);
+                            }}
+                            onReset={reset}
+                            speed={speed}
+                            onSpeedChange={setSpeed}
+                            readouts={[
+                                {
+                                    label: 'Active set',
+                                    value: current
+                                        ? `{${current.states.join(', ')}}`
+                                        : `{${nfa.startState}}`,
+                                },
+                                { label: 'Step', value: `${Math.max(step + 1, 0)}/${steps.length || 0}` },
+                            ]}
                         />
 
-                        <div className="nfa-graph-card">
-                            <h3 className="nfa-card-title">State Diagram</h3>
-                            <NFAGraph nfa={nfa} currentStates={currentStep >= 0 ? simulationSteps[currentStep]?.states || [] : []} activeTransitions={currentStep >= 0 ? simulationSteps[currentStep]?.activeTransitions || [] : []} />
-                                        </div>
+                        {current && (
+                            <div className="card-body" style={{ paddingTop: 0 }}>
+                                <div className="stack">
+                                    <div className="sim-tape-strip">
+                                        {input.length === 0 ? (
+                                            <span className="hint">ε (empty string)</span>
+                                        ) : (
+                                            [...input].map((symbol, i) => (
+                                                <span
+                                                    key={`${symbol}-${i}`}
+                                                    className={`sim-symbol ${
+                                                        i < current.index ? 'is-consumed' : ''
+                                                    } ${i === current.index ? 'is-current' : ''}`}
+                                                >
+                                                    {symbol}
+                                                </span>
+                                            ))
+                                        )}
                                     </div>
-
-                    <div className="nfa-right-col">
-                        <CollapsibleSection title="States Editor" defaultOpen={challenge ? true : false}>
-                            <NFAStatesEditor nfa={nfa} onUpdate={resetSimulation} />
-                        </CollapsibleSection>
-                        <CollapsibleSection title="Alphabet" defaultOpen={challenge ? true : false}>
-                            <NFAAlphabetEditor nfa={nfa} onUpdate={resetSimulation} />
-                        </CollapsibleSection>
-                        <CollapsibleSection title="Transitions Editor" defaultOpen={challenge ? true : false}>
-                            <NFATransitionsEditor nfa={nfa} onUpdate={resetSimulation} />
-                        </CollapsibleSection>
-                        {!challenge && (
-                            <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
-                                <NFATestCases nfa={nfa} currentExample={currentExampleName} onTestString={(testString) => { setInputString(testString); setSimulationSteps([]); setCurrentStep(-1); setIsPlaying(false); }} />
-                            </CollapsibleSection>
-                        )}
-                        {simulationSteps.length > 0 && (
-                            <div className="nfa-steps-card">
-                                <h3 className="nfa-card-title">Simulation Progress</h3>
-                                <div className="nfa-step-display">
-                                    {currentStep >= 0 && currentStep < simulationSteps.length && (
-                                        <>
-                                            <div className="nfa-step-info"><strong>Step {currentStep + 1} of {simulationSteps.length}</strong></div>
-                                            <div className="nfa-step-state">Current States: <span className="nfa-highlight">{simulationSteps[currentStep].states.join(', ')}</span></div>
-                                            <div className="nfa-step-remaining">Remaining Input: <code>"{simulationSteps[currentStep].remainingInput}"</code></div>
-                                            <div className="nfa-step-desc">{simulationSteps[currentStep].description}</div>
-                                        </>
-                                    )}
+                                    <p className="sim-step-note">{current.note}</p>
                                 </div>
-                                    </div>
-                                )}
-                        <CollapsibleSection title="Transition Table" defaultOpen={!currentExampleName}>
-                            <div className="nfa-table-wrapper">
-                                <table className="nfa-table">
-                                    <thead>
-                                        <tr>
-                                            <th>State</th>
-                                            {nfa.alphabet.map(symbol => (<th key={symbol}>{symbol}</th>))}
-                                            <th>ε</th>
-                                            <th>Accept?</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {nfa.states.map(state => {
-                                            const isCurrentState = currentStep >= 0 && simulationSteps[currentStep]?.states.includes(state);
-                                            return (
-                                                <tr key={state} className={isCurrentState ? 'nfa-current-state' : ''}>
-                                                    <td className="nfa-state-cell">{state}</td>
-                                                    {nfa.alphabet.map(symbol => {
-                                                        const transitions = nfa.transitions.filter(t => t.from === state && t.symbol === symbol);
-                                                        return <td key={`${state}-${symbol}`}>{transitions.map(t => t.to).join(', ') || '—'}</td>;
-                                                    })}
-                                                    <td>
-                                                        {nfa.transitions.filter(t => t.from === state && (t.symbol === 'ε' || t.symbol === 'epsilon' || t.symbol === '')).map(t => t.to).join(', ') || '—'}
-                                                    </td>
-                                                    <td>{nfa.acceptStates.includes(state) ? '✓' : ''}</td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
                             </div>
-                        </CollapsibleSection>
+                        )}
                     </div>
                 </div>
+
+                <aside className="sim-panel">
+                    <CollapsibleSection title="States" defaultOpen={!!challenge}>
+                        <NFAStatesEditor nfa={nfa} onUpdate={reset} />
+                    </CollapsibleSection>
+
+                    <CollapsibleSection title="Alphabet" defaultOpen>
+                        <NFAAlphabetEditor nfa={nfa} onUpdate={reset} />
+                    </CollapsibleSection>
+
+                    <CollapsibleSection title="Transitions" defaultOpen>
+                        <NFATransitionsEditor nfa={nfa} onUpdate={reset} />
+                    </CollapsibleSection>
+
+                    {!challenge && (
+                        <CollapsibleSection title="Test cases" defaultOpen={false}>
+                            <NFATestCases
+                                onLoadTest={(t) => {
+                                    setInput(t);
+                                    reset();
+                                }}
+                                currentExample={exampleKey}
+                            />
+                        </CollapsibleSection>
+                    )}
+
+                    {!challenge && (
+                        <CollapsibleSection title="Build a lexer NFA" defaultOpen={false}>
+                            <div className="stack">
+                                <p className="hint">
+                                    Compile a token pattern into the NFA a lexer generator would
+                                    produce before determinisation.
+                                </p>
+                                <div className="row">
+                                    <input
+                                        className="field field-mono"
+                                        value={lexerPattern}
+                                        aria-label="Lexer pattern"
+                                        onChange={(e) => setLexerPattern(e.target.value)}
+                                    />
+                                    <button type="button" className="btn" onClick={applyLexerPattern}>
+                                        Build
+                                    </button>
+                                </div>
+                                {lexerError && (
+                                    <p className="hint" style={{ color: 'var(--reject-fg)' }}>
+                                        {lexerError}
+                                    </p>
+                                )}
+                            </div>
+                        </CollapsibleSection>
+                    )}
+                </aside>
             </div>
         </div>
     );
