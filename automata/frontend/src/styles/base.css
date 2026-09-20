@@ -493,3 +493,27 @@ select.field {
     white-space: nowrap;
     border: 0;
 }
+
+/*
+ * Coarse pointers (finger, stylus) need a larger target than a mouse cursor.
+ * Only the compact variants are raised; the defaults are already 32px.
+ */
+@media (pointer: coarse) {
+    .btn-sm {
+        height: 32px;
+        padding: 0 var(--space-3);
+    }
+
+    .btn-icon.btn-sm {
+        width: 32px;
+        padding: 0;
+    }
+
+    .chip {
+        padding: var(--space-2) var(--space-3);
+    }
+
+    .field-sm {
+        height: 32px;
+    }
+}
