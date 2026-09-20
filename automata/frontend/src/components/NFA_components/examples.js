@@ -57,7 +57,9 @@ export const useExamples = () => {
             name: 'Even a\'s OR Even b\'s',
             description: 'ε-NFA with parallel paths: accepts if even a\'s OR even b\'s',
             states: ['q0', 'q1', 'q2', 'q3', 'q4'],
-            alphabet: ['a', 'b', 'ε'],
+            // ε labels transitions; it is never an input symbol, so it does
+            // not belong in the alphabet.
+            alphabet: ['a', 'b'],
             transitions: [
                 // Start branches via ε to both paths
                 { from: 'q0', to: 'q1', symbol: 'ε' },
