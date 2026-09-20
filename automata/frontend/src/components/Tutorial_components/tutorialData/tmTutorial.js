@@ -33,9 +33,9 @@ Components:
 2. Infinite Tape: A tape, divided into cells, that is infinite in both directions. Each cell can hold one symbol from a "tape alphabet."
 
 3. Tape Head: A head that points to one cell of the tape at a time. The machine can:
-   • READ the symbol under the tape head.
-   • WRITE a new symbol to the cell under the tape head (overwriting what's there).
-   • MOVE the tape head one cell to the Left (L) or Right (R).`,
+   - READ the symbol under the tape head.
+   - WRITE a new symbol to the cell under the tape head (overwriting what's there).
+   - MOVE the tape head one cell to the Left (L) or Right (R).`,
                     keyPoints: [
                         'Infinite tape = unlimited memory',
                         'Can read AND write',
@@ -54,9 +54,9 @@ Components:
                     content: `The **Infinite Tape** is the Turing Machine's primary workspace. Unlike a stack, which is restricted to LIFO access, the tape allows the machine to revisit any part of its memory at any time.
 
 Key properties of the TM Tape:
-• **Alphabet (Γ)**: The set of symbols that can be written on the tape. This includes the input symbols (Σ) and a special **Blank symbol (␣)**.
-• **Initial State**: The tape initially contains the input string, surrounded by an infinite sequence of blank symbols on both sides.
-• **Head Movement**: The machine can move the head one cell at a time. This allows it to use the tape as a "scratchpad" to mark symbols, copy data, or perform arithmetic.
+- **Alphabet (Γ)**: The set of symbols that can be written on the tape. This includes the input symbols (Σ) and a special **Blank symbol (␣)**.
+- **Initial State**: The tape initially contains the input string, surrounded by an infinite sequence of blank symbols on both sides.
+- **Head Movement**: The machine can move the head one cell at a time. This allows it to use the tape as a "scratchpad" to mark symbols, copy data, or perform arithmetic.
 
 The ability to move back and forth and overwrite symbols is what makes the Turing Machine computationally equivalent to any modern computer.`,
                     keyPoints: [
@@ -86,9 +86,9 @@ Based on these two things, the machine does three things:
 
 Special States:
 
-• A TM starts in a start state (q₀).
-• When it enters a special accept state (q_accept), it immediately halts and ACCEPTS the input.
-• When it enters a special reject state (q_reject), it immediately halts and REJECTS the input.
+- A TM starts in a start state (q₀).
+- When it enters a special accept state (q_accept), it immediately halts and ACCEPTS the input.
+- When it enters a special reject state (q_reject), it immediately halts and REJECTS the input.
 
 A TM can also loop forever (never halt), which means it doesn't accept or reject.`,
                     keyPoints: [
@@ -131,8 +131,8 @@ General Strategy:
 
 How to accept/reject:
 
-• If, during a sweep, you are looking for a 'b' but find a 'c' or a blank, REJECT (wrong order or not enough 'b's).
-• If, after Step 5, you rewind and see a 'y' (meaning you've crossed off all the 'a's), sweep right. If you see any remaining 'b's or 'c's, REJECT. If you only see 'y's and 'z's, ACCEPT.
+- If, during a sweep, you are looking for a 'b' but find a 'c' or a blank, REJECT (wrong order or not enough 'b's).
+- If, after Step 5, you rewind and see a 'y' (meaning you've crossed off all the 'a's), sweep right. If you see any remaining 'b's or 'c's, REJECT. If you only see 'y's and 'z's, ACCEPT.
 
 This is a "crossing-off" algorithm. The tape acts as the machine's memory, allowing it to go back and forth and check for correspondence.`,
                     keyPoints: [
@@ -224,18 +224,18 @@ Each level is more powerful than the previous one. Turing Machines sit at the to
                     title: 'Formal Definition of a Turing Machine',
                     content: `A Turing Machine is a 7-tuple M = (Q, Σ, Γ, δ, q₀, q_accept, q_reject) where:
 
-• Q is finite set of states
-• Σ is input alphabet (not containing blank ␣)
-• Γ is tape alphabet (Σ ⊂ Γ, ␣ ∈ Γ)
-• δ: Q × Γ → Q × Γ × {L, R} is transition function
-• q₀ ∈ Q is start state
-• q_accept ∈ Q is accept state
-• q_reject ∈ Q is reject state (q_accept ≠ q_reject)
+- Q is finite set of states
+- Σ is input alphabet (not containing blank ␣)
+- Γ is tape alphabet (Σ ⊂ Γ, ␣ ∈ Γ)
+- δ: Q × Γ → Q × Γ × {L, R} is transition function
+- q₀ ∈ Q is start state
+- q_accept ∈ Q is accept state
+- q_reject ∈ Q is reject state (q_accept ≠ q_reject)
 
 δ(q, X) = (p, Y, D) means:
-• In state q, reading X
-• Write Y, move head direction D (L or R)
-• Transition to state p
+- In state q, reading X
+- Write Y, move head direction D (L or R)
+- Transition to state p
 
 Note: δ need not be total (undefined = implicit reject).`,
                     example: {
@@ -274,9 +274,9 @@ Formally: Any function computable by an algorithm is computable by a Turing Mach
 This is a THESIS, not a theorem (cannot be formally proven).
 
 Evidence:
-• All known models of computation (λ-calculus, recursive functions, RAM machines, etc.) are equivalent to TMs
-• No counterexample has been found in 90+ years
-• TMs formalize our intuition about mechanical computation
+- All known models of computation (λ-calculus, recursive functions, RAM machines, etc.) are equivalent to TMs
+- No counterexample has been found in 90+ years
+- TMs formalize our intuition about mechanical computation
 
 Consequence: Results about TMs apply to ALL models of computation.`,
                     keyPoints: [
@@ -289,23 +289,23 @@ Consequence: Results about TMs apply to ALL models of computation.`,
                 {
                     title: 'Decidability and Recognizability',
                     content: `Decidable Language: L is decidable if ∃ TM M that:
-• Halts on all inputs
-• Accepts if w ∈ L
-• Rejects if w ∉ L
+- Halts on all inputs
+- Accepts if w ∈ L
+- Rejects if w ∉ L
 
 Recognizable Language (r.e.): L is recognizable if ∃ TM M that:
-• Accepts if w ∈ L
-• Rejects OR loops if w ∉ L
+- Accepts if w ∈ L
+- Rejects OR loops if w ∉ L
 
 Relationship:
-• Decidable ⟹ Recognizable
-• Decidable = Recognizable ∩ Co-recognizable
-• ∃ recognizable but undecidable languages
-• ∃ languages that are not even recognizable
+- Decidable ⟹ Recognizable
+- Decidable = Recognizable ∩ Co-recognizable
+- ∃ recognizable but undecidable languages
+- ∃ languages that are not even recognizable
 
 Examples:
-• {⟨M, w⟩ | M accepts w} is recognizable but undecidable (Halting Problem)
-• {⟨M⟩ | L(M) = Σ*} is neither recognizable nor co-recognizable`,
+- {⟨M, w⟩ | M accepts w} is recognizable but undecidable (Halting Problem)
+- {⟨M⟩ | L(M) = Σ*} is neither recognizable nor co-recognizable`,
                     keyPoints: [
                         'Decidable = always halts with correct answer',
                         'Recognizable = may not halt on reject',
@@ -337,8 +337,8 @@ Construct TM D:
     3. If R rejects (M doesn't halt), accept
 
 Now run D on ⟨D⟩:
-• If D halts on ⟨D⟩, then D loops (by construction)
-• If D loops on ⟨D⟩, then D halts (by construction)
+- If D halts on ⟨D⟩, then D loops (by construction)
+- If D loops on ⟨D⟩, then D halts (by construction)
 
 Contradiction! Therefore H is undecidable.`,
                     keyPoints: [
@@ -359,10 +359,10 @@ Computable function f where w ∈ A ⟺ f(w) ∈ B
 Consequence: If A ≤_m B and A undecidable, then B undecidable.
 
 Common reductions from:
-• Halting Problem
-• A_TM = {⟨M, w⟩ | M accepts w}
-• E_TM = {⟨M⟩ | L(M) = ∅}
-• EQ_TM = {⟨M₁, M₂⟩ | L(M₁) = L(M₂)}
+- Halting Problem
+- A_TM = {⟨M, w⟩ | M accepts w}
+- E_TM = {⟨M⟩ | L(M) = ∅}
+- EQ_TM = {⟨M₁, M₂⟩ | L(M₁) = L(M₂)}
 
 Strategy: Reduce from known undecidable to prove new problem undecidable.`,
                     example: {
@@ -375,8 +375,8 @@ Given ⟨M, w⟩, construct M':
     2. If x = w, run M on w and accept if M accepts
 
 Observe:
-• M accepts w ⟹ L(M') = {w} (nonempty)
-• M rejects w ⟹ L(M') = ∅ (empty)
+- M accepts w ⟹ L(M') = {w} (nonempty)
+- M rejects w ⟹ L(M') = ∅ (empty)
 
 So: ⟨M, w⟩ ∈ A_TM ⟺ ⟨M'⟩ ∉ E_TM
 
@@ -412,9 +412,9 @@ NTIME(f(n)) = {L | L decided by NTM in O(f(n)) time}
 NP = ⋃_k NTIME(n^k) = nondeterministic polynomial time
 
 P vs NP Question: Is P = NP?
-• Biggest open problem in computer science
-• $1,000,000 Clay Millennium Prize
-• Most believe P ≠ NP but no proof exists`,
+- Biggest open problem in computer science
+- $1,000,000 Clay Millennium Prize
+- Most believe P ≠ NP but no proof exists`,
                     keyPoints: [
                         'P = efficiently solvable problems',
                         'NP = efficiently verifiable problems',
@@ -433,12 +433,12 @@ Theorem (Cook-Levin, 1971): SAT is NP-complete.
 Consequence: If ANY NP-complete problem has polynomial-time algorithm, then P = NP.
 
 Common NP-complete problems:
-• 3-SAT, Circuit-SAT
-• Clique, Independent Set, Vertex Cover
-• Hamiltonian Path/Cycle
-• Traveling Salesman
-• Subset Sum, Knapsack
-• Graph Coloring
+- 3-SAT, Circuit-SAT
+- Clique, Independent Set, Vertex Cover
+- Hamiltonian Path/Cycle
+- Traveling Salesman
+- Subset Sum, Knapsack
+- Graph Coloring
 
 Thousands of problems are NP-complete!`,
                     keyPoints: [
