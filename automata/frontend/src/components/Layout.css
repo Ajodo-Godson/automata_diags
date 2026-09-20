@@ -1,10 +1,18 @@
 .app {
     display: flex;
     flex-direction: column;
+    /* dvh follows the mobile browser's collapsing toolbars; vh is the fallback. */
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
     background: var(--canvas);
+    /*
+     * Keep the shell clear of a notch, a rounded corner and the home
+     * indicator. These resolve to 0 everywhere else.
+     */
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* ---------------------------------------------------------------- Header */
@@ -19,9 +27,9 @@
     grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
     align-items: center;
     gap: var(--space-4);
-    height: var(--header-height);
+    height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
     flex: 0 0 auto;
-    padding: 0 var(--space-4);
+    padding: env(safe-area-inset-top, 0px) var(--space-4) 0;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
 }
@@ -195,7 +203,8 @@
             'start end'
             'nav   nav';
         height: auto;
-        padding: var(--space-2) var(--space-3);
+        padding: calc(var(--space-2) + env(safe-area-inset-top, 0px)) var(--space-3)
+            var(--space-2);
         gap: var(--space-2);
     }
 
