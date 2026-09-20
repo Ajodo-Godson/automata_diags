@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
-import { CheckCircle2, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import '../DFA_components/stylings/DFATestCases.css';
+import React from 'react';
+import TestCaseList from '../shared/TestCaseList';
 
-export const NFATestCases = ({ nfa, onTestString, currentExample }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+export const NFATestCases = ({ onLoadTest, currentExample }) => {
 
   const getTestCases = () => {
     if (currentExample === 'lexer_digits_plus') {
@@ -142,48 +140,6 @@ export const NFATestCases = ({ nfa, onTestString, currentExample }) => {
 
   const testCases = getTestCases();
 
-  if (!testCases || testCases.length === 0) return null;
 
-  return (
-    <div className="dfa-test-cases-card">
-      <div
-        className="dfa-test-cases-header"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        style={{ cursor: 'pointer' }}
-      >
-        <div className="dfa-test-cases-header-content">
-          <div>
-            <h3 className="dfa-test-cases-title">Example Test Cases</h3>
-            <p className="dfa-test-cases-subtitle">Click to load and test the current NFA</p>
-          </div>
-          <button className="dfa-collapse-btn">
-            {isCollapsed ? <ChevronDown className="dfa-collapse-icon" /> : <ChevronUp className="dfa-collapse-icon" />}
-          </button>
-        </div>
-      </div>
-
-      <div className={`dfa-test-cases-list ${isCollapsed ? 'collapsed' : ''}`}>
-        {testCases.map((testCase, idx) => (
-          <div key={idx} className="dfa-test-case-item">
-            <div className="dfa-test-case-content">
-              <div className="dfa-test-case-input">
-                <code className="dfa-test-case-code">{testCase.input || '(empty string)'}</code>
-              </div>
-              <div className="dfa-test-case-expected">
-                {testCase.shouldAccept ? <CheckCircle2 className="dfa-icon-success" /> : <XCircle className="dfa-icon-warning" />}
-                <span className={testCase.shouldAccept ? 'dfa-text-success' : 'dfa-text-warning'}>{testCase.expected}</span>
-              </div>
-            </div>
-            <button
-              onClick={() => onTestString(testCase.input)}
-              className="dfa-btn dfa-btn-outline dfa-btn-small"
-            >
-              Test
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+    return <TestCaseList testCases={testCases} onLoadTest={onLoadTest} />;
 };
-
