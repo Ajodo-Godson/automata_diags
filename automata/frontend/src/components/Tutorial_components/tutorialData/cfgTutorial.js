@@ -12,8 +12,8 @@ export const cfgTutorial = {
                     title: 'Beyond Regular Languages',
                     content: `We've seen that DFAs/NFAs are limited. They cannot recognize languages that require "counting" or "matching pairs," like:
 
-• L₁ = {0ⁿ1ⁿ | n ≥ 0} (equal numbers of 0s and 1s)
-• L₂ = {w | w is a balanced set of parentheses} (e.g., "(())", "()()")
+- L₁ = {0ⁿ1ⁿ | n ≥ 0} (equal numbers of 0s and 1s)
+- L₂ = {w | w is a balanced set of parentheses} (e.g., "(())", "()()")
 
 These languages are not regular. They belong to a larger class called the Context-Free Languages.
 
@@ -59,8 +59,8 @@ T = {0, 1}
 S: Start variable
 
 Productions:
-• S → 0S1  (This rule adds one '0' and one '1', keeping them balanced)
-• S → ε     (This rule stops the recursion and allows for n=0)
+- S → 0S1  (This rule adds one '0' and one '1', keeping them balanced)
+- S → ε     (This rule stops the recursion and allows for n=0)
 
 Let's derive the string "0011":
 
@@ -107,9 +107,9 @@ T = {(, )}
 S: Start variable
 
 Productions:
-• S → (S)   (Rule for nesting: ( ... ))
-• S → SS    (Rule for sequence: ... ...)
-• S → ε     (Rule for the empty string, the base case)
+- S → (S)   (Rule for nesting: ( ... ))
+- S → SS    (Rule for sequence: ... ...)
+- S → ε     (Rule for the empty string, the base case)
 
 Let's derive "()(())":
 
@@ -223,10 +223,10 @@ Key insight: CFGs can describe nested, recursive structures that regular languag
                     title: 'Formal Definition of a CFG',
                     content: `A Context-Free Grammar is a 4-tuple G = (V, T, P, S) where:
 
-• V is finite set of variables (non-terminals)
-• T is finite set of terminals (disjoint from V)
-• P ⊆ V × (V ∪ T)* is finite set of production rules
-• S ∈ V is the start variable
+- V is finite set of variables (non-terminals)
+- T is finite set of terminals (disjoint from V)
+- P ⊆ V × (V ∪ T)* is finite set of production rules
+- S ∈ V is the start variable
 
 Production notation: A → α where A ∈ V and α ∈ (V ∪ T)*
 
@@ -264,15 +264,15 @@ L(G) = {ε, (), (()), ()(), (())(), ...}`
 Rightmost derivation: Always replace rightmost variable
 
 Notation:
-• ⇒_lm for leftmost derivation step
-• ⇒_rm for rightmost derivation step
+- ⇒_lm for leftmost derivation step
+- ⇒_rm for rightmost derivation step
 
 Theorem: For any derivation S ⇒* w, there exist unique leftmost and rightmost derivations.
 
 Importance:
-• Leftmost: Top-down parsing (LL parsers)
-• Rightmost: Bottom-up parsing (LR parsers)
-• Both generate same parse tree
+- Leftmost: Top-down parsing (LL parsers)
+- Rightmost: Bottom-up parsing (LR parsers)
+- Both generate same parse tree
 
 Ambiguity: Grammar is ambiguous if some string has multiple parse trees (equivalently, multiple leftmost derivations).`,
                     example: {
@@ -302,10 +302,10 @@ Ambiguous!`
                 {
                     title: 'Parse Trees and Yield',
                     content: `A parse tree for derivation S ⇒* w has:
-• Root labeled S
-• Interior nodes labeled with variables
-• Leaves labeled with terminals or ε
-• If node A has children X₁...Xₖ, then A → X₁...Xₖ ∈ P
+- Root labeled S
+- Interior nodes labeled with variables
+- Leaves labeled with terminals or ε
+- If node A has children X₁...Xₖ, then A → X₁...Xₖ ∈ P
 
 Yield of tree: concatenation of leaf labels (left to right)
 
@@ -385,9 +385,9 @@ C → a`
 
 Time complexity: O(n³|G|) where n = |w|, |G| = grammar size
 Idea: Dynamic programming
-• Build table T[i,j,A]: true iff A ⇒* w[i...j]
-• Base case: T[i,i,A] = true if A → w[i]
-• Recursive: T[i,j,A] = true if ∃ k, B, C:
+- Build table T[i,j,A]: true iff A ⇒* w[i...j]
+- Base case: T[i,i,A] = true if A → w[i]
+- Recursive: T[i,j,A] = true if ∃ k, B, C:
   A → BC ∈ P and T[i,k,B] and T[k+1,j,C]
 Result: w ∈ L(G) ⟺ T[1,n,S] = true
 
@@ -409,11 +409,11 @@ This is optimal for worst-case general CFG parsing.`,
 If a grammar is in **Chomsky Normal Form (CNF)**, we can use a very structured recursive approach to check if a string $w$ is in the language:
 
 1. **Base Case (Length ≤ 1)**:
-   • If $w = ε$, check if there is a rule $S → ε$.
-   • If $w = a$ (a single terminal), check if there is a rule $S → a$.
+   - If $w = ε$, check if there is a rule $S → ε$.
+   - If $w = a$ (a single terminal), check if there is a rule $S → a$.
 2. **Recursive Step (Length > 1)**:
-   • For every rule $A → BC$, try splitting the string $w$ into two parts $w_1$ and $w_2$ in all possible ways ($w = w_1w_2$).
-   • Recursively check if $B \\Rightarrow^* w_1$ AND $C \\Rightarrow^* w_2$.
+   - For every rule $A → BC$, try splitting the string $w$ into two parts $w_1$ and $w_2$ in all possible ways ($w = w_1w_2$).
+   - Recursively check if $B \\Rightarrow^* w_1$ AND $C \\Rightarrow^* w_2$.
 
 This structured decomposition is only possible because CNF rules are restricted to exactly two variables on the right-hand side.`,
                     keyPoints: [
