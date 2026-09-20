@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import '../shared/SimulatorShell.css';
 import './stylings/PDASimulator.css';
-import { PDAControlPanel } from './PDAControlPanel';
+import StateDiagram from '../shared/StateDiagram';
+import Transport from '../shared/Transport';
 import { PDATestCases } from './PDATestCases';
 import { PDAStatesEditor } from './StatesEditor';
 import { PDATransitionsEditor } from './TransitionsEditor';
 import { PDAAlphabetEditor } from './AlphabetEditor';
-import PDAGraph from './PDAGraph';
 import { CollapsibleSection } from '../shared/CollapsibleSection';
 import { useExamples } from './examples';
 import { usePDA } from './usePDA';
 import { validatePDAChallenge } from '../Tutorial_components/ChallengeValidator';
-import { CheckCircle, XCircle, Target } from 'lucide-react';
+import { CheckCircle, Target } from 'lucide-react';
 
 const PDASimulator = ({ challenge }) => {
     const { examples } = useExamples();
@@ -324,150 +325,269 @@ const PDASimulator = ({ challenge }) => {
         }
     };
 
+
+    /* Flatten the PDA transition list for the shared diagram. Each edge is
+     * labelled in the standard notation: input, pop → push. */
+    const diagramTransitions = useMemo(
+        () =>
+            pda.transitions.map((t) => ({
+                from: t.from,
+                to: t.to,
+                label: `${t.input || 'ε'}, ${t.pop || 'ε'} → ${t.push || 'ε'}`,
+            })),
+        [pda.transitions]
+    );
+
+    const step = currentStep >= 0 ? simulationSteps[currentStep] : null;
+    const stack = step ? step.stack : [pda.startStackSymbol];
+    const atEnd = isComplete;
+
+    const activeTransition = step?.transition
+        ? {
+              from: step.transition.from,
+              to: step.transition.to,
+              label: `${step.transition.input || 'ε'}, ${step.transition.pop || 'ε'} → ${
+                  step.transition.push || 'ε'
+              }`,
+          }
+        : null;
+
     return (
-        <div className="pda-simulator-new">
-            <div className="pda-container">
-                {/* Compact Challenge Header */}
-                {challenge && challenge.challenge && (
-                    <div className="compact-challenge-header">
-                        <div className="challenge-info">
-                            <Target size={20} />
-                            <span><strong>Challenge:</strong> {challenge.challenge.description}</span>
-                        </div>
-                        <button className="validate-btn-compact" onClick={handleValidateChallenge}>
-                            <CheckCircle size={16} /> Validate
-                        </button>
+        <div className="sim">
+            <div>
+                {challenge?.challenge && (
+                    <div className="sim-challenge">
+                        <Target size={16} aria-hidden="true" />
+                        <span className="sim-challenge-text">
+                            <strong>Challenge:</strong> {challenge.challenge.description}
+                        </span>
                         {validationResults && (
-                            <div className={`mini-results ${validationResults.passed === validationResults.total ? 'pass' : 'fail'}`}>
-                                {validationResults.passed}/{validationResults.total} Passed
-                            </div>
+                            <span
+                                className={`verdict ${
+                                    validationResults.passed === validationResults.total
+                                        ? 'verdict-accept'
+                                        : 'verdict-reject'
+                                }`}
+                            >
+                                {validationResults.passed}/{validationResults.total} passing
+                            </span>
                         )}
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={handleValidateChallenge}
+                        >
+                            <CheckCircle size={14} aria-hidden="true" />
+                            Validate
+                        </button>
                     </div>
                 )}
 
-                {!challenge && (
-                    <div className="pda-header">
-                        <h1 className="pda-title">PDA Simulator</h1>
-                        <p className="pda-subtitle">Pushdown Automaton - Step-by-step visualization with stack operations</p>
+                <div className="sim-toolbar">
+                    <div className="sim-identity">
+                        <h1 className="sim-title">Pushdown Automaton</h1>
+                        <p className="sim-subtitle">
+                            Input {'{'}
+                            {pda.alphabet.join(', ')}
+                            {'}'} · Stack {'{'}
+                            {pda.stackAlphabet.join(', ')}
+                            {'}'} · {pda.states.length} states
+                        </p>
                     </div>
-                )}
+
+                    <div className="sim-run">
+                        <label className="sr-only" htmlFor="pda-input">
+                            Input string
+                        </label>
+                        <input
+                            id="pda-input"
+                            className="field"
+                            value={inputString}
+                            placeholder="Type a string, e.g. (())"
+                            onChange={(e) => {
+                                setInputString(e.target.value);
+                                handleReset();
+                            }}
+                            onKeyDown={(e) => e.key === 'Enter' && simulateString()}
+                        />
+                        <button type="button" className="btn btn-primary" onClick={simulateString}>
+                            Test
+                        </button>
+                    </div>
+
+                    {isComplete && (
+                        <div
+                            className={`verdict ${
+                                isAccepted ? 'verdict-accept' : 'verdict-reject'
+                            } sim-verdict`}
+                        >
+                            {isAccepted ? 'Accepted' : 'Rejected'}
+                            <span className="verdict-note">
+                                {isAccepted
+                                    ? 'Input consumed, stack resolved.'
+                                    : 'No accepting computation exists.'}
+                            </span>
+                        </div>
+                    )}
+                </div>
 
                 {!challenge && (
-                    <div className="pda-example-selector">
-                        <label className="pda-selector-label">Load Example:</label>
-                        <div className="pda-selector-buttons">
+                    <div className="sim-examples">
+                        <span className="eyebrow sim-examples-label">Examples</span>
+                        <div className="sim-examples-list">
                             {Object.entries(examples).map(([key, example]) => (
-                                <button key={key} className={`pda-selector-btn ${currentExampleName === key ? 'active' : ''}`} onClick={() => loadExample(key)}>
+                                <button
+                                    key={key}
+                                    type="button"
+                                    className="chip"
+                                    aria-pressed={currentExampleName === key}
+                                    onClick={() => loadExample(key)}
+                                >
                                     {example.name}
                                 </button>
                             ))}
                         </div>
-                        {currentExampleDescription && (
-                            <div className="pda-example-description"><strong>Description:</strong> {currentExampleDescription}</div>
-                        )}
                     </div>
                 )}
 
-                <div className="pda-grid">
-                    <div className="pda-left-col">
-                        <div className="pda-input-card">
-                            <h3 className="pda-card-title">Input String</h3>
-                            <div className="pda-input-group">
-                                <input type="text" value={inputString} onChange={(e) => setInputString(e.target.value)} placeholder="Enter input string (e.g., (())" className="pda-input" />
-                                <button onClick={simulateString} className="pda-btn pda-btn-primary">Test</button>
-                            </div>
-                            <p className="pda-input-help">Alphabet: {pda.alphabet.join(', ')}</p>
-                            {isComplete && (
-                                <div className={`pda-result-indicator ${isAccepted ? 'pda-result-accepted' : 'pda-result-rejected'}`}>
-                                    {isAccepted ? '✓ ACCEPTED' : '✗ REJECTED'}
-                                </div>
+                {!challenge && currentExampleDescription && (
+                    <p className="sim-example-note">{currentExampleDescription}</p>
+                )}
+            </div>
+
+            <div className="sim-body">
+                <div className="sim-stage">
+                    <div className="card sim-diagram-card">
+                        <div className="card-header">
+                            <h2 className="card-title">State diagram</h2>
+                            {step && (
+                                <span className="hint">
+                                    Step {currentStep + 1} of {simulationSteps.length}
+                                </span>
                             )}
                         </div>
-
-                        <PDAControlPanel
-                            currentState={simulationSteps.length > 0 && currentStep >= 0 ? simulationSteps[currentStep].state : pda.startState}
-                            stepCount={currentStep + 1}
-                            isPlaying={isPlaying}
-                            isComplete={isComplete}
-                            isAccepted={isAccepted}
-                            speed={playbackSpeed}
-                            onRun={() => { if (simulationSteps.length === 0) simulateString(); setIsPlaying(true); }}
-                            onPause={() => setIsPlaying(false)}
-                            onStep={() => { if (simulationSteps.length === 0) simulateString(); else if (currentStep < simulationSteps.length - 1) setCurrentStep(currentStep + 1); }}
-                            onReset={handleReset}
-                            onSpeedChange={setPlaybackSpeed}
-                        />
-
-                        <div className="pda-stack-card">
-                            <h3 className="pda-card-title">Stack Visualization</h3>
-                            <div className="pda-stack-container">
-                                {simulationSteps.length > 0 && currentStep >= 0 ? (
-                                    <div className="pda-stack">
-                                        {simulationSteps[currentStep].stack.length === 0 ? (
-                                            <div className="pda-stack-empty">Stack is empty</div>
-                                        ) : (
-                                            simulationSteps[currentStep].stack.map((symbol, index) => (
-                                                <div key={index} className={`pda-stack-item ${index === simulationSteps[currentStep].stack.length - 1 ? 'pda-stack-top' : ''}`}>
-                                                    {symbol}
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="pda-stack-initial">
-                                        <div className="pda-stack-item pda-stack-top">{pda.startStackSymbol}</div>
-                                    </div>
-                                )}
-                                <div className="pda-stack-label">Top of Stack</div>
-                            </div>
+                        <div className="card-body">
+                            <StateDiagram
+                                states={pda.states}
+                                transitions={diagramTransitions}
+                                startState={pda.startState}
+                                acceptStates={pda.acceptStates}
+                                currentState={step?.state}
+                                activeTransition={activeTransition}
+                                onDeleteState={pda.removeState}
+                            />
                         </div>
                     </div>
 
-                    <div className="pda-right-col">
-                        <CollapsibleSection title="States Editor" defaultOpen={challenge ? true : false}>
-                            <PDAStatesEditor pda={pda} onUpdate={handleReset} />
-                        </CollapsibleSection>
-                        <CollapsibleSection title="Alphabets" defaultOpen={challenge ? true : false}>
-                            <PDAAlphabetEditor pda={pda} onUpdate={handleReset} />
-                        </CollapsibleSection>
-                        <CollapsibleSection title="Transitions Editor" defaultOpen={challenge ? true : false}>
-                            <PDATransitionsEditor pda={pda} onUpdate={handleReset} />
-                        </CollapsibleSection>
-                        {!challenge && (
-                            <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
-                                <PDATestCases onLoadTest={(ti) => { setInputString(ti); handleReset(); }} currentExample={currentExampleName} />
-                            </CollapsibleSection>
-                        )}
-                        {/* PDA Graph Visualization - at the top of right column */}
-                        <CollapsibleSection title="State Diagram" defaultOpen={true}>
-                            <div className="pda-graph-card">
-                                <PDAGraph
-                                    states={pda.states}
-                                    transitions={pda.transitions}
-                                    startState={pda.startState}
-                                    acceptStates={pda.acceptStates}
-                                    currentState={simulationSteps.length > 0 && currentStep >= 0 ? simulationSteps[currentStep].state : pda.startState}
-                                />
-                            </div>
-                        </CollapsibleSection>
-                        {simulationSteps.length > 0 && (
-                            <div className="pda-steps-card">
-                                <h3 className="pda-card-title">Simulation Progress</h3>
-                                <div className="pda-step-display">
-                                    {currentStep >= 0 && currentStep < simulationSteps.length && (
-                                        <>
-                                            <div className="pda-step-info"><strong>Step {currentStep + 1} of {simulationSteps.length}</strong></div>
-                                            <div className="pda-step-state">Current State: <span className="pda-highlight">{simulationSteps[currentStep].state}</span></div>
-                                            <div className="pda-step-stack">Stack: [{simulationSteps[currentStep].stack.join(', ')}]</div>
-                                            <div className="pda-step-remaining">Remaining Input: <code>"{simulationSteps[currentStep].remainingInput}"</code></div>
-                                            <div className="pda-step-desc">{simulationSteps[currentStep].description}</div>
-                                        </>
-                                    )}
+                    <div className="card">
+                        <Transport
+                            isPlaying={isPlaying}
+                            canPlay={!atEnd}
+                            canStep={!atEnd}
+                            onRun={() => {
+                                if (simulationSteps.length === 0) simulateString();
+                                setIsPlaying(true);
+                            }}
+                            onPause={() => setIsPlaying(false)}
+                            onStep={() => {
+                                if (simulationSteps.length === 0) simulateString();
+                                else if (currentStep < simulationSteps.length - 1)
+                                    setCurrentStep(currentStep + 1);
+                            }}
+                            onReset={handleReset}
+                            speed={playbackSpeed}
+                            onSpeedChange={setPlaybackSpeed}
+                            readouts={[
+                                { label: 'State', value: step?.state ?? pda.startState },
+                                { label: 'Depth', value: stack.length },
+                                {
+                                    label: 'Step',
+                                    value: `${Math.max(currentStep + 1, 0)}/${
+                                        simulationSteps.length || 0
+                                    }`,
+                                },
+                            ]}
+                        />
+
+                        {step && (
+                            <div className="card-body" style={{ paddingTop: 0 }}>
+                                <div className="stack">
+                                    <div className="sim-tape-strip">
+                                        {inputString.length === 0 ? (
+                                            <span className="hint">ε (empty string)</span>
+                                        ) : (
+                                            [...inputString].map((symbol, i) => (
+                                                <span
+                                                    key={`${symbol}-${i}`}
+                                                    className={`sim-symbol ${
+                                                        i < step.inputPosition ? 'is-consumed' : ''
+                                                    } ${i === step.inputPosition ? 'is-current' : ''}`}
+                                                >
+                                                    {symbol}
+                                                </span>
+                                            ))
+                                        )}
+                                    </div>
+                                    <p className="sim-step-note">{step.description}</p>
                                 </div>
                             </div>
                         )}
                     </div>
                 </div>
+
+                <aside className="sim-panel">
+                    {/*
+                      * The stack is what distinguishes a PDA from an NFA, so it
+                      * leads the panel rather than hiding in an accordion.
+                      */}
+                    <section className="card">
+                        <div className="card-header">
+                            <h2 className="card-title">Stack</h2>
+                            <span className="hint">top first</span>
+                        </div>
+                        <div className="card-body">
+                            {stack.length === 0 ? (
+                                <p className="empty">Stack is empty.</p>
+                            ) : (
+                                <ol className="pda-stack">
+                                    {[...stack].reverse().map((symbol, i) => (
+                                        <li
+                                            key={`${symbol}-${stack.length - i}`}
+                                            className={`pda-stack-cell ${i === 0 ? 'is-top' : ''}`}
+                                        >
+                                            <span className="pda-stack-symbol">{symbol}</span>
+                                            {i === 0 && <span className="pda-stack-tag">top</span>}
+                                        </li>
+                                    ))}
+                                </ol>
+                            )}
+                        </div>
+                    </section>
+
+                    <CollapsibleSection title="States" defaultOpen={!!challenge}>
+                        <PDAStatesEditor pda={pda} onUpdate={handleReset} />
+                    </CollapsibleSection>
+
+                    <CollapsibleSection title="Alphabets" defaultOpen={false}>
+                        <PDAAlphabetEditor pda={pda} onUpdate={handleReset} />
+                    </CollapsibleSection>
+
+                    <CollapsibleSection title="Transitions" defaultOpen>
+                        <PDATransitionsEditor pda={pda} onUpdate={handleReset} />
+                    </CollapsibleSection>
+
+                    {!challenge && (
+                        <CollapsibleSection title="Test cases" defaultOpen={false}>
+                            <PDATestCases
+                                onLoadTest={(t) => {
+                                    setInputString(t);
+                                    handleReset();
+                                }}
+                                currentExample={currentExampleName}
+                            />
+                        </CollapsibleSection>
+                    )}
+                </aside>
             </div>
         </div>
     );
