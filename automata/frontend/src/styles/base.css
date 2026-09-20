@@ -1,0 +1,495 @@
+/*
+ * Base layer — reset plus the shared primitives every simulator uses.
+ *
+ * Buttons, inputs, cards, panels, tables and the accept/reject badges are
+ * defined once here. Component stylesheets should compose these classes and
+ * only add what is genuinely specific to that component.
+ */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure {
+    margin: 0;
+}
+
+img,
+svg {
+    max-width: 100%;
+}
+
+code,
+kbd,
+samp,
+pre {
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    color: inherit;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+:focus-visible {
+    outline: 2px solid var(--accent-500);
+    outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- Scroll */
+
+.scroll-y {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: var(--radius-full);
+    border: 3px solid transparent;
+    background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--border-hover);
+    background-clip: content-box;
+}
+
+/* --------------------------------------------------------------- Buttons */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-3);
+    height: 32px;
+    flex: 0 0 auto;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background var(--duration) var(--ease),
+        border-color var(--duration) var(--ease),
+        color var(--duration) var(--ease);
+}
+
+.btn:hover:not(:disabled) {
+    background: var(--hover);
+    border-color: var(--border-hover);
+}
+
+.btn:active:not(:disabled) {
+    background: var(--hover-strong);
+}
+
+.btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: var(--accent-600);
+    border-color: var(--accent-600);
+    color: var(--text-on-accent);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--accent-700);
+    border-color: var(--accent-700);
+}
+
+.btn-primary:active:not(:disabled) {
+    background: var(--accent-800);
+}
+
+.btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-muted);
+}
+
+.btn-ghost:hover:not(:disabled) {
+    background: var(--hover-strong);
+    border-color: transparent;
+    color: var(--text);
+}
+
+.btn-danger {
+    color: var(--reject-fg);
+    border-color: var(--reject-border);
+    background: var(--surface);
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: var(--reject-surface);
+    border-color: var(--reject-solid);
+}
+
+.btn-sm {
+    height: 26px;
+    padding: 0 var(--space-2);
+    font-size: var(--text-sm);
+}
+
+.btn-lg {
+    height: 38px;
+    padding: 0 var(--space-5);
+}
+
+.btn-icon {
+    width: 32px;
+    padding: 0;
+}
+
+.btn-icon.btn-sm {
+    width: 26px;
+}
+
+/* A row of buttons that should never stretch to fill its container. */
+.btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* ---------------------------------------------------------------- Inputs */
+
+.field {
+    display: block;
+    width: 100%;
+    height: 32px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-size: var(--text-base);
+    transition: border-color var(--duration) var(--ease),
+        box-shadow var(--duration) var(--ease);
+}
+
+.field::placeholder {
+    color: var(--text-subtle);
+}
+
+.field:focus {
+    outline: none;
+    border-color: var(--accent-500);
+    box-shadow: var(--ring);
+}
+
+.field:disabled {
+    background: var(--surface-sunken);
+    color: var(--text-subtle);
+    cursor: not-allowed;
+}
+
+/* Symbols, state names and tape cells are data — always monospaced. */
+.field-mono {
+    font-family: var(--font-mono);
+}
+
+.field-sm {
+    height: 26px;
+    padding: 0 var(--space-2);
+    font-size: var(--text-sm);
+}
+
+select.field {
+    padding-right: var(--space-6);
+    cursor: pointer;
+}
+
+.label {
+    display: block;
+    margin-bottom: var(--space-1);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+}
+
+/* Small uppercase section label. Used sparingly — it is loud. */
+.eyebrow {
+    display: block;
+    color: var(--text-subtle);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.hint {
+    color: var(--text-subtle);
+    font-size: var(--text-sm);
+}
+
+/* ----------------------------------------------------------------- Cards */
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xs);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border);
+}
+
+.card-title {
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-tight);
+}
+
+.card-body {
+    padding: var(--space-4);
+}
+
+.card-body-flush {
+    padding: 0;
+}
+
+/* ---------------------------------------------------------------- Chips  */
+
+/* Selectable pill, used for example pickers and test cases. */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-full);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background var(--duration) var(--ease),
+        border-color var(--duration) var(--ease),
+        color var(--duration) var(--ease);
+}
+
+.chip:hover {
+    background: var(--hover);
+    border-color: var(--border-hover);
+    color: var(--text);
+}
+
+.chip[aria-pressed="true"],
+.chip.is-active {
+    background: var(--accent-600);
+    border-color: var(--accent-600);
+    color: var(--text-on-accent);
+}
+
+/* Read-only token, e.g. an alphabet symbol or stack cell. */
+.token {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    padding: 0 var(--space-2);
+    height: 24px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunken);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+}
+
+/* ------------------------------------------------------------ Verdicts   */
+
+.verdict {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+}
+
+.verdict-accept {
+    background: var(--accept-surface);
+    border-color: var(--accept-border);
+    color: var(--accept-fg);
+}
+
+.verdict-reject {
+    background: var(--reject-surface);
+    border-color: var(--reject-border);
+    color: var(--reject-fg);
+}
+
+.verdict-note {
+    margin-left: auto;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-normal);
+    opacity: 0.85;
+}
+
+/* Inline status dot, for test-case lists. */
+.dot {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 auto;
+    border-radius: var(--radius-full);
+    background: var(--border-hover);
+}
+
+.dot-accept {
+    background: var(--accept-solid);
+}
+
+.dot-reject {
+    background: var(--reject-solid);
+}
+
+/* ---------------------------------------------------------------- Tables */
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-base);
+}
+
+.table th,
+.table td {
+    padding: var(--space-2) var(--space-3);
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table tbody tr.is-current {
+    background: var(--accent-50);
+}
+
+.table tbody tr.is-current td:first-child {
+    box-shadow: inset 3px 0 0 var(--accent-500);
+}
+
+/* Cells holding machine data read as data. */
+.table .cell-mono {
+    font-family: var(--font-mono);
+}
+
+/* ----------------------------------------------------------------- Misc  */
+
+.empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-8) var(--space-4);
+    color: var(--text-subtle);
+    font-size: var(--text-sm);
+    text-align: center;
+}
+
+.divider {
+    height: 1px;
+    background: var(--border);
+    border: 0;
+    margin: var(--space-4) 0;
+}
+
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
