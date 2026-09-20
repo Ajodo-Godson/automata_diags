@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TapeVisualizer } from './TapeVisualizer';
-import { ControlPanel } from './ControlPanel';
+import Transport from '../shared/Transport';
 import { ProgramEditor } from './ProgramEditor';
 import { TMTestCases } from './TMTestCases';
 import { useExamples } from './examples';
 import { validateTMChallenge } from '../Tutorial_components/ChallengeValidator';
-import { CheckCircle, XCircle, Target } from 'lucide-react';
+import { CheckCircle, Target } from 'lucide-react';
 import { CollapsibleSection } from '../shared/CollapsibleSection';
+import '../shared/SimulatorShell.css';
 import './stylings/TMSimulator.css';
 
 export default function TMSimulator({ challenge }) {
@@ -35,6 +36,12 @@ export default function TMSimulator({ challenge }) {
 
   const [playbackSpeed, setPlaybackSpeed] = useState(500);
   const [activeRuleId, setActiveRuleId] = useState(null);
+  /*
+   * Configuration trace. Reading a Turing machine means following how the
+   * (state, head, symbol) triple evolves, so each applied rule is recorded and
+   * shown beside the tape.
+   */
+  const [trace, setTrace] = useState([]);
   const [initialInput, setInitialInput] = useState(initialData.input);
   const [acceptState, setAcceptState] = useState('qaccept');
   const [rejectState, setRejectState] = useState('qreject');
@@ -61,6 +68,7 @@ export default function TMSimulator({ challenge }) {
       haltReason: undefined
     });
     setActiveRuleId(null);
+    setTrace([]);
   }, [initialInput, blankSymbol, startState]);
 
   // Event listeners for toolbox actions
@@ -166,52 +174,81 @@ export default function TMSimulator({ challenge }) {
     }
   }, [challenge]);
 
+  /*
+   * A state updater must be a pure function of its previous value: React
+   * invokes it twice in development (StrictMode), so recording the trace
+   * inside it logged every step twice — the trace read "10 steps" while the
+   * machine had taken 5. The transition is computed here instead, and the
+   * three pieces of state are set from the outside.
+   */
+  const machineRef = useRef(machineState);
+  useEffect(() => {
+    machineRef.current = machineState;
+  }, [machineState]);
+
   const executeStep = useCallback(() => {
-    setMachineState(prev => {
-      if (prev.stepCount >= MAX_STEPS) {
-        setActiveRuleId(null);
-        return { ...prev, isRunning: false, isHalted: true, haltReason: 'reject' };
-      }
+    const prev = machineRef.current;
+    if (prev.isHalted) return;
 
-      const tape = [...prev.tape];
-      const head = prev.headPosition;
-      const currentSymbol = tape[head] === undefined || tape[head] === '' ? blankSymbol : tape[head];
+    if (prev.stepCount >= MAX_STEPS) {
+      setActiveRuleId(null);
+      setMachineState({ ...prev, isRunning: false, isHalted: true, haltReason: 'reject' });
+      return;
+    }
 
-      const matchingRule = rules.find(
-        r => r.currentState === prev.currentState && r.readSymbol === currentSymbol
-      );
+    const tape = [...prev.tape];
+    const head = prev.headPosition;
+    const currentSymbol =
+      tape[head] === undefined || tape[head] === '' ? blankSymbol : tape[head];
 
-      if (!matchingRule) {
-        const haltReason = prev.currentState === acceptState ? 'accept' : 'reject';
-        setActiveRuleId(null);
-        return { ...prev, isRunning: false, isHalted: true, haltReason };
-      }
+    const matchingRule = rules.find(
+      (r) => r.currentState === prev.currentState && r.readSymbol === currentSymbol
+    );
 
-      setActiveRuleId(matchingRule.id);
-      tape[head] = matchingRule.writeSymbol;
-      let newHead = head + (matchingRule.moveDirection === 'R' ? 1 : -1);
+    if (!matchingRule) {
+      // No applicable rule: the machine halts where it stands.
+      const haltReason = prev.currentState === acceptState ? 'accept' : 'reject';
+      setActiveRuleId(null);
+      setMachineState({ ...prev, isRunning: false, isHalted: true, haltReason });
+      return;
+    }
 
-      if (newHead < 0) {
-        tape.unshift(blankSymbol);
-        newHead = 0;
-      }
-      if (newHead >= tape.length) tape.push(blankSymbol);
+    tape[head] = matchingRule.writeSymbol;
+    let newHead = head + (matchingRule.moveDirection === 'R' ? 1 : -1);
 
-      const newState = matchingRule.newState;
-      const isAccept = newState === acceptState;
-      const isReject = newState === rejectState;
-      const halted = isAccept || isReject;
+    // The tape is unbounded, so grow it rather than clamping the head.
+    if (newHead < 0) {
+      tape.unshift(blankSymbol);
+      newHead = 0;
+    }
+    if (newHead >= tape.length) tape.push(blankSymbol);
 
-      return {
-        ...prev,
-        tape,
-        headPosition: newHead,
-        currentState: newState,
-        stepCount: prev.stepCount + 1,
-        isRunning: !halted,
-        isHalted: halted,
-        haltReason: isAccept ? 'accept' : isReject ? 'reject' : undefined
-      };
+    const newState = matchingRule.newState;
+    const isAccept = newState === acceptState;
+    const isReject = newState === rejectState;
+    const halted = isAccept || isReject;
+
+    setActiveRuleId(matchingRule.id);
+    setTrace((log) => [
+      ...log.slice(-199),
+      {
+        step: prev.stepCount + 1,
+        from: prev.currentState,
+        read: currentSymbol,
+        write: matchingRule.writeSymbol,
+        move: matchingRule.moveDirection,
+        to: newState,
+      },
+    ]);
+    setMachineState({
+      ...prev,
+      tape,
+      headPosition: newHead,
+      currentState: newState,
+      stepCount: prev.stepCount + 1,
+      isRunning: prev.isRunning && !halted,
+      isHalted: halted,
+      haltReason: isAccept ? 'accept' : isReject ? 'reject' : undefined,
     });
   }, [rules, acceptState, rejectState, blankSymbol]);
 
@@ -328,98 +365,194 @@ export default function TMSimulator({ challenge }) {
     return Array.from(symbols).filter(s => s && s.trim() !== '');
   }, [rules, blankSymbol, machineState.tape]);
 
+  const halted = machineState.isHalted;
+  const accepted = halted && /accept/i.test(machineState.haltReason || '');
+
   return (
-    <div className="tm-simulator">
-      <div className="tm-container">
-        {/* Compact Challenge Header */}
-        {challenge && challenge.challenge && (
-          <div className="compact-challenge-header">
-            <div className="challenge-info">
-              <Target size={20} />
-              <span><strong>Challenge:</strong> {challenge.challenge.description}</span>
-            </div>
-            <button className="validate-btn-compact" onClick={handleValidateChallenge}>
-              <CheckCircle size={16} /> Validate
-            </button>
+    <div className="sim">
+      <div>
+        {challenge?.challenge && (
+          <div className="sim-challenge">
+            <Target size={16} aria-hidden="true" />
+            <span className="sim-challenge-text">
+              <strong>Challenge:</strong> {challenge.challenge.description}
+            </span>
             {validationResults && (
-              <div className={`mini-results ${validationResults.passed === validationResults.total ? 'pass' : 'fail'}`}>
-                {validationResults.passed}/{validationResults.total} Passed
-              </div>
+              <span
+                className={`verdict ${
+                  validationResults.passed === validationResults.total
+                    ? 'verdict-accept'
+                    : 'verdict-reject'
+                }`}
+              >
+                {validationResults.passed}/{validationResults.total} passing
+              </span>
             )}
+            <button type="button" className="btn btn-primary" onClick={handleValidateChallenge}>
+              <CheckCircle size={14} aria-hidden="true" />
+              Validate
+            </button>
           </div>
         )}
 
-        {!challenge && (
-          <div className="tm-header">
-            <h1 className="tm-title">Turing Machine Simulator</h1>
-            <p className="tm-subtitle">Visualize and understand how a Turing machine operates step-by-step</p>
+        <div className="sim-toolbar">
+          <div className="sim-identity">
+            <h1 className="sim-title">Turing Machine</h1>
+            <p className="sim-subtitle">
+              {rules.length} rules · {availableStates.length} states · blank symbol {blankSymbol}
+            </p>
           </div>
-        )}
+
+          <div className="sim-run">
+            <label className="sr-only" htmlFor="tm-input">
+              Initial tape
+            </label>
+            <input
+              id="tm-input"
+              className="field"
+              value={initialInput}
+              placeholder="Initial tape, e.g. 1011"
+              onChange={(e) => handleInitialInputChange(e.target.value)}
+            />
+            <button type="button" className="btn btn-primary" onClick={handleReset}>
+              Load
+            </button>
+          </div>
+
+          {halted && (
+            <div className={`verdict ${accepted ? 'verdict-accept' : 'verdict-reject'} sim-verdict`}>
+              {accepted ? 'Halted — accepted' : 'Halted'}
+              <span className="verdict-note">{machineState.haltReason}</span>
+            </div>
+          )}
+        </div>
 
         {!challenge && (
-          <div className="tm-example-selector">
-            <label className="tm-selector-label">Load Example:</label>
-            <div className="tm-selector-buttons">
+          <div className="sim-examples">
+            <span className="eyebrow sim-examples-label">Examples</span>
+            <div className="sim-examples-list">
               {Object.entries(examples).map(([key, example]) => (
-                <button 
-                  key={key} 
-                  onClick={() => loadPresetExample(key)} 
-                  className={`tm-selector-btn ${currentExampleName === key ? 'active' : ''}`} 
+                <button
+                  key={key}
+                  type="button"
+                  className="chip"
+                  aria-pressed={currentExampleName === key}
                   title={example.description || example.name || key}
+                  onClick={() => loadPresetExample(key)}
                 >
                   {example.name || key}
                 </button>
               ))}
             </div>
-            {currentExampleDescription && (
-              <div className="tm-example-description"><strong>Description:</strong> {currentExampleDescription}</div>
-            )}
           </div>
         )}
 
-        <div className="tm-grid">
-          <div className="tm-left-col">
-            <TapeVisualizer 
-              tape={machineState.tape} 
-              headPosition={machineState.headPosition} 
-              currentState={machineState.currentState} 
-              initialInput={initialInput} 
-              onInitialInputChange={handleInitialInputChange} 
-              isHalted={machineState.isHalted} 
-              haltReason={machineState.haltReason} 
-            />
-            <ControlPanel 
-              currentState={machineState.currentState} 
-              stepCount={machineState.stepCount} 
-              isRunning={machineState.isRunning} 
-              isHalted={machineState.isHalted} 
-              haltReason={machineState.haltReason} 
-              playbackSpeed={playbackSpeed} 
-              onRun={handleRun} 
-              onPause={handlePause} 
-              onStep={handleStep} 
-              onReset={handleReset} 
-              onSpeedChange={setPlaybackSpeed} 
-            />
-          </div>
-          <div className="tm-right-col">
-            <CollapsibleSection title="Transition Rules" defaultOpen={true}>
-              <ProgramEditor 
-                rules={rules} 
-                activeRuleId={activeRuleId} 
-                onRulesChange={setRules}
-                availableStates={availableStates}
-                availableSymbols={availableSymbols}
-              />
-            </CollapsibleSection>
+        {!challenge && currentExampleDescription && (
+          <p className="sim-example-note">{currentExampleDescription}</p>
+        )}
+      </div>
 
-            {!challenge && (
-              <CollapsibleSection title="Example Test Cases" defaultOpen={false}>
-                <TMTestCases onLoadExample={handleInitialInputChange} currentExample={currentExampleName} />
-              </CollapsibleSection>
-            )}
+      <div className="sim-body">
+        <div className="sim-stage sim-stage-tm">
+          <div className="card tm-tape-card">
+            <div className="card-header">
+              <h2 className="card-title">Tape</h2>
+              <span className="hint">
+                head at {machineState.headPosition} · state {machineState.currentState}
+              </span>
+            </div>
+            <div className="card-body">
+              <TapeVisualizer
+                tape={machineState.tape}
+                headPosition={machineState.headPosition}
+                currentState={machineState.currentState}
+                isHalted={machineState.isHalted}
+                haltReason={machineState.haltReason}
+              />
+            </div>
+          </div>
+
+          <div className="card tm-trace-card">
+            <div className="card-header">
+              <h2 className="card-title">Configuration trace</h2>
+              <span className="hint">{trace.length} steps</span>
+            </div>
+            <div className="card-body card-body-flush tm-trace-body">
+              {trace.length === 0 ? (
+                <p className="empty">
+                  Press Run or Step to trace how the machine rewrites the tape.
+                </p>
+              ) : (
+                <div className="table-wrap">
+                  <table className="table tm-trace-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>State</th>
+                        <th>Read</th>
+                        <th>Write</th>
+                        <th>Move</th>
+                        <th>Next</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...trace].reverse().map((t) => (
+                        <tr key={t.step} className={t.step === trace.length ? 'is-current' : ''}>
+                          <td className="cell-mono">{t.step}</td>
+                          <td className="cell-mono">{t.from}</td>
+                          <td className="cell-mono">{t.read}</td>
+                          <td className="cell-mono">{t.write}</td>
+                          <td className="cell-mono">{t.move === 'R' ? '→' : '←'}</td>
+                          <td className="cell-mono">{t.to}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="card">
+            <Transport
+              isPlaying={machineState.isRunning}
+              canPlay={!machineState.isHalted}
+              canStep={!machineState.isHalted}
+              onRun={handleRun}
+              onPause={handlePause}
+              onStep={handleStep}
+              onReset={handleReset}
+              speed={playbackSpeed}
+              onSpeedChange={setPlaybackSpeed}
+              readouts={[
+                { label: 'State', value: machineState.currentState },
+                { label: 'Head', value: machineState.headPosition },
+                { label: 'Steps', value: machineState.stepCount },
+              ]}
+            />
           </div>
         </div>
+
+        <aside className="sim-panel">
+          <CollapsibleSection title="Transition rules" defaultOpen>
+            <ProgramEditor
+              rules={rules}
+              activeRuleId={activeRuleId}
+              onRulesChange={setRules}
+              availableStates={availableStates}
+              availableSymbols={availableSymbols}
+            />
+          </CollapsibleSection>
+
+          {!challenge && (
+            <CollapsibleSection title="Test cases" defaultOpen={false}>
+              <TMTestCases
+                onLoadExample={handleInitialInputChange}
+                currentExample={currentExampleName}
+              />
+            </CollapsibleSection>
+          )}
+        </aside>
       </div>
     </div>
   );
