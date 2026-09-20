@@ -1,49 +1,49 @@
 .collapsible-section {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 12px;
-    padding: 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
     overflow: hidden;
 }
 
 .collapsible-header {
-    width: 100%;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 0.75rem 1rem;
+    justify-content: space-between;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: 0;
     background: transparent;
-    border: none;
+    color: var(--text);
     cursor: pointer;
-    transition: all 0.2s;
+    text-align: left;
+    transition: background var(--duration) var(--ease);
 }
 
 .collapsible-header:hover {
-    background: rgba(0, 0, 0, 0.02);
+    background: var(--surface-sunken);
+}
+
+.collapsible-header[aria-expanded='true'] {
+    border-bottom: 1px solid var(--border);
 }
 
 .collapsible-title {
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin: 0;
-    color: #1f2937;
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-tight);
+}
+
+.collapsible-chevron {
+    flex: 0 0 auto;
+    color: var(--text-subtle);
+    transition: transform var(--duration) var(--ease);
+}
+
+.collapsible-header[aria-expanded='true'] .collapsible-chevron {
+    transform: rotate(180deg);
 }
 
 .collapsible-content {
-    padding: 0 1rem 1rem 1rem;
-    animation: slideDown 0.2s ease-out;
+    padding: var(--space-3);
 }
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
