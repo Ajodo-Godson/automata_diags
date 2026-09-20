@@ -1,162 +1,60 @@
-import React, { useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useRef } from 'react';
 import './stylings/TapeVisualizer.css';
 
-export function TapeVisualizer({ tape, headPosition, currentState, initialInput, onInitialInputChange, isHalted, haltReason }) {
-  const scrollContainerRef = useRef(null);
+const CELL_WIDTH = 56;
 
-  // Auto-scroll to keep the head in view
-  useEffect(() => {
-    if (scrollContainerRef.current) {
-      const cellWidth = 64; // matches .tape-cell width
-      const containerWidth = scrollContainerRef.current.clientWidth;
-      const scrollPosition = headPosition * cellWidth - containerWidth / 2 + cellWidth / 2;
-      
-      scrollContainerRef.current.scrollTo({
-        left: scrollPosition,
-        behavior: 'smooth'
-      });
-    }
-  }, [headPosition]);
+/**
+ * The tape.
+ *
+ * This used to also own the "Initial Tape Input" field, its own card header
+ * and a halt summary — all of which now live in the simulator toolbar, where
+ * every other machine keeps the same things. This just draws the tape.
+ */
+export function TapeVisualizer({ tape, headPosition, currentState, isHalted }) {
+    const scrollRef = useRef(null);
 
-  // Extract output from tape (non-blank symbols)
-  const getTapeOutput = () => {
-    return tape.filter(s => s !== '□' && s !== '').join('');
-  };
+    // Follow the head, but never fight the user mid-drag.
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const target = Math.max(headPosition * CELL_WIDTH - el.clientWidth / 2 + CELL_WIDTH / 2, 0);
+        // scrollTo is missing in jsdom and in older engines; fall back to the
+        // property, which every implementation supports.
+        if (typeof el.scrollTo === 'function') {
+            el.scrollTo({ left: target, behavior: 'smooth' });
+        } else {
+            el.scrollLeft = target;
+        }
+    }, [headPosition]);
 
-  const tapeOutput = getTapeOutput();
-
-  return (
-    <div className="tm-tape-card">
-      <h3 className="tm-card-title"> Tape Visualizer</h3>
-      <div className="input-section">
-        <label htmlFor="initial-input" className="input-label">Initial Tape Input</label>
-        <input
-          id="initial-input"
-          value={initialInput}
-          onChange={(e) => onInitialInputChange(e.target.value)}
-          placeholder="Enter symbols (e.g., 0010)"
-          className="tape-input"
-        />
-        <p className="input-help">
-          Set the initial tape contents. Use any characters. Blank cells are represented by □.
-        </p>
-      </div>
-
-      <div className="tape-section">
-        <div className="head-indicator-container">
-          <motion.div
-            className="head-indicator-label"
-            initial={{ scale: 1 }}
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
-          >
-            Read/Write Head ↓
-          </motion.div>
-        </div>
-
-        <div 
-          ref={scrollContainerRef}
-          className="tape-scroll-container"
-        >
-          <div className="tape-cells-container">
-            {tape.map((symbol, index) => (
-              <TapeCell
-                key={index}
-                symbol={symbol}
-                isActive={index === headPosition}
-                position={index}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="tape-footer">
-          Scroll to view more of the tape • Head Position: {headPosition}
-        </div>
-      </div>
-
-      {/* Output Display */}
-      {isHalted && (
-        <div className={`output-section ${haltReason === 'accept' ? 'output-accepted' : 'output-rejected'}`}>
-          <h4 className="output-title">
-            {haltReason === 'accept' ? '✓ Computation Complete' : '✗ Computation Failed'}
-          </h4>
-          <div className="output-content">
-            <div className="output-row">
-              <span className="output-label">Input:</span>
-              <span className="output-value">{initialInput || '(empty)'}</span>
+    return (
+        <div className="tm-tape">
+            <div className="tm-tape-track" ref={scrollRef}>
+                <div className="tm-tape-cells">
+                    {tape.map((symbol, index) => {
+                        const isHead = index === headPosition;
+                        return (
+                            <div className="tm-tape-slot" key={index}>
+                                {/* The head label rides above the active cell. */}
+                                <span
+                                    className={`tm-tape-head ${isHead ? 'is-visible' : ''}`}
+                                    aria-hidden={!isHead}
+                                >
+                                    {currentState}
+                                </span>
+                                <div
+                                    className={`tm-tape-cell ${isHead ? 'is-head' : ''} ${
+                                        isHead && isHalted ? 'is-halted' : ''
+                                    }`}
+                                >
+                                    {symbol}
+                                </div>
+                                <span className="tm-tape-index">{index}</span>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
-            {haltReason === 'accept' && (
-              <div className="output-row">
-                <span className="output-label">Output on Tape:</span>
-                <span className="output-value tape-output">{tapeOutput}</span>
-              </div>
-            )}
-            <div className="output-help">
-              {haltReason === 'accept' 
-                ? 'The result is written on the tape above. Look at the tape cells to see the output.'
-                : 'The computation halted without completing. Check the tape and program rules.'}
-            </div>
-          </div>
         </div>
-      )}
-    </div>
-  );
+    );
 }
-
-function TapeCell({ symbol, isActive, position }) {
-  return (
-    <div className="tape-cell-wrapper">
-      {/* Active indicator arrow */}
-      {isActive && (
-        <motion.div
-          className="active-arrow"
-          initial={{ y: -10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-          >
-            <path d="M12 16L6 10h12z" />
-          </svg>
-        </motion.div>
-      )}
-
-      {/* Cell */}
-      <motion.div
-        className={`tape-cell ${isActive ? 'active' : ''}`}
-        initial={false}
-        animate={{
-          scale: isActive ? 1.05 : 1,
-        }}
-        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-      >
-        <motion.span
-          key={`${position}-${symbol}`}
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.2 }}
-          className="tape-symbol"
-        >
-          {symbol}
-        </motion.span>
-      </motion.div>
-
-      {/* Position label */}
-      <div className="tape-position">{position}</div>
-    </div>
-  );
-}
-
-
-
-
-
-
-
-
