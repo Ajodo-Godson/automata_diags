@@ -1,12 +1,10 @@
 /**
- * Turing Machine Examples
- * 
- * Starting with MINIMAL examples to verify the engine works.
+ * Turing machine examples, ordered roughly by difficulty.
  */
 export const useExamples = () => {
     const examples = {
-        "Test: Write 3 ones": {
-            description: "Minimal test: Write three '1's and halt. Verifies basic TM operation.",
+        "Write Three 1s": {
+            description: "The simplest machine here: write three 1s on a blank tape and halt. Start with this one to see how a rule fires.",
             rules: [
                 { id: '1', currentState: 'q0', readSymbol: '□', newState: 'q1', writeSymbol: '1', moveDirection: 'R' },
                 { id: '2', currentState: 'q1', readSymbol: '□', newState: 'q2', writeSymbol: '1', moveDirection: 'R' },
@@ -97,7 +95,7 @@ export const useExamples = () => {
             blankSymbol: '□',
         },
         "Busy Beaver (3-state)": {
-            description: "Classic 3-state busy beaver",
+            description: "A 3-state busy beaver: writes six 1s on a blank tape and halts after 13 steps. Leave the tape empty and press Run.",
             rules: [
                 { id: '1', currentState: 'A', readSymbol: '□', newState: 'B', writeSymbol: '1', moveDirection: 'R' },
                 { id: '2', currentState: 'A', readSymbol: '1', newState: 'C', writeSymbol: '1', moveDirection: 'L' },
