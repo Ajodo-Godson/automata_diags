@@ -19,8 +19,8 @@ Imagine a machine with a finite number of states. It:
 4. After reading the entire string, checks its final state
 
 The outcome:
-• If it ends in an ACCEPT STATE (or "final state"), the string is ACCEPTED
-• If it ends in any other state, the string is REJECTED
+- If it ends in an ACCEPT STATE (or "final state"), the string is ACCEPTED
+- If it ends in any other state, the string is REJECTED
 
 The set of all strings that an automaton accepts is called the LANGUAGE of that automaton. Automata that recognize these languages are also called "language recognizers."`,
                     keyPoints: [
@@ -40,10 +40,10 @@ The set of all strings that an automaton accepts is called the LANGUAGE of that 
                     content: `The most intuitive way to understand a DFA is through a STATE DIAGRAM.
 
 Components:
-• STATES (Q): Drawn as circles
-• START STATE (q₀): Has an arrow pointing to it from nowhere
-• ACCEPT STATES (F): Drawn as double circles (⊚)
-• TRANSITIONS (δ): Arrows between states, labeled with input symbols
+- STATES (Q): Drawn as circles
+- START STATE (q₀): Has an arrow pointing to it from nowhere
+- ACCEPT STATES (F): Drawn as double circles (⊚)
+- TRANSITIONS (δ): Arrows between states, labeled with input symbols
 
 Example: DFA accepting strings ending in '1'
 
@@ -86,10 +86,10 @@ Final state: q₀ ∉ F  ✗ REJECTED`
                     content: `Another way to represent a DFA is with a TRANSITION TABLE - a tabular form of the transition function δ.
 
 Format:
-• Rows: States
-• Columns: Input symbols
-• Cell (q, a): The state δ(q, a) you transition to
-• Notation: → marks start state, * marks accept states`,
+- Rows: States
+- Columns: Input symbols
+- Cell (q, a): The state δ(q, a) you transition to
+- Notation: → marks start state, * marks accept states`,
                     example: {
                         description: 'Same DFA (strings ending in \'1\') as a transition table',
                         code: `╔═══════╦═════════╦═════════╗
@@ -100,10 +100,10 @@ Format:
 ╚═══════╩═════════╩═════════╝
 
 Reading the table:
-• From q₀ on input '0': stay at q₀
-• From q₀ on input '1': go to q₁
-• From q₁ on input '0': go to q₀
-• From q₁ on input '1': stay at q₁`
+- From q₀ on input '0': stay at q₀
+- From q₀ on input '1': go to q₁
+- From q₁ on input '0': go to q₀
+- From q₁ on input '1': stay at q₁`
                     },
                     keyPoints: [
                         'Transition tables are compact and unambiguous',
@@ -123,22 +123,22 @@ Reading the table:
                     content: `Let's design a DFA for the language L = {w | w has an even number of 0s}
 
 This means:
-• Accept: "", "1", "111", "00", "1010", "0011"
-• Reject: "0", "10", "011", "000"
+- Accept: "", "1", "111", "00", "1010", "0011"
+- Reject: "0", "10", "011", "000"
 
 Key insight: We need to track whether we've seen an even or odd number of 0s. This suggests TWO states.
 
 States:
-• q_{even}: Seen an even number of 0s (start state, since 0 is even)
-• q_{odd}: Seen an odd number of 0s
+- q_{even}: Seen an even number of 0s (start state, since 0 is even)
+- q_{odd}: Seen an odd number of 0s
 
 Which is accept state? Since we want even 0s: F = {q_{even}}
 
 Transitions:
-• δ(q_{even}, 0) = q_{odd}  (0 flips even → odd)
-• δ(q_{even}, 1) = q_{even} (1 doesn't change parity)
-• δ(q_{odd}, 0) = q_{even}  (0 flips odd → even)
-• δ(q_{odd}, 1) = q_{odd}   (1 doesn't change parity)`,
+- δ(q_{even}, 0) = q_{odd}  (0 flips even → odd)
+- δ(q_{even}, 1) = q_{even} (1 doesn't change parity)
+- δ(q_{odd}, 0) = q_{even}  (0 flips odd → even)
+- δ(q_{odd}, 1) = q_{odd}   (1 doesn't change parity)`,
                     example: {
                         description: 'State diagram',
                         visual: require('./Images/dfa_even_zeros.png'),
@@ -192,16 +192,16 @@ Intuition: DFAs can recognize patterns, but not arbitrary counts.`,
 
 A **Language** ($L$) is a set of strings over a given alphabet ($\\Sigma$). For example, if $\\Sigma = \\{0, 1\\}$, we can define languages like:
 
-• $L_1 = \\{w \\mid w \\text{ is an even binary number}\\} = \\{0, 10, 110, 1000, \\dots\\}$
-• $L_2 = \\{w \\mid w \\text{ starts and ends with the same symbol}\\} = \\{0, 1, 00, 11, 010, 101, \\dots\\}$
+- $L_1 = \\{w \\mid w \\text{ is an even binary number}\\} = \\{0, 10, 110, 1000, \\dots\\}$
+- $L_2 = \\{w \\mid w \\text{ starts and ends with the same symbol}\\} = \\{0, 1, 00, 11, 010, 101, \\dots\\}$
 
 In DFA design, we often use **set-builder notation** to describe these sets precisely. For example:
 $L = \\{01^n0 \\mid n > 0\\}$ means any string that starts with 0, followed by one or more 1s, and ends with 0.
 
 **The Empty String: $\\varepsilon$ (Epsilon)**
 The empty string $\\varepsilon$ is a unique string of length zero ($|\\varepsilon| = 0$). It is a critical edge case in automata theory:
-• A DFA accepts $\\varepsilon$ if and only if its **start state** is also an **accept state**.
-• Formally, $\\varepsilon \\in L(M) \\iff q_0 \\in F$.`,
+- A DFA accepts $\\varepsilon$ if and only if its **start state** is also an **accept state**.
+- Formally, $\\varepsilon \\in L(M) \\iff q_0 \\in F$.`,
                     keyPoints: [
                         'An alphabet $\\Sigma$ is a finite, non-empty set of symbols',
                         'A string is a finite sequence of symbols from $\\Sigma$',
@@ -225,11 +225,11 @@ The empty string $\\varepsilon$ is a unique string of length zero ($|\\varepsilo
                     title: 'Formal Definition of a DFA',
                     content: `A Deterministic Finite Automaton is formally defined as a 5-tuple M = (Q, Σ, δ, q₀, F) where:
 
-• Q is a finite, non-empty set of states
-• Σ is a finite, non-empty set of input symbols (the alphabet)
-• δ: Q × Σ → Q is the transition function
-• q₀ ∈ Q is the initial (start) state
-• F ⊆ Q is the set of accept (final) states
+- Q is a finite, non-empty set of states
+- Σ is a finite, non-empty set of input symbols (the alphabet)
+- δ: Q × Σ → Q is the transition function
+- q₀ ∈ Q is the initial (start) state
+- F ⊆ Q is the set of accept (final) states
 
 The transition function δ is TOTAL, meaning δ(q, a) is defined for all q ∈ Q and a ∈ Σ. This is what makes the automaton "deterministic" - for every state-symbol pair, there exists exactly one next state.`,
                     example: {
@@ -466,8 +466,8 @@ Then by the Pumping Lemma, there exists p ≥ 1 (the pumping length).
 
 Choose w = 0ᵖ1ᵖ.
 Note that:
-  • w ∈ L (by definition, equal 0s and 1s)
-  • |w| = 2p ≥ p (satisfies length requirement)
+  - w ∈ L (by definition, equal 0s and 1s)
+  - |w| = 2p ≥ p (satisfies length requirement)
 
 By the Pumping Lemma, w can be decomposed as w = xyz where:
   (1) |xy| ≤ p
@@ -479,9 +479,9 @@ Since |xy| ≤ p and w = 0ᵖ1ᵖ, the substring xy consists entirely of 0s.
 (The first p symbols of w are all 0s)
 
 Therefore:
-  • x = 0ᵃ for some a ≥ 0
-  • y = 0ᵇ for some b ≥ 1  (from condition 2)
-  • z = 0ᶜ1ᵖ where a + b + c = p
+  - x = 0ᵃ for some a ≥ 0
+  - y = 0ᵇ for some b ≥ 1  (from condition 2)
+  - z = 0ᶜ1ᵖ where a + b + c = p
 
 Consider i = 2 (pumping up):
 xy²z = x · y · y · z
@@ -490,9 +490,9 @@ xy²z = x · y · y · z
      = 0ᵖ⁺ᵇ1ᵖ
 
 Count the symbols:
-  • Number of 0s: p + b
-  • Number of 1s: p
-  • Since b ≥ 1, we have p + b > p
+  - Number of 0s: p + b
+  - Number of 1s: p
+  - Since b ≥ 1, we have p + b > p
 
 Therefore xy²z has MORE 0s than 1s, so xy²z ∉ L.
 
@@ -517,22 +517,22 @@ Therefore, our assumption was wrong, and L is not regular. ∎`
                     content: `Both techniques prove non-regularity, but they have different strengths.
 
 Pumping Lemma:
-• More widely known and taught
-• Works well for "counting" languages (0ⁿ1ⁿ)
-• Requires choosing specific string and pumping position
-• Sometimes difficult to handle all possible decompositions
+- More widely known and taught
+- Works well for "counting" languages (0ⁿ1ⁿ)
+- Requires choosing specific string and pumping position
+- Sometimes difficult to handle all possible decompositions
 
 Myhill-Nerode Theorem:
-• More powerful and general
-• Gives exact characterization of regular languages
-• Often cleaner and more elegant proofs
-• Directly connects to DFA state minimization
-• Works well when distinguishing suffixes are clear
+- More powerful and general
+- Gives exact characterization of regular languages
+- Often cleaner and more elegant proofs
+- Directly connects to DFA state minimization
+- Works well when distinguishing suffixes are clear
 
 When to use which:
-• Pumping Lemma: Good for sequences with counting (aⁿbⁿ, 0ⁿ1ⁿ)
-• Myhill-Nerode: Better for languages with complex structure
-• Both can prove the same results, but one may be easier
+- Pumping Lemma: Good for sequences with counting (aⁿbⁿ, 0ⁿ1ⁿ)
+- Myhill-Nerode: Better for languages with complex structure
+- Both can prove the same results, but one may be easier
 
 Example where Myhill-Nerode is cleaner:
 L = {w ∈ {0,1}* | w has equal 0s and 1s}
