@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import './stylings/ExerciseViewer.css';
@@ -11,6 +11,10 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
     const [showHint, setShowHint] = useState(false);
     const [challengeResults, setChallengeResults] = useState(null);
     const [showAllHints, setShowAllHints] = useState(false);
+    const [simulatorBlocked, setSimulatorBlocked] = useState(false);
+    /* Handle on the challenge window, so a second click focuses it rather
+     * than opening another copy of the same challenge. */
+    const simulatorWindow = useRef(null);
 
     // Reset state when exercise changes
     useEffect(() => {
@@ -101,18 +105,49 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
     };
 
     const handleOpenSimulator = () => {
-        if (question?.type === 'hands-on' && question.challenge) {
-            const challengeData = {
-                type: question.simulatorType,
-                challenge: question.challenge,
-                questionId: `${exercise.id}-${currentQuestion}`,
-                returnTo: 'tutorial'
-            };
-            // Store in sessionStorage so simulator can access it
-            sessionStorage.setItem('simulatorChallenge', JSON.stringify(challengeData));
-            // Open simulator in new window
-            window.open(`${window.location.origin}${window.location.pathname}#challenge`, 'simulator-challenge', 'width=1400,height=900');
+        if (question?.type !== 'hands-on' || !question.challenge) return;
+
+        const challengeData = {
+            type: question.simulatorType,
+            challenge: question.challenge,
+            questionId: `${exercise.id}-${currentQuestion}`,
+            returnTo: 'tutorial',
+        };
+        // The simulator reads this on '#challenge'.
+        sessionStorage.setItem('simulatorChallenge', JSON.stringify(challengeData));
+
+        // Already open from a previous click — bring it forward instead of
+        // stacking a second window on the same challenge.
+        if (simulatorWindow.current && !simulatorWindow.current.closed) {
+            simulatorWindow.current.location.hash = 'challenge';
+            simulatorWindow.current.focus();
+            setSimulatorBlocked(false);
+            return;
         }
+
+        const opened = window.open(
+            `${window.location.origin}${window.location.pathname}#challenge`,
+            'simulator-challenge',
+            'width=1400,height=900'
+        );
+
+        /*
+         * A blocked popup returns null, and the old code ignored it — the
+         * button simply did nothing and the exercise looked broken. Say so and
+         * offer the same challenge in this tab.
+         */
+        if (!opened) {
+            setSimulatorBlocked(true);
+            return;
+        }
+        simulatorWindow.current = opened;
+        setSimulatorBlocked(false);
+        opened.focus();
+    };
+
+    /** Fallback when the popup is blocked: run the challenge in this tab. */
+    const openSimulatorInThisTab = () => {
+        window.location.hash = 'challenge';
     };
 
     const isCorrect = (idx) => {
@@ -293,13 +328,32 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
                             )}
 
                             <div className="challenge-actions-box">
-                                <button 
-                                    className="action-btn simulator-btn"
+                                <button
+                                    type="button"
+                                    className="action-btn primary simulator-btn"
                                     onClick={handleOpenSimulator}
                                 >
-                                    <ExternalLink size={18} />
-                                    Open {question.simulatorType} Simulator
+                                    <ExternalLink size={16} aria-hidden="true" />
+                                    Open {question.simulatorType} simulator
                                 </button>
+
+                                {simulatorBlocked && (
+                                    <p className="error-message challenge-blocked">
+                                        <AlertCircle size={16} aria-hidden="true" />
+                                        <span>
+                                            Your browser blocked the simulator window. Allow pop-ups
+                                            for this site, or{' '}
+                                            <button
+                                                type="button"
+                                                className="link-btn"
+                                                onClick={openSimulatorInThisTab}
+                                            >
+                                                open the challenge in this tab
+                                            </button>
+                                            .
+                                        </span>
+                                    </p>
+                                )}
 
                                 {challengeResults ? (
                                     <div className={`challenge-feedback ${challengeResults.passed === challengeResults.total ? 'all-pass' : 'some-fail'}`}>
@@ -330,10 +384,12 @@ const ExerciseViewer = ({ exercise, automatonType, onComplete, isCompleted }) =>
                                     <div className="challenge-instructions">
                                         <Play size={20} />
                                         <p>
-                                            <strong>How it works:</strong><br/>
-                                            1. Click "Open Simulator" to build your {question.simulatorType}<br/>
-                                            2. Click "Validate Challenge" in the simulator when ready<br/>
-                                            3. Results will appear here automatically
+                                            <strong>How it works</strong><br />
+                                            1. Open the simulator and build your{' '}
+                                            {question.simulatorType}<br />
+                                            2. Press <strong>Validate</strong> there when you are
+                                            ready<br />
+                                            3. Your results appear here automatically
                                         </p>
                                     </div>
                                 )}
