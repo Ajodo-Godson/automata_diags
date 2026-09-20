@@ -1,234 +1,240 @@
+/*
+ * Turing machine transition rules.
+ *
+ * A rule reads: in state q scanning s, write s', move D, go to q'. The editor
+ * lays that out as two lines with an arrow between them, so a rule is legible
+ * as a rule rather than as six labelled form fields.
+ */
+
 .program-editor {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
 }
 
 .editor-header-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 0.5rem;
-}
-
-.editor-subtitle {
-  font-size: 13px;
-  color: #6b7280;
-  margin: 0;
-}
-
-.btn-small {
-  padding: 8px 12px;
-  font-size: 13px;
-}
-
-.btn-icon-sm {
-  width: 14px;
-  height: 14px;
+    display: flex;
+    justify-content: flex-end;
 }
 
 .rules-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.rule-card {
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 12px;
-  background: white;
-  transition: all 0.2s;
-}
-
-.rule-card:hover {
-  border-color: #93c5fd;
-}
-
-.rule-card.active {
-  border-color: #3b82f6;
-  border-width: 3px;
-  background: rgba(59, 130, 246, 0.05);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.rule-content {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.rule-info {
-  flex: 1;
-  font-family: 'Courier New', monospace;
-  font-size: 13px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-height: 420px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .rule-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: border-color var(--duration) var(--ease),
+        background var(--duration) var(--ease);
+}
+
+.rule-row:hover {
+    border-color: var(--border-strong);
+}
+
+/* The rule the machine is executing right now. */
+.rule-row.executing,
+.rule-row.is-active {
+    border-color: var(--accent-500);
+    background: var(--accent-50);
+}
+
+.rule-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+.rule-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 0;
 }
 
 .rule-label {
-  color: #6b7280;
-  font-size: 12px;
+    color: var(--text-subtle);
+    font-size: var(--text-xs);
 }
 
+/*
+ * Every value in a rule is machine data, so every badge is monospaced and
+ * legible — these used to render as near-invisible grey chips.
+ */
 .rule-badge {
-  background: #f3f4f6;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 var(--space-1);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunken);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
 }
 
 .rule-badge-highlight {
-  background: rgba(59, 130, 246, 0.1);
-  padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  font-size: 12px;
-  color: #1e40af;
+    border-color: var(--accent-300);
+    background: var(--accent-50);
+    color: var(--accent-800);
 }
 
 .rule-arrow {
-  color: #3b82f6;
-  font-size: 14px;
-  margin: 2px 0;
-  text-align: center;
-  width: 100%;
+    color: var(--text-subtle);
+    font-size: var(--text-sm);
+    padding-left: var(--space-1);
 }
 
 .rule-actions {
-  display: flex;
-  gap: 4px;
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex: 0 0 auto;
 }
 
-.icon-btn {
-  padding: 6px;
-  background: transparent;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #6b7280;
-  transition: all 0.2s;
+.icon-btn,
+.btn-icon-sm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-subtle);
+    cursor: pointer;
+    transition: background var(--duration) var(--ease), color var(--duration) var(--ease);
 }
 
-.icon-btn:hover {
-  background: #f3f4f6;
-  color: #111827;
+.icon-btn:hover,
+.btn-icon-sm:hover {
+    background: var(--surface-sunken);
+    color: var(--text);
 }
 
 .icon-btn-danger:hover {
-  background: #fee2e2;
-  color: #dc2626;
+    background: var(--reject-surface);
+    color: var(--reject-fg);
 }
 
-.icon-sm {
-  width: 14px;
-  height: 14px;
-}
-
-.executing-indicator {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #3b82f6;
-  margin-top: 8px;
-}
-
-.pulse-dot {
-  width: 8px;
-  height: 8px;
-  background: #3b82f6;
-  border-radius: 50%;
-  animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
+/* ----------------------------------------------------------------- Form   */
 
 .rule-form {
-  border: 2px solid #3b82f6;
-  border-radius: 8px;
-  padding: 16px;
-  background: rgba(59, 130, 246, 0.05);
-  margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-sunken);
 }
 
 .form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
 }
 
 .form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+    display: flex;
+    gap: var(--space-2);
 }
 
 .form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
 }
 
 .form-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: #374151;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
 }
 
 .form-input,
 .form-select {
-  padding: 8px 10px;
-  font-size: 13px;
-  font-family: 'Courier New', monospace;
-  border: 2px solid #e5e7eb;
-  border-radius: 4px;
-  background: white;
-  transition: border-color 0.2s;
+    width: 100%;
+    height: 28px;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
 }
 
 .form-input:focus,
 .form-select:focus {
-  outline: none;
-  border-color: #3b82f6;
+    outline: none;
+    border-color: var(--accent-500);
+    box-shadow: var(--ring);
 }
 
 .form-actions {
-  display: flex;
-  gap: 8px;
-  padding-top: 8px;
+    display: flex;
+    gap: var(--space-2);
 }
 
 .form-actions .btn {
-  flex: 1;
+    flex: 1 1 0;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 24px 16px;
-  color: #6b7280;
+/* ------------------------------------------------------------- Indicators */
+
+.executing-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--accent-700);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
 }
 
-.empty-state p {
-  margin: 4px 0;
+.pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: var(--accent-600);
 }
 
+.empty-state,
 .empty-state-hint {
-  font-size: 13px;
+    padding: var(--space-4) var(--space-2);
+    color: var(--text-subtle);
+    font-size: var(--text-sm);
+    text-align: center;
+}
+
+/* The editor's own button variants map onto the shared ones. */
+.program-editor .btn-outline {
+    border-color: var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+}
+
+.program-editor .btn-small {
+    height: 26px;
+    font-size: var(--text-sm);
 }
