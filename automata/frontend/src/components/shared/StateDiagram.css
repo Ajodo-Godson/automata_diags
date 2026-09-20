@@ -212,3 +212,26 @@
     font-weight: var(--weight-normal);
     opacity: 0.75;
 }
+
+/* Same reasoning as .tc-load: no hover means no way to reveal this. */
+@media (hover: none) {
+    .sd-node-delete {
+        opacity: 1;
+    }
+}
+
+@media (pointer: coarse) {
+    .sd-node-delete {
+        width: 26px;
+        height: 26px;
+        top: -8px;
+        right: -8px;
+        font-size: 16px;
+    }
+
+    /* ReactFlow's own zoom buttons are too small to hit with a thumb. */
+    .sd-wrap .react-flow__controls-button {
+        width: 34px;
+        height: 34px;
+    }
+}
