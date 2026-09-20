@@ -1,9 +1,9 @@
 import React from 'react';
-import './stylings/TMTestCases.css';
+import TestCaseList from '../shared/TestCaseList';
 
 export function TMTestCases({ onLoadExample, currentExample }) {
   const getExamples = () => {
-    if (currentExample === 'Test: Write 3 ones') {
+    if (currentExample === 'Write Three 1s') {
       return [
         { input: '', expected: 'Accept' },
       ];
@@ -74,28 +74,5 @@ export function TMTestCases({ onLoadExample, currentExample }) {
 
   const examples = getExamples();
 
-  if (examples.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="tm-test-list-container">
-      <h3 className="tm-card-title">Test Cases</h3>
-      <div className="tm-test-list">
-        {examples.map((example, index) => (
-          <div key={index} className="tm-test-item">
-            <button
-              onClick={() => onLoadExample(example.input)}
-              className="tm-test-btn"
-            >
-              <code className="tm-test-input">"{example.input || '(empty)'}"</code>
-            </button>
-            <span className={`tm-test-expected ${example.expected.toLowerCase()}`}>
-              {example.expected}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return <TestCaseList testCases={examples} onLoadTest={onLoadExample} />;
 }
