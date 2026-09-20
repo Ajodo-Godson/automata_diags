@@ -1,225 +1,226 @@
-.layout {
+.app {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
-    max-height: 100vh;
+    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
+    background: var(--canvas);
 }
 
-.header {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-    color: white;
-    padding: 0.75rem 1.5rem;
-    display: flex;
-    justify-content: space-between;
+/* ---------------------------------------------------------------- Header */
+
+/*
+ * Three columns, with the nav pinned to the centre track. The side tracks are
+ * symmetrical so the nav sits at the true centre and — importantly — cannot
+ * move when the contents of either side change.
+ */
+.app-header {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 1fr);
     align-items: center;
-    gap: 1rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    flex-shrink: 0;
+    gap: var(--space-4);
+    height: var(--header-height);
+    flex: 0 0 auto;
+    padding: 0 var(--space-4);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
 }
 
-.logo-section h1 {
-    font-size: 1.25rem;
-    margin: 0;
-    font-weight: 600;
-}
-
-/* Horizontal Automata Type Selector */
-.automata-types-horizontal {
+.app-header-start {
     display: flex;
-    gap: 0.5rem;
     align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
 }
 
-.type-btn-horizontal {
-    padding: 0.5rem 1.25rem;
-    border: 2px solid transparent;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.type-btn-horizontal:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-1px);
-}
-
-.type-btn-horizontal.active {
-    background: #4CAF50;
-    border-color: #45a049;
-    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
-}
-
-.main-content {
+.app-mark {
     display: flex;
-    flex: 1;
-    overflow: hidden;
-}
-
-.workspace-full {
-    flex: 1;
-    padding: 1rem;
-    background: #fff;
-    overflow-y: auto;
-}
-
-/* Header tool buttons */
-.header-tools {
-    display: flex;
-    gap: 0.5rem;
     align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 auto;
+    border: 1.5px solid var(--accent-600);
+    border-radius: var(--radius-full);
+    color: var(--accent-600);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    line-height: 1;
 }
 
-.header-tool-btn {
-    padding: 0.5rem 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
+.app-mark sub {
+    font-size: 0.7em;
+}
+
+.app-name {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    letter-spacing: -0.01em;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.header-tool-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
-    transform: translateY(-1px);
-}
+/* ------------------------------------------------------------------- Nav */
 
-.guide-tool-btn {
-    background: rgba(37, 99, 235, 0.9);
-    border-color: rgba(147, 197, 253, 0.8);
-}
-
-.guide-tool-btn:hover {
-    background: rgba(29, 78, 216, 1);
-}
-
-.header-tool-btn:active {
-    transform: translateY(0);
-}
-
-@media (max-width: 768px) {
-    .header {
-        flex-direction: column;
-        gap: 0.5rem;
-        padding: 0.75rem;
-    }
-
-    .automata-types-horizontal {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .type-btn-horizontal {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.75rem;
-    }
-
-    .main-content {
-        flex-direction: column;
-    }
-
-    .sidebar-compact {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid #e0e0e0;
-        max-height: 150px;
-    }
-
-    .workspace {
-        padding: 0.75rem;
-    }
-}
-
-.sidebar .toolbox,
-.sidebar .history {
-    background: white;
-    border-radius: 8px;
-    padding: 15px;
-    margin: 0 0 20px 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.sidebar h3 {
-    margin: 0 0 12px 0;
-    color: #333;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.sidebar .tool-buttons,
-.sidebar .history-buttons {
+.app-nav {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-sunken);
 }
 
-.sidebar .tool-btn,
-.sidebar .history-button {
-    padding: 10px 14px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 6px;
+.app-nav-btn {
+    padding: 0 var(--space-3);
+    height: 26px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.01em;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    text-align: left;
+    transition: background var(--duration) var(--ease), color var(--duration) var(--ease);
 }
 
-.sidebar .tool-btn:hover:not(:disabled),
-.sidebar .history-button:hover:not(:disabled) {
-    background-color: #45a049;
-    transform: translateX(2px);
+.app-nav-btn:hover {
+    color: var(--text);
+    background: var(--track);
 }
 
-.sidebar .tool-btn:active:not(:disabled),
-.sidebar .history-button:active:not(:disabled) {
-    transform: translateX(0px);
+.app-nav-btn.is-active {
+    background: var(--surface);
+    color: var(--accent-700);
+    box-shadow: var(--shadow-xs);
 }
 
-.sidebar .tool-btn:disabled,
-.sidebar .history-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-    transform: none;
+.app-nav-sep {
+    width: 1px;
+    height: 16px;
+    margin: 0 var(--space-1);
+    background: var(--border-strong);
 }
 
-.sidebar .history-button {
-    background-color: #2196F3;
+/* ----------------------------------------------------------------- Tools */
+
+.app-header-end {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
 }
 
-.sidebar .history-button:hover:not(:disabled) {
-    background-color: #1976D2;
+.app-tools {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
 }
 
-.sidebar button {
-    padding: 8px 12px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
+/*
+ * On the Learn tab the file tools do not apply. They stay in the layout so the
+ * header geometry is identical on every tab; only their visibility changes.
+ */
+.app-tools.is-hidden {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.app-tool-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0 var(--space-2);
+    height: 28px;
+    flex: 0 0 auto;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
     cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.2s;
+    transition: background var(--duration) var(--ease),
+        border-color var(--duration) var(--ease),
+        color var(--duration) var(--ease);
 }
 
-.sidebar button:hover:not(:disabled) {
-    background-color: #45a049;
+.app-tool-btn:hover {
+    background: var(--hover);
+    border-color: var(--border-hover);
+    color: var(--text);
 }
 
-.sidebar button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
+.app-tool-btn-accent {
+    border-color: var(--accent-600);
+    background: var(--accent-600);
+    color: var(--text-on-accent);
+}
+
+.app-tool-btn-accent:hover {
+    background: var(--accent-700);
+    border-color: var(--accent-700);
+    color: var(--text-on-accent);
+}
+
+/* ------------------------------------------------------------------ Main */
+
+.app-main {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* ----------------------------------------------------------- Narrow view */
+
+@media (max-width: 1080px) {
+    .app-tool-label {
+        display: none;
+    }
+
+    .app-tool-btn {
+        padding: 0 var(--space-2);
+    }
+}
+
+@media (max-width: 860px) {
+    .app-header {
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            'start end'
+            'nav   nav';
+        height: auto;
+        padding: var(--space-2) var(--space-3);
+        gap: var(--space-2);
+    }
+
+    .app-header-start {
+        grid-area: start;
+    }
+
+    .app-header-end {
+        grid-area: end;
+    }
+
+    .app-nav {
+        grid-area: nav;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .app-nav::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+/* The theme control is icon-only at every width; its label lives in the title. */
+.app-theme-btn {
+    width: 28px;
+    padding: 0;
+    justify-content: center;
 }
