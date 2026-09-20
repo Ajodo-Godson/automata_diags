@@ -1,52 +1,63 @@
+/*
+ * The CFG derivation tree.
+ *
+ * Drawn as a nested <ul>, with the connectors made from borders on the list
+ * items so the structure stays correct at any depth and needs no measurement.
+ */
+
 .parse-tree-container {
-    width: 100%;
-    padding: 0.75rem;
+    display: flex;
+    justify-content: center;
+    min-width: min-content;
+    padding: var(--space-4) var(--space-2);
 }
 
 .parse-tree-empty {
-    text-align: center;
-    padding: 2rem;
-    color: #6b7280;
-    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 160px;
+    color: var(--text-subtle);
+    font-size: var(--text-sm);
 }
 
 .hierarchical-tree {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
+    display: inline-block;
 }
 
-.tree-title-secondary {
-    margin-top: 0.5rem;
-}
-
-/* 2D parse tree (top-down) */
 .tree-canvas {
-    width: 100%;
-    overflow-x: auto;
-    padding: 0.5rem 0.25rem 0.75rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    background: #ffffff;
+    display: inline-block;
 }
+
+/* -------------------------------------------------------------- Structure */
 
 .tree-root,
 .tree-root ul {
-    position: relative;
-    padding-top: 1rem;
-    margin: 0;
     display: flex;
-    justify-content: center;
+    margin: 0;
+    padding: 0;
     list-style: none;
+    position: relative;
+}
+
+.tree-root ul {
+    padding-top: var(--space-5);
 }
 
 .tree-root li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     position: relative;
-    padding: 1rem 0.45rem 0 0.45rem;
-    text-align: center;
+    padding: var(--space-5) var(--space-2) 0;
 }
 
+/*
+ * Connectors. Each child draws the half-width horizontal rule that reaches
+ * toward its sibling, plus the vertical drop from its parent; the first and
+ * last child trim the outer half so the rule spans exactly the sibling group.
+ */
 .tree-root li::before,
 .tree-root li::after {
     content: '';
@@ -54,14 +65,14 @@
     top: 0;
     right: 50%;
     width: 50%;
-    height: 1rem;
-    border-top: 1.5px solid #cbd5e1;
+    height: var(--space-5);
+    border-top: 1px solid var(--border-strong);
 }
 
 .tree-root li::after {
     right: auto;
     left: 50%;
-    border-left: 1.5px solid #cbd5e1;
+    border-left: 1px solid var(--border-strong);
 }
 
 .tree-root li:only-child::before,
@@ -70,7 +81,7 @@
 }
 
 .tree-root li:only-child {
-    padding-top: 0;
+    padding-top: var(--space-5);
 }
 
 .tree-root li:first-child::before,
@@ -79,225 +90,64 @@
 }
 
 .tree-root li:last-child::before {
-    border-right: 1.5px solid #cbd5e1;
-    border-radius: 0 5px 0 0;
+    border-right: 1px solid var(--border-strong);
+    border-radius: 0 var(--radius-sm) 0 0;
 }
 
 .tree-root li:first-child::after {
-    border-radius: 5px 0 0 0;
+    border-radius: var(--radius-sm) 0 0 0;
 }
+
+/* The drop from a parent down to its children. */
+.tree-root ul::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 0;
+    height: var(--space-5);
+    border-left: 1px solid var(--border-strong);
+}
+
+/* The root has no parent, so it needs neither connector nor top padding. */
+.tree-root > li {
+    padding-top: 0;
+}
+
+.tree-root > li::before,
+.tree-root > li::after {
+    display: none;
+}
+
+/* ----------------------------------------------------------------- Nodes  */
 
 .tree-symbol {
-    display: inline-block;
-    min-width: 1.6rem;
-    padding: 0.25rem 0.45rem;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
-    background: #f9fafb;
-    font-family: 'Courier New', monospace;
-    font-size: 0.86rem;
-    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    white-space: nowrap;
 }
 
+/* Variables can still be rewritten; terminals are final. The distinction is
+ * the whole point of a derivation, so it is carried by fill, not just colour. */
 .tree-symbol-var {
-    color: #7c3aed;
-    background: #f5f3ff;
-    border-color: #ddd6fe;
+    border-color: var(--accent-500);
+    background: var(--accent-50);
+    color: var(--accent-800);
+    font-weight: var(--weight-semibold);
 }
 
 .tree-symbol-term {
-    color: #065f46;
-    background: #ecfdf5;
-    border-color: #a7f3d0;
+    border-color: var(--border);
+    background: var(--surface-sunken);
+    color: var(--text-muted);
 }
-
-.tree-title {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 0.5rem;
-}
-
-.tree-path {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-    max-height: 400px;
-    overflow-y: auto;
-    padding: 0.5rem;
-}
-
-.tree-node {
-    background: #f9fafb;
-    border: 2px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 0.6rem 1rem;
-    text-align: center;
-    transition: all 0.2s;
-    min-width: 120px;
-}
-
-.tree-node-current {
-    background: #dbeafe;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.tree-node-value {
-    font-family: 'Courier New', monospace;
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-    letter-spacing: 0.1em;
-}
-
-.node-char {
-    display: inline-block;
-    padding: 0.1rem 0.2rem;
-}
-
-.node-var {
-    color: #7c3aed;
-    font-weight: 700;
-}
-
-.node-term {
-    color: #059669;
-}
-
-.tree-node-rule {
-    font-size: 0.7rem;
-    color: #6b7280;
-    margin-top: 0.25rem;
-    font-family: 'Courier New', monospace;
-}
-
-.tree-connector {
-    font-size: 1.5rem;
-    color: #9ca3af;
-    line-height: 1;
-    height: 1.5rem;
-}
-
-/* Text tree styles (alternative view) */
-.text-tree {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.5rem;
-}
-
-.tree-level {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.tree-level-number {
-    background: #3b82f6;
-    color: white;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-    flex-shrink: 0;
-}
-
-.tree-level-content {
-    flex: 1;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    padding: 0.5rem 0.75rem;
-}
-
-.tree-string {
-    font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-}
-
-.tree-char {
-    padding: 0.1rem 0.15rem;
-}
-
-.tree-char-highlight {
-    background: #fef3c7;
-    color: #92400e;
-    border-radius: 3px;
-}
-
-.tree-production {
-    font-size: 0.7rem;
-    color: #6b7280;
-    font-family: 'Courier New', monospace;
-}
-
-.tree-arrow {
-    text-align: center;
-    color: #9ca3af;
-    font-size: 1.2rem;
-    margin-left: 12px;
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .tree-canvas {
-        background: #111827;
-        border-color: #374151;
-    }
-
-    .tree-root li::before,
-    .tree-root li::after {
-        border-color: #4b5563;
-    }
-
-    .tree-symbol {
-        background: #1f2937;
-        border-color: #4b5563;
-        color: #e5e7eb;
-    }
-
-    .tree-symbol-var {
-        color: #c4b5fd;
-        background: #312e81;
-        border-color: #6366f1;
-    }
-
-    .tree-symbol-term {
-        color: #6ee7b7;
-        background: #064e3b;
-        border-color: #10b981;
-    }
-
-    .tree-node {
-        background: #1f2937;
-        border-color: #374151;
-    }
-    
-    .tree-node-current {
-        background: #1e3a8a;
-        border-color: #3b82f6;
-    }
-    
-    .tree-node-rule {
-        color: #9ca3af;
-    }
-    
-    .tree-level-content {
-        background: #1f2937;
-        border-color: #374151;
-    }
-    
-    .tree-title {
-        color: #d1d5db;
-    }
-}
-
