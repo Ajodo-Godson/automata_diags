@@ -5,7 +5,7 @@ export function ParseTree({ derivationSteps, currentStep, tokenMode, variables }
     if (!derivationSteps || derivationSteps.length === 0 || currentStep < 0) {
         return (
             <div className="parse-tree-empty">
-                <p>Run a derivation to see the parse tree</p>
+                <p>Parse a string to see its derivation tree.</p>
             </div>
         );
     }
@@ -91,7 +91,6 @@ export function ParseTree({ derivationSteps, currentStep, tokenMode, variables }
 
         return (
             <div className="hierarchical-tree">
-                <div className="tree-title">2D Parse Tree</div>
                 <div className="tree-canvas">
                     <ul className="tree-root">
                         {renderTreeNode(parseTreeRoot)}
